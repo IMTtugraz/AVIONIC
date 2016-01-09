@@ -6,10 +6,10 @@ Accelerated Variational dynamic MRI reconstruction
 * CUDA 4.0
 * CMAKE 2.8
 * GCC
+* [AGILE](https://github.com/IMTtugraz/AGILE)
 * [gpuNUFFT](https://github.com/andyschwarzl/gpuNUFFT)
-* [GoogleTest](https://code.google.com/p/googletest/downloads/detail?name=gtest-1.6.0.zip&can=2&q=)
-* [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for code docs)
 * [DCMTK](http://dicom.offis.de/dcmtk.php.de)
+* [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for code docs)
 
 ## Setup
 
@@ -20,28 +20,35 @@ Accelerated Variational dynamic MRI reconstruction
 
 1 Install AGILE lib 
 ```
-cd CUDA/AGILE
+git clone https://github.com/IMTtugraz/AGILE.git
+cd AGILE
 mkdir build
 cd build
 cmake ..
 make -j 
 sudo make install
 ``` 
-2 Install ICTGV recon lib
+2 Install gpuNUFFT 
 ```
-cd CUDA/ictgv
+git clone https://github.com/andyschwarzl/gpuNUFFT.git
+cd gpuNUFFT/CUDA
 mkdir build
 cd build
-cmake .. -DGTEST_DIR=/path/to/google/test/framework -DGPUNUFFT_ROOT_DIR=/path/to/gpuNUFFT
+cmake ..
+make 
+``` 
+3 Install AVIONIC recon lib
+```
+git clone https://github.com/IMTtugraz/AVIONIC.git
+cd AVIONIC/CUDA
+mkdir build
+cd build
+cmake .. -DGPUNUFFT_ROOT_DIR=/path/to/gpuNUFFT
 make -j 
-```
-3 Run tests
-```
-make tests
 ```
 4 Run reconstruction
 ```
-bin/fredy_mri 
+bin/avionic 
 ```
 
 ## Doc
