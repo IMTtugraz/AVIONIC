@@ -1,6 +1,20 @@
 ## AVIONIC
 Accelerated Variational dynamic MRI reconstruction
 
+# Authors
+* Andreas Schwarzl (andreas.schwarzl@student.tugraz.at)
+* Martin Holler (martin.holler@uni-graz.at)
+* Matthias Schloegl (matthias.schloegl@tugraz.at)
+
+# License
+This software is published under GNU GPLv3. In particular, all source code is provided "as is" without warranty of any kind, either expressed or implied. For details, see the attached LICENSE.
+
+# Reference
+[1]  Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+
+[2] Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+
+
 ## Dependencies
 
 * CUDA 4.0
@@ -71,3 +85,5 @@ make doc
 ```
 
 and open the file `doc/html/index.html`. 
+
+## Example
