@@ -14,7 +14,8 @@ This software is published under GNU GPLv3. In particular, all source code is pr
 
 [2] Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
 
-
+This work is funded and supported by the Austrian Science Fund (FWF) in the context of project ”SFB F3209-19” (Mathematical Optimization and Applications in Biomedical Sciences)
+http://math.uni-graz.at/mobis/
 ## Dependencies
 
 * CUDA 4.0
