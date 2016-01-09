@@ -8,6 +8,7 @@ Accelerated Variational dynamic MRI reconstruction
 * GCC
 * [AGILE](https://github.com/IMTtugraz/AGILE)
 * [gpuNUFFT](https://github.com/andyschwarzl/gpuNUFFT)
+* [ISMRMRD](https://github.com/ismrmrd/ismrmrd)
 * [DCMTK](http://dicom.offis.de/dcmtk.php.de)
 * [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for code docs)
 
@@ -35,9 +36,19 @@ cd gpuNUFFT/CUDA
 mkdir build
 cd build
 cmake ..
-make 
+make
 ``` 
-3 Install AVIONIC recon lib
+3 Install ISMRMRD 
+```
+git clone https://github.com/ismrmrd/ismrmrd
+cd ismrmrd/
+mkdir build
+cd build
+cmake ../
+make
+sudo make install
+``` 
+4 Install AVIONIC recon lib
 ```
 git clone https://github.com/IMTtugraz/AVIONIC.git
 cd AVIONIC/CUDA
@@ -46,7 +57,7 @@ cd build
 cmake .. -DGPUNUFFT_ROOT_DIR=/path/to/gpuNUFFT
 make -j 
 ```
-4 Run reconstruction
+5 Run reconstruction
 ```
 bin/avionic 
 ```
