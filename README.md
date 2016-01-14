@@ -21,7 +21,7 @@ http://math.uni-graz.at/mobis/
 * CUDA 4.0
 * CMAKE 2.8
 * GCC
-* [AGILE](https://github.com/IMTtugraz/AGILE)
+* [AGILE](http://www.tugraz.at/fileadmin/user_upload/Institute/IMT/files/misc/agile-20160116.tar.gz)
 * [gpuNUFFT](https://github.com/andyschwarzl/gpuNUFFT)
 * [ISMRMRD](https://github.com/ismrmrd/ismrmrd)
 * [DCMTK](http://dicom.offis.de/dcmtk.php.de)
@@ -36,7 +36,8 @@ http://math.uni-graz.at/mobis/
 
 1 Install AGILE lib 
 ```
-git clone https://github.com/IMTtugraz/AGILE.git
+wget http://www.tugraz.at/fileadmin/user_upload/Institute/IMT/files/misc/agile-20160116.tar.gz
+tar -xf agile-20160116.tar.gz
 cd AGILE
 mkdir build
 cd build
@@ -44,6 +45,7 @@ cmake ..
 make -j 
 sudo make install
 ``` 
+
 2 Install gpuNUFFT 
 ```
 git clone https://github.com/andyschwarzl/gpuNUFFT.git
@@ -53,6 +55,7 @@ cd build
 cmake ..
 make
 ``` 
+
 3 Install ISMRMRD 
 ```
 git clone https://github.com/ismrmrd/ismrmrd
@@ -63,6 +66,7 @@ cmake ../
 make
 sudo make install
 ``` 
+
 4 Install AVIONIC recon lib
 ```
 git clone https://github.com/IMTtugraz/AVIONIC.git
@@ -72,19 +76,40 @@ cd build
 cmake .. -DGPUNUFFT_ROOT_DIR=/path/to/gpuNUFFT
 make -j 
 ```
-5 Run reconstruction
+
+5 Add binary to PATH (bash)
 ```
-bin/avionic 
+in ~/.bashrc add:
+export PATH=/path/to/AVIONIC/bin/:${PATH} 
 ```
 
 ## Doc
-
 In order to generate the code documentation, run
 
 ```
 make doc
 ```
-
 and open the file `doc/html/index.html`. 
 
-## Example
+
+## Display help
+```
+avionic --help
+```
+
+## Example reconstruction
+
+a) Cartesian
+```
+wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_tpat8_sedona.h5
+mkdir ./recon_tpat/
+avionic -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
+```
+
+a) Radial
+```
+wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_rad_24_sedona.h5
+mkdir ./recon_rad/
+avionic -r cine_rad_24_sedona.h5 -a -n ./recon_rad/recon.dcm
+
+
