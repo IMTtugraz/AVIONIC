@@ -1,3 +1,0 @@
-https://github.com/cjohnevans/Gannet2.0/blob/master/mapVBVD.m
-https://github.com/FNNDSC/mdh_apps/blob/master/mdh_process/includelib/mdh.h
-https://github.com/solleo/freesurfer/blob/master/matlab/read_meas_dat.m

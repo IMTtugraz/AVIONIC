@@ -1,9 +1,0 @@
-#ifndef INCLUDE_CONFIG_DIR_H_
-
-#define INCLUDE_CONFIG_DIR_H_
-
-@GEN_WARNING@
-
-#cmakedefine CONFIG_DIR "@CONFIG_DIR@"
-
-#endif  // INCLUDE_CONFIG_DIR_H_
