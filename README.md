@@ -21,7 +21,7 @@ http://math.uni-graz.at/mobis/
 * CUDA 4.0
 * CMAKE 2.8
 * GCC
-* [AGILE](http://www.tugraz.at/fileadmin/user_upload/Institute/IMT/files/misc/agile-20160116.tar.gz)
+* [AGILE](https://github.com/IMTtugraz/AGILE.git)
 * [gpuNUFFT](https://github.com/andyschwarzl/gpuNUFFT)
 * [ISMRMRD](https://github.com/ismrmrd/ismrmrd)
 * [DCMTK](http://dicom.offis.de/dcmtk.php.de)
