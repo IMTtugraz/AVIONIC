@@ -36,8 +36,7 @@ http://math.uni-graz.at/mobis/
 
 1 Install AGILE lib 
 ```
-wget http://www.tugraz.at/fileadmin/user_upload/Institute/IMT/files/misc/agile-20160116.tar.gz
-tar -xf agile-20160116.tar.gz
+git clone https://github.com/IMTtugraz/AGILE.git
 cd AGILE
 mkdir build
 cd build
