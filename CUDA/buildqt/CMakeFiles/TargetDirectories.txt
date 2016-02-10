@@ -1,3 +1,0 @@
-/home/dieheart/workspace/AVIONIC/CUDA/buildqt/src/CMakeFiles/ICTGV.dir
-/home/dieheart/workspace/AVIONIC/CUDA/buildqt/src/CMakeFiles/avionic.dir
-/home/dieheart/workspace/AVIONIC/CUDA/buildqt/doc/CMakeFiles/doc.dir
