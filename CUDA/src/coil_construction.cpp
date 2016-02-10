@@ -3,7 +3,7 @@
 
 CoilConstruction::CoilConstruction(unsigned width, unsigned height,
                                    unsigned coils, unsigned frames)
-  : PDRecon(width, height, coils, frames, mrOp)
+  : PDRecon(width, height, 0, coils, frames, mrOp)
 {
   InitParams();
 }
@@ -11,7 +11,7 @@ CoilConstruction::CoilConstruction(unsigned width, unsigned height,
 CoilConstruction::CoilConstruction(unsigned width, unsigned height,
                                    unsigned coils, unsigned frames,
                                    CoilConstructionParams &params)
-  : PDRecon(width, height, coils, frames, mrOp), params(params)
+  : PDRecon(width, height, 0, coils, frames, mrOp), params(params)
 {
 }
 

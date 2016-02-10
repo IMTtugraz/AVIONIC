@@ -3,7 +3,7 @@
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames,
                                      RVector &mask, bool centered)
-  : BaseOperator(width, height, coils, frames), centered(centered), mask(mask)
+  : BaseOperator(width, height, 0, coils, frames), centered(centered), mask(mask)
 {
   Init();
 }
@@ -11,7 +11,7 @@ CartesianOperator::CartesianOperator(unsigned width, unsigned height,
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames,
                                      RVector &mask)
-  : BaseOperator(width, height, coils, frames), centered(true), mask(mask)
+  : BaseOperator(width, height, 0, coils, frames), centered(true), mask(mask)
 {
   Init();
 }
@@ -21,7 +21,7 @@ RVector ZeroMask(0);
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames,
                                      bool centered)
-  : BaseOperator(width, height, coils, frames), centered(centered),
+  : BaseOperator(width, height,  0, coils, frames), centered(centered),
     mask(ZeroMask)
 {
   Init();
@@ -29,7 +29,7 @@ CartesianOperator::CartesianOperator(unsigned width, unsigned height,
 
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames)
-  : BaseOperator(width, height, coils, frames), centered(true), mask(ZeroMask)
+  : BaseOperator(width, height,  0, coils, frames), centered(true), mask(ZeroMask)
 {
   Init();
 }
@@ -37,13 +37,27 @@ CartesianOperator::CartesianOperator(unsigned width, unsigned height,
 CartesianOperator::~CartesianOperator()
 {
   delete fftOp;
+ // cufftDestroy(fftplan3d);
 }
 
 void CartesianOperator::Init()
 {
+  std::cout <<"Init2d: height=" << height << " / width=" << width << " / coils = " << coils << std::endl;
+ 
   fftOp = new agile::FFT<CType>(height, width);
 }
 
+/*
+void CartesianOperator::Init3D()
+{
+  std::cout <<"Init3d: height=" << height << " / width=" << width << " / depth = " << depth << std::endl;
+  //TODO: define FFT3D in agile
+  //fftOp = new agile::FFT<CType>(height, width); //, depth);
+  cufftHandle fftplan3d;
+  cufftPlan3d(&fftplan3d, height, width, depth, CUFFT_C2C);
+}
+
+*/
 RType CartesianOperator::AdaptLambda(RType k, RType d)
 {
   RType lambda = 0.0;
@@ -136,12 +150,12 @@ void CartesianOperator::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
       else
         fftOp->Inverse(x_hat_gpu, z_gpu, 0, z_offset);
 
-      if (!mask.empty())
+/*      if (!mask.empty())
       {
         agile::lowlevel::multiplyElementwise(
             z_gpu.data() + z_offset, mask.data() + width * height * frame,
             z_gpu.data() + z_offset, width * height);
-      }
+      }*/
     }
   }
 }
@@ -154,3 +168,53 @@ CVector CartesianOperator::BackwardOperation(CVector &x_gpu, CVector &b1_gpu)
   return z_gpu;
 }
 
+
+/*
+void CartesianOperator::BackwardOperation3D(CVector &x_gpu, CVector &z_gpu,
+                                          CVector &b1_gpu)
+{
+  unsigned N = width * height * depth;
+  CVector x_hat_gpu(N);
+
+  // perform backward operation
+  for (unsigned coil = 0; coil < coils; coil++)
+  {
+    // apply b1 map
+    agile::lowlevel::multiplyElementwise(
+        x_gpu.data() , b1_gpu.data() + coil * width * height * depth,
+        x_hat_gpu.data(), N);
+
+    // TODO: implement centered inverse FFT with right scaling
+    unsigned offset = coil * N;
+    if (centered)
+    {
+      const CType*  in_data = x_hat_gpu.data();
+      CType* out_data = z_gpu.data() + offset;
+      cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+       //fftOp->CenteredInverse(x_hat_gpu, z_gpu, 0, z_offset);
+    }
+    else
+    {
+      const CType*  in_data = x_hat_gpu.data();
+      CType* out_data = z_gpu.data() + offset;
+      cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+      //fftOp->Inverse(x_hat_gpu, z_gpu, 0, z_offset);
+    }
+
+    if (!mask.empty())
+    {
+      agile::lowlevel::multiplyElementwise(
+      z_gpu.data() + offset, mask.data() ,
+      z_gpu.data() + offset, N);
+    }
+  }
+}
+
+CVector CartesianOperator::BackwardOperation3D(CVector &x_gpu, CVector &b1_gpu)
+{
+  unsigned int N = width * height * depth;
+  CVector z_gpu(N * coils);
+  this->BackwardOperation(x_gpu, z_gpu, b1_gpu);
+  return z_gpu;
+}
+*/

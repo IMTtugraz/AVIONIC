@@ -24,10 +24,10 @@
 class BaseOperator
 {
  public:
-  BaseOperator(unsigned width, unsigned height, unsigned coils,
+  BaseOperator(unsigned width, unsigned height, unsigned depth, unsigned coils,
                unsigned frames);
 
-  virtual ~BaseOperator();
+   virtual ~BaseOperator();
 
   /** \brief Forward operation: computation of coil-summation image based on
    *k-space data
@@ -69,6 +69,7 @@ class BaseOperator
    * */
   virtual CVector BackwardOperation(CVector &x_gpu, CVector &b1_gpu) = 0;
 
+
   /** \brief Initial lambda parameter computation. Depends on operator type
    * (Cartesian, Non-Cartesian).*/
   virtual RType AdaptLambda(RType k, RType d) = 0;
@@ -78,7 +79,9 @@ class BaseOperator
   unsigned int width;
   /** \brief Image dimension height */
   unsigned int height;
-  /** \brief Image dimension amount of coils */
+  /** \brief Image dimension depth (3d data) */
+  unsigned depth;
+  /** \brief Number of receiver coils */
   unsigned int coils;
   /** \brief Image dimension amount of frames */
   unsigned int frames;

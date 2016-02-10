@@ -676,7 +676,6 @@ std::string utils::GetFilename(const std::string &filename)
   return p.stem().string();
 }
 
-
 std::string utils::GetFileExtension(const std::string &filename)
 {
   boost::filesystem::path p(filename);
@@ -691,5 +690,21 @@ void utils::WriteH5File(const std::string &filename,
   ISMRMRD::NDArray<CType> dataArray(dims);
   std::copy(data.begin(), data.end(), dataArray.begin());
   d.appendNDArray(fieldname, dataArray);
+}
+
+void utils::GetSubVector(CVector &full, CVector &stride, unsigned index,
+                         unsigned strideLength)
+{
+  agile::lowlevel::get_content(full.data(), 1, strideLength, 0,
+                               index * strideLength, stride.data(), 1,
+                               strideLength);
+}
+
+void utils::SetSubVector(CVector &stride, CVector &full, unsigned index,
+                         unsigned strideLength)
+{
+  agile::lowlevel::get_content(stride.data(), 1, strideLength, 0, 0,
+                               full.data() + index * strideLength, 1,
+                               strideLength);
 }
 

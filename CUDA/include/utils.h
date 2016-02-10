@@ -594,6 +594,28 @@ std::string GetFileExtension(const std::string &filename);
  */
 void WriteH5File(const std::string &filename, const std::string &fieldname,
                  std::vector<size_t> dims, std::vector<CType> data);
+
+/**
+ * \brief Extract sub vector out of full vector
+ *
+ * \param[in] full Full vector
+ * \param[out] stride Extracted stride
+ * \param[in] index index of stride to extract
+ * \param[in] strideLength length of one stride
+ */
+void GetSubVector(CVector &full, CVector &stride, unsigned index,
+                  unsigned strideLength);
+
+/**
+ * \brief Set sub vector elements of full vector
+ *
+ * \param[in] stride Stride to insert/update into full vector
+ * \param[in,out] full Full vector
+ * \param[in] index index of stride to extract
+ * \param[in] strideLength length of one stride
+ */
+void SetSubVector(CVector &stride, CVector &full, unsigned index,
+                  unsigned strideLength);
 }
 
 #endif  // INCLUDE_UTILS_H_

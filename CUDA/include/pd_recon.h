@@ -36,6 +36,15 @@ typedef struct PDParams
   /** \brief Maximum number of iterations for main iteration. */
   unsigned maxIt;
 
+  /** \brief Step size for difference computation in x-spatial direction */
+  RType dx;
+  
+  /** \brief Step size for difference computation in y-spatial direction */
+  RType dy;
+
+  /** \brief Step size for difference computation in z-spatial direction */
+  RType dz;
+
   /** \brief Step size for difference computation in spatial direction */
   RType ds;
 
@@ -69,19 +78,27 @@ typedef void (*ResultExportCallback)(const char* outputDir, const char* filename
  *
  * \see TV
  * \see TGV2
+ * \see TGV2_3D 
  * \see ICTGV2
  * \see CoilConstruction
  */
 class PDRecon
 {
  public:
-  PDRecon(unsigned width, unsigned height, unsigned coils, unsigned frames,
+  PDRecon(unsigned width, unsigned height, unsigned depth, unsigned coils, unsigned frames,
           BaseOperator *mrOp);
+ 
   virtual ~PDRecon();
 
   /** \brief Redirects the adapt lambda step to the corresponding MR operator.
    */
   RType AdaptLambda(RType k, RType d);
+
+  /** \brief Test adjointness of forward and backward operation, i.e. 
+   * evaluates <K^H v, u> = <v, Ku> on random vectors u,v.
+   */
+  void TestAdjointness(CVector &b1);
+
 
   /** \brief Adapt stepsizes (sigma, tau) by checking the convergence condition
    * based on nKx and nx.
@@ -124,6 +141,8 @@ class PDRecon
   unsigned int width;
   /** \brief Image dimension height */
   unsigned int height;
+  /** \brief Image dimension depth */
+  unsigned int depth; 
   /** \brief Image dimension amount of coils */
   unsigned int coils;
   /** \brief Image dimension amount of frames */
@@ -131,6 +150,10 @@ class PDRecon
 
   /** \brief Pointer to MR operator used in forward/backward operations. */
   BaseOperator *mrOp;
+
+  /** \brief flag to distinguish 2d-time from 3d data. */
+  bool is3D;
+
 
   /** \brief Enable verbose console output. */
   bool verbose;

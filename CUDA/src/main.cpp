@@ -10,12 +10,14 @@
 #include <fstream>
 #include <iostream>
 #include <math.h>
+#include <algorithm> 
 #include "../include/raw_data_preparation.h"
 #include "../include/cartesian_coil_construction.h"
 #include "../include/noncartesian_coil_construction.h"
 #include "../include/ictgv2.h"
 #include "../include/tv.h"
 #include "../include/noncartesian_operator.h"
+#include "../include/cartesian_operator3d.h"
 #include "../include/options_parser.h"
 #include "../include/utils.h"
 
@@ -36,7 +38,7 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
                            BaseOperator *mrOp)
 {
   Dimension dims = options.dims;
-  assert(dims.width == 0 || dims.height == 0 || dims.coils == 0 ||
+  assert(dims.width == 0 || dims.height == 0 || dims.depth ==0 ||dims.coils == 0 ||
          dims.frames == 0);
 
   // adapt dims to correspond to image space dimensions
@@ -55,6 +57,13 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
     std::cout << "TGV2" << std::endl;
     *recon = new class TGV2(dims.width, dims.height, dims.coils, dims.frames,
                             options.tgv2Params, mrOp);
+    break;
+  }
+  case TGV2_3D:
+  {
+    std::cout << "TGV2_3D" << std::endl;
+    *recon = new class TGV2_3D(dims.width, dims.height, dims.depth, dims.coils,
+                            options.tgv2_3DParams, mrOp);
     break;
   }
   case ICTGV2:
@@ -163,6 +172,9 @@ void PerformRawDataPreparation(Dimension &dims, OptionsParser &op,
   ExportAdditionalResultsToMatlabBin(outputDir.c_str(), "kdata.bin", kdata);
 }
 
+// ==================================================================================================================
+// BEGIN: main
+// ==================================================================================================================
 int main(int argc, char *argv[])
 {
   OptionsParser op;
@@ -206,9 +218,13 @@ int main(int argc, char *argv[])
 
   BaseOperator *baseOp = NULL;
 
-  unsigned N = dims.width * dims.height;
+  unsigned N;// = dims.width * dims.height;
+  if (op.method==TGV2_3D)
+    N = dims.width * dims.height * dims.depth;
+  else 
+    N = dims.width * dims.height;
   CVector b1, u0;
-
+  std::cout << "N=" << N << std::endl;
   // init b1 and u0
   b1 = CVector(N * dims.coils);
   b1.assign(N * dims.coils, 1.0);
@@ -263,7 +279,7 @@ int main(int argc, char *argv[])
               << " sectorWidth:" << op.gpuNUFFTParams.sectorWidth
               << " OSF:" << op.gpuNUFFTParams.osf << std::endl;
 
-    // Create MR Operator
+    // Create 2d-t MR Operator
     baseOp = new NoncartesianOperator(
         dims.width, dims.height, dims.coils, dims.frames,
         spokesPerFrame * dims.frames, nFE, spokesPerFrame, mask, w, b1,
@@ -272,36 +288,81 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // Create MR Operator
-    baseOp = new CartesianOperator(dims.width, dims.height, dims.coils,
-                                   dims.frames, mask, false);
+    // Create 3d MR Operator
+    if (op.method==TGV2_3D)
+    {
+      baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
+                                   dims.coils, mask);
+    }
+    else
+    {
+      baseOp = new CartesianOperator(dims.width, dims.height, dims.coils,
+                                   dims.frames, mask);
+    }
   }
 
-  // Perform method type (TV, TGV2, ICTGV2) reconstruction
+  // ==================================================================================================================
+  // BEGIN: Perform method type (TV, TGV2, TGV_3D, ICTGV2) reconstruction
+  // ==================================================================================================================
   PDRecon *recon = NULL;
   GenerateReconOperator(&recon, op, baseOp);
 
-  // Initialize x0
-  CVector x(N * dims.frames);
-  for (unsigned frame = 0; frame < dims.frames; frame++)
+  // TODO: assign x properly!
+  CVector x(N);
+  agile::copy(u0, x);
+  if (op.method==TGV2_3D)
   {
-    utils::SetSubVector(u0, x, frame, N);
+   //x.push_back(u0);
+   CVector x(N);
+   agile::copy(u0, x);
+   std::cout << "Norm x: " << agile::norm1(x) << std::endl;
   }
-
+  else
+  {
+    // Initialize x0
+    CVector x(N * dims.frames);
+    for (unsigned frame = 0; frame < dims.frames; frame++)
+    {
+      utils::SetSubVector(u0, x, frame, N);
+    }
+  }
   std::cout << "Initialization time: " << timer.stop() / 1000 << "s"
             << std::endl;
+  std::cout << "norm u0 " << agile::norm1(u0) << "norm x "<< agile::norm1(x) << std::endl;
+  
   timer.start();
 
+  // run reconstruction
   recon->IterativeReconstruction(kdata, x, b1);
   std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
+ 
+  // ==================================================================================================================
+  // END: Perform method type (TV, TGV2, TGV_3D, ICTGV2) reconstruction
+  // ==================================================================================================================
 
-  std::vector<CType> xHost(N * dims.frames);
-  x.copyToHost(xHost);
 
-  std::cout << "writing output file to: " << op.outputFilename << std::endl;
-
+  // ==================================================================================================================
+  // BEGIN: Define output 
+  // ================================================================================================================== 
   std::string extension = utils::GetFileExtension(op.outputFilename);
-  
+  std::vector<CType> xHost;
+  if (op.method==TGV2_3D)
+  {
+    //std::vector<CType> xHost(N);
+    xHost.assign(N,0.0);
+    x.copyToHost(xHost);
+    std::cout << "writing output file to: " << op.outputFilename << std::endl;
+    agile::writeVectorFile(op.outputFilename.c_str(), xHost); 
+  }
+  else
+  {
+    //std::vector<CType> xHost(N * dims.frames);
+    xHost.assign(N,0.0);
+    x.copyToHost(xHost);
+    std::cout << "writing output file to: " << op.outputFilename << std::endl;
+    agile::writeVectorFile(op.outputFilename.c_str(), xHost);
+  }
+ 
   if (extension.compare(".h5") == 0)
   {
     // write reconstruction to h5 file
@@ -324,8 +385,8 @@ int main(int argc, char *argv[])
       std::vector<float> xoutphs;
       for( unsigned i = N*frame; i < N*(frame+1); i++ )
         {
-        xoutmag.push_back( (float)sqrt( pow(real(xHost[i]),2) + pow(imag(xHost[i]),2) ) ) ;
-        xoutphs.push_back( (float)atan2( real(xHost[i]),imag(xHost[i]) ) );
+        xoutmag.push_back( (float)std::sqrt( pow(real(xHost[i]),2) + pow(std::imag(xHost[i]),2) ) ) ;
+        xoutphs.push_back( (float)std::atan2( real(xHost[i]),std::imag(xHost[i]) ) );
         }
       
       ss << std::setw(3) << std::setfill('0') << frame;
@@ -347,11 +408,19 @@ int main(int argc, char *argv[])
     }
   }
   else
+  {
+     // write reconstruction to binary file
      agile::writeVectorFile(op.outputFilename.c_str(), xHost);
+  }
 
+  // export additional information (pdgap, ictgv-component)
   if (op.extradata)
     recon->ExportAdditionalResults(outputDir.c_str(),
                                    &ExportAdditionalResultsToMatlabBin);
+
+  // ==================================================================================================================
+  // END: Define output 
+  // ================================================================================================================== 
 
   delete recon;
   delete baseOp;

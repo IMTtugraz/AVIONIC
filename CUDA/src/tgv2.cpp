@@ -2,7 +2,7 @@
 
 TGV2::TGV2(unsigned width, unsigned height, unsigned coils, unsigned frames,
            BaseOperator *mrOp)
-  : PDRecon(width, height, coils, frames, mrOp)
+  : PDRecon(width, height, 0, coils, frames, mrOp)
 {
   InitParams();
   InitTempVectors();
@@ -10,7 +10,7 @@ TGV2::TGV2(unsigned width, unsigned height, unsigned coils, unsigned frames,
 
 TGV2::TGV2(unsigned width, unsigned height, unsigned coils, unsigned frames,
            TGV2Params &params, BaseOperator *mrOp)
-  : PDRecon(width, height, coils, frames, mrOp), params(params)
+  : PDRecon(width, height, 0, coils, frames, mrOp), params(params)
 {
   InitLambda(params.adaptLambdaParams.adaptLambda);
   InitTempVectors();
@@ -78,6 +78,12 @@ PDParams &TGV2::GetParams()
 {
   return params;
 }
+
+void TGV2::TestAdjointness(CVector &b1)
+{
+  //TODO: Implement
+} 
+
 
 void TGV2::AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
                          CVector &b1)
@@ -172,7 +178,7 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
                                    CVector &b1_gpu)
 {
   unsigned N = width * height * frames;
-
+ 
   ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
   Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
 

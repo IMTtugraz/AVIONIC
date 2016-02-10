@@ -29,16 +29,19 @@ typedef struct Dimension
   Dimension()
   {
   }
-  Dimension(unsigned width, unsigned height, unsigned readouts,
-            unsigned encodings, unsigned coils, unsigned frames)
-    : width(width), height(height), readouts(readouts), encodings(encodings),
+  Dimension(unsigned width, unsigned height, unsigned depth,
+	    unsigned readouts, unsigned encodings, unsigned encodings2,
+	    unsigned coils, unsigned frames)
+    : width(width), height(height), depth(depth), readouts(readouts), encodings(encodings), encodings2(encodings2),
       coils(coils), frames(frames)
   {
   }
   unsigned width;
   unsigned height;
+  unsigned depth;
   unsigned readouts;
   unsigned encodings;
+  unsigned encodings2;
   unsigned coils;
   unsigned frames;
 
