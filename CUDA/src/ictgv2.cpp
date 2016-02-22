@@ -37,6 +37,7 @@ void ICTGV2::InitLambda(bool adaptLambda)
 void ICTGV2::InitParams()
 {
   params.maxIt = 500;
+  params.stopPDGap = 0;
 
   params.sigma = 1.0 / 3.0;
   params.tau = 1.0 / 3.0;
@@ -274,6 +275,7 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
   Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
   ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.ds2, params.dt2);
   Log("Setting ds2: %.3e, dt2: %.3e\n", params.ds2, params.dt2);
+  Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
 
   // primal
   InitPrimalVectors(N);
@@ -287,10 +289,9 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
   z.assign(z.size(), 0.0);
 
   unsigned loopCnt = 0;
-
   // loop
   Log("Starting iteration\n");
-  while (loopCnt < params.maxIt)
+  while ( loopCnt < params.maxIt )
   {
     // dual ascent step
     // p, r
@@ -415,22 +416,21 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
         agile::subVector(ext4[cnt], x4[cnt], y4Temp[cnt]);
       }
       AdaptStepSize(div1Temp, div2Temp, div3Temp, y4Temp, b1_gpu);
-
-      if (verbose)
-      {
-        RType pdGap =
-            ComputePDGap(x1, x2, x3, x4, y1, y2, y3, y4, z, data_gpu, b1_gpu);
-        Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt,
-            pdGap / N);
-      }
     }
 
-    // compute PD Gap for export
-    if ((debug) && (loopCnt % debugstep == 0))
+    // compute PD Gap (export,verbose,stopping)
+    if ( (verbose && (loopCnt < 10 || (loopCnt % 50 == 0)) ) ||
+         ((debug) && (loopCnt % debugstep == 0)) || 
+         ((params.stopPDGap > 0) && (loopCnt % 20 == 0)) )
     {
       RType pdGap =
           ComputePDGap(x1, x2, x3, x4, y1, y2, y3, y4, z, data_gpu, b1_gpu);
-      pdGapExport.push_back((pdGap / N));
+      pdGap=pdGap/N;
+      pdGapExport.push_back( pdGap );
+      Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap);     
+ 
+      if ( pdGap < params.stopPDGap )
+        return;
     }
 
     loopCnt++;

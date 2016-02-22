@@ -36,6 +36,9 @@ typedef struct PDParams
   /** \brief Maximum number of iterations for main iteration. */
   unsigned maxIt;
 
+  /** \brief Minimum value for PD Gap for main iteration. */
+  float stopPDGap;
+
   /** \brief Step size for difference computation in spatial direction */
   RType ds;
 
