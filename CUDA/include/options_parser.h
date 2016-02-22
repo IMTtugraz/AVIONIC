@@ -106,6 +106,9 @@ class OptionsParser
   void AddAdaptLambdaConfigurationParameters();
 
   void SetMaxIt(int maxIt);
+  
+  void SetStopPDGap(float stopPDGap);
+
   void SetAdaptLambdaParams();
 };
 

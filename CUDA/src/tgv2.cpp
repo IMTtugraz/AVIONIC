@@ -37,6 +37,7 @@ void TGV2::InitLambda(bool adaptLambda)
 void TGV2::InitParams()
 {
   params.maxIt = 500;
+  params.stopPDGap = 0;
 
   params.sigma = 1.0 / 3.0;
   params.tau = 1.0 / 3.0;
@@ -175,6 +176,8 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 
   ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
   Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
+  Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
+
 
   std::vector<CVector> x2;
   for (unsigned cnt = 0; cnt < 3; cnt++)
@@ -212,10 +215,9 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
   z.assign(N * coils, 0.0);
 
   unsigned loopCnt = 0;
-
   // loop
   Log("Starting iteration\n");
-  while (loopCnt < params.maxIt)
+  while ( loopCnt < params.maxIt )
   {
     // dual ascent step
     // p
@@ -289,19 +291,22 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
         agile::subVector(ext2[cnt], x2[cnt], div2Temp[cnt]);
       }
       AdaptStepSize(div1Temp, div2Temp, b1_gpu);
-
-      if (verbose)
-      {
-        RType pdGap = ComputePDGap(x1, x2, y1, y2, z, data_gpu, b1_gpu);
-        Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap/N);
-      }  
     }
     
-    // compute PD Gap for export
-    if ((debug) && (loopCnt % debugstep == 0))
+    // compute PD Gap (export,verbose,stopping)
+    if ( (verbose && (loopCnt < 10 || (loopCnt % 50 == 0)) ) ||
+         ((debug) && (loopCnt % debugstep == 0)) || 
+         ((params.stopPDGap > 0) && (loopCnt % 20 == 0)) )
     {
-        RType pdGap = ComputePDGap(x1, x2, y1, y2, z, data_gpu, b1_gpu);
-        pdGapExport.push_back( pdGap/N );
+      RType pdGap =
+            ComputePDGap(x1, x2, y1, y2, z, data_gpu, b1_gpu);
+      pdGap=pdGap/N;
+      
+      if ( pdGap < params.stopPDGap )
+        return;
+
+      pdGapExport.push_back( pdGap );
+      Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap);     
     }
 
     loopCnt++;
