@@ -1,22 +1,31 @@
 # AVIONIC
-Accelerated Variational dynamic MRI reconstruction
+Accelerated Variational Dynamic MRI Reconstruction
 
-## Authors
-* Andreas Schwarzl (andreas.schwarzl@student.tugraz.at)
-* Martin Holler (martin.holler@uni-graz.at)
-* Matthias Schloegl (matthias.schloegl@tugraz.at)
+## Contributors
+* [Andreas Schwarzl](https://github.com/andyschwarzl) (Graz University of Technology)
+* [Martin Holler](http://www.uni-graz.at/~holler) (University of Graz) 
+* [Matthias Schloegl](http://www.tugraz.at/institute/imt/people/schloegl/) (Graz University of Technology)
+* [Kristian Bredies](http://www.uni-graz.at/~bredies) (University of Graz) 
 
 ## License
 This software is published under GNU GPLv3. In particular, all source code is provided "as is" without warranty of any kind, either expressed or implied. For details, see the attached LICENSE.
 
-## Reference
-[1] Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+## General Information
+AVIONIC (Accelerated Variational Dynamic MRI Reconstruction) is an open source software for GPU accelerated reconstruction of hightly undersampled
+dynamic Magnetic Resonance data, such as functional cardiac imaging oder dynamic contrast enhanced (DCE) MRI applications. It also includes a variational
+approach for the estimation of receiver-coil sensitivity profiles from the undersampled data. The current version is able to handle Cartesian and Non-Cartesian
+data if the trajectory information is provided.
 
-[2] Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+If you use this software please cite:
+
+* Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+
+* Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
 
 This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' (Mathematical Optimization and Applications in Biomedical Sciences)
 [MOBIS](http://math.uni-graz.at/mobis/)
 
+For questions and comments on the project please contact [Matthias Schloegl](mailto:matthias.schloegl@tugraz.at)
 ## Dependencies
 * CUDA 4.0
 * CMAKE 2.8
