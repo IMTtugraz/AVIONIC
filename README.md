@@ -1,23 +1,23 @@
-## AVIONIC
+# AVIONIC
 Accelerated Variational dynamic MRI reconstruction
 
-# Authors
+## Authors
 * Andreas Schwarzl (andreas.schwarzl@student.tugraz.at)
 * Martin Holler (martin.holler@uni-graz.at)
 * Matthias Schloegl (matthias.schloegl@tugraz.at)
 
-# License
+## License
 This software is published under GNU GPLv3. In particular, all source code is provided "as is" without warranty of any kind, either expressed or implied. For details, see the attached LICENSE.
 
-# Reference
-[1]  Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+## Reference
+[1] Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
 
 [2] Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
 
-This work is funded and supported by the Austrian Science Fund (FWF) in the context of project ”SFB F3209-19” (Mathematical Optimization and Applications in Biomedical Sciences)
-http://math.uni-graz.at/mobis/
-## Dependencies
+This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' (Mathematical Optimization and Applications in Biomedical Sciences)
+[MOBIS](http://math.uni-graz.at/mobis/)
 
+## Dependencies
 * CUDA 4.0
 * CMAKE 2.8
 * GCC
@@ -28,7 +28,6 @@ http://math.uni-graz.at/mobis/
 * [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for code docs)
 
 ## Setup
-
 0 Preparations 
 * Make sure that the CUDA environment is set up correctly 
 * Ensure that the DCMDICTPATH environment variable is set correctly, namely with <br>
@@ -97,15 +96,14 @@ avionic --help
 ```
 
 ## Example reconstruction
-
-a) Cartesian
+1 Cartesian
 ```
 wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_tpat8_sedona.h5
 mkdir ./recon_tpat/
 avionic -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
 ```
 
-a) Radial
+2 Radial
 ```
 wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_rad_24_sedona.h5
 mkdir ./recon_rad/
