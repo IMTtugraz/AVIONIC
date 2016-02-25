@@ -126,6 +126,7 @@ Acquisition IsmrmrdReader::GetAcquisition(unsigned index) const
   // Compute line Offset due to Partial Fourier in Phase direction
   acq.line = ismrmrdAcq.idx().kspace_encode_step_1;
   acq.phase = ismrmrdAcq.idx().phase;
+  acq.slice = ismrmrdAcq.idx().slice;
 
   //  std::cout << "Line/phase: " << acq.line << "," << acq.phase << std::endl;
 
