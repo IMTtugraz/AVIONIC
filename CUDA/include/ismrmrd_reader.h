@@ -30,6 +30,7 @@ class IsmrmrdReader : public RawDataReader
 
   bool IsNonUniformData() const;
   bool IsOversampledData() const;
+  bool IsPerfusionData() const;
 
  private:
   const std::string &filename;
