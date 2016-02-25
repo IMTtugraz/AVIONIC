@@ -417,7 +417,8 @@ void RawDataPreparation::PrepareRawData(std::vector<CType> &data,
   {
     Acquisition line = dataReader->GetAcquisition(acqCnt);
 
-    if (line.isNoiseMeasurement)
+    if (line.isNoiseMeasurement || (line.slice != op.slice) ||
+        ((line.phase + (line.line % op.tpat)) % op.tpat) != 0)
       continue;
 
     // Check consistency
