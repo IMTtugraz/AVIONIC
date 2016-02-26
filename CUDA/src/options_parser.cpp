@@ -80,14 +80,17 @@ OptionsParser::OptionsParser()
       "rawdata,r", po::bool_switch(&rawdata)->default_value(false),
       "flag to indicate raw data import")(
       "forceOSRemoval,f", po::bool_switch(&forceOSRemoval)->default_value(false),
-      "flag to force OS removal in raw data preparation");
+      "flag to force OS removal in raw data preparation")(
+      "tpat,t", po::value<int>(&tpat)->default_value(1),
+      "artifical TPAT interleave")(
+      "slice,z", po::value<unsigned int>(&slice)->default_value(0),
+      "slice to reconstruct");
 
-  conf.add_options()(
-      "method,m", po::value<Method>()->default_value(ICTGV2),
-          "reconstruction method (TV, TGV, ICTGV2)")(
-      "maxIt,i", po::value<int>()->default_value(500),
-          "Maximum number of iterations")(
-      "stopPDGap,j", po::value<float>()->default_value(0),
+    conf.add_options()("method,m", po::value<Method>()->default_value(ICTGV2),
+        "reconstruction method (TV, TGV, ICTGV2)")(
+        "maxIt,i", po::value<int>()->default_value(500),
+        "Maximum number of iterations")(
+          "stopPDGap,j", po::value<float>()->default_value(0),
           "use PDGap as stopping criterion");
 
   AddCoilConstrConfigurationParameters();

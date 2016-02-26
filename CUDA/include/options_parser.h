@@ -70,6 +70,8 @@ class OptionsParser
   Dimension dims;
   bool verbose;
   int debugstep;
+  unsigned int slice;
+  int tpat;
 
   std::string sensitivitiesFilename;
   std::string u0Filename;

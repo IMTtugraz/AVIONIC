@@ -18,6 +18,7 @@ typedef struct Acquisition
 
   unsigned line;
   unsigned phase;
+  unsigned slice;
 
   unsigned readouts;
   unsigned centerRow;
