@@ -18,7 +18,7 @@ void RawDataReader::GenerateRadialTrajectory(unsigned lineIdx,
 
   for (unsigned enc = 0; enc < nRO; enc++)
   {
-    RType rho = enc / (RType)nRO - (RType)0.5;
+    RType rho = enc / (RType)(nRO - 1.0) - (RType)0.5;
     RType phi = lineIdx / (RType)nEnc * 1.0 * M_PI;
     // x
     traj[enc] = rho * cos(phi);
