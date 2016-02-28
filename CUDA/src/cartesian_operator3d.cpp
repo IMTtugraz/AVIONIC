@@ -31,19 +31,17 @@ CartesianOperator3D::CartesianOperator3D(unsigned width, unsigned height,
   Init();
 }
 
+//TODO: put cufftplan initialization and destroy in Init and Destructor
 CartesianOperator3D::~CartesianOperator3D()
 {
-//  delete fftOp;
 //  cufftDestroy(fftplan3d);
 }
 
 void CartesianOperator3D::Init()
 {
-//  std::cout <<"Init3d: height=" << height << " / width=" << width << " / depth = " << depth << std::endl;
 //  cufftResult cres;
 //  cufftHandle fftplan3d;
 //  cres = cufftPlan3d(&fftplan3d, width, height, depth, CUFFT_C2C);
-//  std::cout << "cufftplan init: " << cres << std::endl;
 }
 
 RType CartesianOperator3D::AdaptLambda(RType k, RType d)
@@ -69,7 +67,6 @@ void CartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
   unsigned N = width * height * depth; 
   CVector z_gpu(N);
 
-  //TODO: put in init
   cufftResult cres;
   cufftHandle fftplan3d;
   cres = cufftPlan3d(&fftplan3d, depth, height, width, CUFFT_C2C);

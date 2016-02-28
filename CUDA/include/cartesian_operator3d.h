@@ -7,7 +7,7 @@
 #include "cufft.h"
 
 /**
- * \brief Cartesian MR operator utilizing simple masked FFT functionality
+ * \brief Cartesian MR operator for 3D dat utilizing simple masked FFT functionality
  *
  * The mask defines the sub-sampling pattern for each frame.
  *

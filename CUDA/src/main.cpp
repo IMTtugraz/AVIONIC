@@ -26,6 +26,7 @@ bool LoadGPUVectorFromFile(std::string &filename, TType &data)
 {
   std::cout << "trying to load data from: " << filename << std::endl;
   std::vector<typename TType::value_type> dataHost;
+
   if (!agile::readVectorFile(filename.c_str(), dataHost))
   {
     return false;
@@ -33,6 +34,12 @@ bool LoadGPUVectorFromFile(std::string &filename, TType &data)
   data.assignFromHost(dataHost.begin(), dataHost.end());
   return true;
 }
+
+// TODO: import cfl
+//bool LoadGPUVectorFromCFL(std::string &filename, TType &data)
+//{
+//return true;
+//} 
 
 void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
                            BaseOperator *mrOp)
@@ -211,9 +218,14 @@ int main(int argc, char *argv[])
     std::cout << "Binary files defined...." << std::endl;
     if (!LoadGPUVectorFromFile(op.kdataFilename, kdata))
       return -1;
-
+    else
+      std::cout << "Data File " << op.kdataFilename << " successfully loaded." << std::endl;
+ 
     if (!LoadGPUVectorFromFile(op.maskFilename, mask))
       return -1;
+    else
+      std::cout << "Mask File " << op.maskFilename  << " successfully loaded." << std::endl;
+    
   }
 
   BaseOperator *baseOp = NULL;
@@ -223,8 +235,8 @@ int main(int argc, char *argv[])
     N = dims.width * dims.height * dims.depth;
   else 
     N = dims.width * dims.height;
+
   CVector b1, u0;
-  std::cout << "N=" << N << std::endl;
   // init b1 and u0
   b1 = CVector(N * dims.coils);
   b1.assign(N * dims.coils, 1.0);
@@ -308,19 +320,19 @@ int main(int argc, char *argv[])
   GenerateReconOperator(&recon, op, baseOp);
 
   // TODO: assign x properly!
-  CVector x(N);
-  agile::copy(u0, x);
+  CVector x(0); // resize at runtime
+  //agile::copy(u0, x); 
   if (op.method==TGV2_3D)
   {
-   //x.push_back(u0);
-   CVector x(N);
-   agile::copy(u0, x);
-   std::cout << "Norm x: " << agile::norm1(x) << std::endl;
+    x.resize(N, 0.0);
+    agile::copy(u0, x);
+    std::cout << "Norm x: " << agile::norm1(x) << std::endl;
   }
   else
   {
     // Initialize x0
-    CVector x(N * dims.frames);
+    //CVector x(N * dims.frames);
+    x.resize(N * dims.frames, 0.0);
     for (unsigned frame = 0; frame < dims.frames; frame++)
     {
       utils::SetSubVector(u0, x, frame, N);
@@ -334,8 +346,7 @@ int main(int argc, char *argv[])
 
   // run reconstruction
   recon->IterativeReconstruction(kdata, x, b1);
-  std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
- 
+  std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl; 
   // ==================================================================================================================
   // END: Perform method type (TV, TGV2, TGV_3D, ICTGV2) reconstruction
   // ==================================================================================================================
