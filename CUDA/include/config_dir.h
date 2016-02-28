@@ -4,6 +4,6 @@
 
 /* WARNING: Automatically generated file. Do not modify! */
 
-#define CONFIG_DIR "/home/dieheart/workspace/AVIONIC/CUDA/config/"
+#define CONFIG_DIR "/home/dieheart/workspace/AVIONIC_TGV3D/CUDA/config/"
 
 #endif  // INCLUDE_CONFIG_DIR_H_

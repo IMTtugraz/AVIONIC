@@ -5,18 +5,20 @@
 #include <complex>
 #include "agile/gpu_vector.hpp"
 
-/** \file Type defs used in ICTGV reconstruction. */
+/** \file Type defs used in AVIONIC reconstruction. */
 
 /** \brief Floating point type definition */
 typedef float DType;
 
 /** \brief Complex type definition */
 typedef std::complex<DType> CType;
+
 /** \brief Complex gpu vector type definition */
 typedef agile::GPUVector<CType> CVector;
 
 /** \brief Real type definition */
 typedef DType RType;
+
 /** \brief Real gpu vector type definition */
 typedef agile::GPUVector<RType> RVector;
 

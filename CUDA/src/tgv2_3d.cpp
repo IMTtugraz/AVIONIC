@@ -20,15 +20,16 @@ TGV2_3D::~TGV2_3D()
 
 void TGV2_3D::TestAdjointness(CVector &b1)
 {
+/*
   // TODO: implement random numbers
   unsigned N = width * height * depth;
-/*
+//
   std::vector<CVector> urand_h,vrand_h;
   for(int i=0; i<N; ++i) 
     urand_h.push_back( rand()%10 );  // u
   for(int i=0; i<N*coils; ++i) 
     vrand_h.push_back( rand()%10 ); // v
-*/
+///
   CVector urand(N), vrand(N);
   urand.assign(N, 1.0);
   vrand.assign(N*coils,1.0);
@@ -43,6 +44,7 @@ void TGV2_3D::TestAdjointness(CVector &b1)
   CType temp4=agile::getScalarProduct(urand,temp1); 
  
   std::cout << "test adjointness:" << (temp3-temp4) << std::endl; 
+*/
 }
 
 void TGV2_3D::InitLambda(bool adaptLambda)
@@ -66,8 +68,7 @@ void TGV2_3D::InitParams()
   params.sigma = 1.0 / 3.0;
   params.tau = 1.0 / 3.0;
 
-  //params.sigmaTauRatio = 1.0;
-  //params.timeSpaceWeight = 5.0;
+  params.sigmaTauRatio = 1.0;
 
   params.dx = 1.0;
   params.dy = 1.0;
@@ -191,6 +192,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 
   unsigned N = width * height * depth;
 
+  //TODO: compute for dx,dy,dz
   //ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
   //Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
 
@@ -254,7 +256,6 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
       agile::subVector(y1Temp[cnt], ext2[cnt], y1Temp[cnt]);
       agile::addScaledVector(y1[cnt], params.sigma, y1Temp[cnt], y1[cnt]);
     }
-
     // q
     utils::SymmetricGradient(ext2, y2Temp, width, height, params.dx, params.dy,
                              params.dz);
@@ -262,10 +263,10 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     {
       agile::addScaledVector(y2[cnt], params.sigma, y2Temp[cnt], y2[cnt]);
     }
-
+   
     mrOp->BackwardOperation(ext1, zTemp, b1_gpu);
     agile::addScaledVector(z, params.sigma, zTemp, z);
-
+   
     // Proximal mapping
     utils::ProximalMap3(y1, (DType)1.0 / params.alpha1);
     utils::ProximalMap6(y2, (DType)1.0 / params.alpha0);
@@ -280,7 +281,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
                       params.dz);
     agile::subVector(imgTemp, div1Temp, div1Temp);
     agile::subScaledVector(x1, params.tau, div1Temp, ext1);
-
+   
     // ext2
     utils::SymmetricDivergence(y2, div2Temp, width, height, depth, params.dx,
                                params.dy, params.dz);
@@ -312,6 +313,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     if (loopCnt < 10 || (loopCnt % 50 == 0))
     {
       CVector temp1(N);
+   
       agile::subVector(ext1, x1, temp1);
       std::vector<CVector> temp2;
       for (unsigned cnt = 0; cnt < 3; cnt++)
@@ -323,7 +325,8 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 
       if (verbose)
       {
-        RType pdGap = ComputePDGap(x1, x2, y1, y2, z, data_gpu, b1_gpu);
+        RType pdGap = 1.0;
+//        RType pdGap = ComputePDGap(x1, x2, y1, y2, z, data_gpu, b1_gpu);
         Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap/N);
       }  
     }
