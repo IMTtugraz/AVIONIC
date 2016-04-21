@@ -103,18 +103,30 @@ and open the file `doc/html/index.html`.
 ```
 avionic --help
 ```
+## DEMO Reconstruction
 
-## Example reconstruction
+Example for ICTGV reconstruction with VISTA pattern and subsampling factor 12
+'
+1 CINE cardiac imaging
+```
+./demo_avionic_cine.sh --functype=ICTGV2 --pattern=vista --red=12
+```
+2 Cardiac perfusion imaging
+```
+./demo_avionic_cine.sh --functype=ICTGV2 --pattern=vista --red=12
+```
+
+## Example reconstruction for ISMRMRD data
 1 Cartesian
 ```
-wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_tpat8_sedona.h5
+wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_tpat8_sedona.h5
 mkdir ./recon_tpat/
 avionic -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
 ```
 
 2 Radial
 ```
-wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_rad_24_sedona.h5
+wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_rad_24_sedona.h5
 mkdir ./recon_rad/
 avionic -r cine_rad_24_sedona.h5 -a -n ./recon_rad/recon.dcm
 
