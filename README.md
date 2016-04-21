@@ -113,7 +113,7 @@ Example for ICTGV reconstruction with VISTA pattern and subsampling factor 12
 ```
 2 Cardiac perfusion imaging
 ```
-./demo_avionic_cine.sh --functype=ICTGV2 --pattern=vista --red=12
+./demo_avionic_perf.sh --functype=ICTGV2 --pattern=vista --red=12
 ```
 
 ## Example reconstruction for ISMRMRD data
