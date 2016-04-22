@@ -49,7 +49,8 @@ echo "==========================================================================
 
 DATAFILE="cardiac_cine_data.bin"
 PATTERNFILE="cardiac_cine_${PATTERN}_acc${R}.bin"
-RESULTSFILE="ictgv_recon_cardiac_cine_${PATTERN}_acc${R}.bin"
+RESULTSFILE="${FUNCTYPE}_recon_cardiac_cine_${PATTERN}_acc${R}"
+echo "$RESULTSFILE"
 
 echo "==================================================================================="
 echo "Downloading Data"
@@ -68,30 +69,34 @@ echo "==========================================================================
 echo "Run Reconstruction"
 echo "==================================================================================="
 mkdir ./results_cine/
+nENC=168;nRO=416;nFRAMES=25;nCOILS=30;
+nX=$nENC;nY=$nRO;
 
-if [ ! -f ./results_cine/$RESULTSFILE ]
+
+if [ ! -f ./results_cine/${RESULTSFILE}.bin ]
 then
 
   recon_cmd="./CUDA/bin/avionic -i 500 -m ICTGV2 -e -a \
-   	    -p ./CUDA/config/default_cine.cfg -d 168:416:168:416:30:25 \
+   	    -p ./CUDA/config/default_cine.cfg -d $nX:$nY:$nENC:$nRO:$nCOILS:$nFRAMES \
  			  $DATAFILE $PATTERNFILE \
-			  ./results_cine/$RESULTSFILE"
+			  ./results_cine/${RESULTSFILE}.bin"
 	echo "------------------------------------------------------------------------"
   echo "$recon_cmd"
   echo "------------------------------------------------------------------------"
   eval $recon_cmd
-	mv ./x3_component ./results_cine/${RESULTSFILE}_comp.bin
-	mv ./PDGap ./results_cine/${RESULTSFILE}_pdgap.bin
-	mv ./b1_reconstructed.bin ./results_cine/${RESULTSFILE}_b1.bin
-	mv ./u0_reconstructed.bin ./results_cine/${RESULTSFILE}_initguess.bin
+	mv ./results_cine/x3_component ./results_cine/${RESULTSFILE}_comp.bin
+	mv ./results_cine/PDGap ./results_cine/${RESULTSFILE}_pdgap.bin
+	mv ./results_cine/b1_reconstructed.bin ./results_cine/${RESULTSFILE}_b1.bin
+	mv ./results_cine/u0_reconstructed.bin ./results_cine/${RESULTSFILE}_initguess.bin
 fi
 
 echo "==================================================================================="
 echo "Display Results"
 echo "==================================================================================="
-./python/show_avionic.py -f "./results_cine/${RESULTSFILE}.bin" -nx $nENC -ny $nRO -nframes $nFRAMES
 
-if [ -f ./results_perfusion/${RESULTSFILE}_comp.bin ]
+./python/show_avionic.py -f "./results_cine/${RESULTSFILE}.bin" -nx $nRO -ny $nENC -nframes $nFRAMES
+
+if [ -f ./results_cine/${RESULTSFILE}_comp.bin ]
 then
- ./python/show_avionic.py -f "./results_cine/${RESULTSFILE}_comp.bin" -nx $nENC -ny $nRO -nframes $nFRAMES
+ ./python/show_avionic.py -f "./results_cine/${RESULTSFILE}_comp.bin" -nx $nRO -ny $nENC -nframes $nFRAMES
 fi

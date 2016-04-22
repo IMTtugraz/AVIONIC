@@ -35,7 +35,7 @@ def show_recon(dataFile):
         fig = plt.figure()
         ims = []
         for i in range(0,imgDim[2]):
-            im = plt.imshow(abs(img[:,:,i]))#, cmap=cm.gray)
+            im = plt.imshow(abs(img[:,:,i]),cmap='Greys_r')
             ims.append([im])
 
         ani = animation.ArtistAnimation(fig, ims, interval=100, blit=True,
