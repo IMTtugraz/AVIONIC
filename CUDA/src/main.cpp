@@ -202,6 +202,19 @@ int main(int argc, char *argv[])
 
     if (!LoadGPUVectorFromFile(op.maskFilename, mask))
       return -1;
+  
+    // perform forward operation
+    for (unsigned frame = 0; frame < dims.frames; frame++)
+    {
+      unsigned offset = dims.width * dims.height * dims.coils * frame;
+      for (unsigned coil = 0; coil < dims.coils; coil++)
+        {
+        unsigned int x_offset = offset + coil * dims.width * dims.height;
+        agile::lowlevel::multiplyElementwise(
+            kdata.data() + x_offset, mask.data() + dims.width * dims.height * frame,
+            kdata.data() + x_offset, dims.width * dims.height);
+        }
+    }
   }
 
   BaseOperator *baseOp = NULL;
@@ -220,7 +233,7 @@ int main(int argc, char *argv[])
   {
     std::cout << "B1 File " << op.sensitivitiesFilename
               << " successfully loaded." << std::endl;
-
+    
     if (LoadGPUVectorFromFile(op.u0Filename, u0))
     {
       std::cout << " initial solution (u0) file " << op.u0Filename
@@ -287,7 +300,7 @@ int main(int argc, char *argv[])
   {
     utils::SetSubVector(u0, x, frame, N);
   }
-
+  
   std::cout << "Initialization time: " << timer.stop() / 1000 << "s"
             << std::endl;
   timer.start();
