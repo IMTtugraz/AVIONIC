@@ -44,9 +44,10 @@ void RawDataPreparation::InitOSRemoval(unsigned width)
 {
   fftOp = new agile::FFT<CType>(1, 2 * width);
   croppedFftOp = new agile::FFT<CType>(1, width);
-  fullLine = std::vector<CType>(2 * width);
+  fullLine = std::vector<CType>(2 * width, 0);
   fullLineGPU = CVector(2 * width);
   croppedLineGPU = CVector(width);
+  croppedLineGPU.assign(width, 0);
 }
 
 void RawDataPreparation::RemoveOS(std::vector<CType> &oversampledLine,
@@ -61,11 +62,11 @@ void RawDataPreparation::RemoveOS(std::vector<CType> &oversampledLine,
   fftOp->Inverse(fullLineGPU, fullLineGPU);
 
   // first quater
-  agile::lowlevel::get_content(fullLineGPU.data(), 1, width, 0, 0,
+  agile::lowlevel::get_content(fullLineGPU.data(), 1, width / 2.0, 0, 0,
                                croppedLineGPU.data(), 1, width / 2.0);
   // last quater
   agile::lowlevel::get_content(
-      fullLineGPU.data(), 1, width, 0, (3 * 2 * width) / 4,
+      fullLineGPU.data(), 1, width / 2.0, 0, (3.0 * 2.0 * width) / 4.0,
       croppedLineGPU.data() + (unsigned)(width / 2.0), 1, width / 2.0);
 
   // cropped forward FFT
@@ -417,7 +418,8 @@ void RawDataPreparation::PrepareRawData(std::vector<CType> &data,
   {
     Acquisition line = dataReader->GetAcquisition(acqCnt);
 
-    if (line.isNoiseMeasurement)
+    if (line.isNoiseMeasurement || (line.slice != op.slice) ||
+        ((line.phase + (line.line % op.tpat)) % op.tpat) != 0)
       continue;
 
     // Check consistency
@@ -497,7 +499,11 @@ void RawDataPreparation::PrepareRawData(std::vector<CType> &data,
     if (line.line >= lineStart && line.line < lineEnd)
     {
       maskPhaseOffset = line.phase * nRO * nEnc;
-      lineOffset = (rowOffset + line.line - lineStart) * nRO;
+      if (lineStart > 0)
+        lineOffset = (line.line - lineStart) * nRO;
+      else
+        lineOffset = (rowOffset + line.line - lineStart) * nRO;
+
       phaseOffset = line.phase * nRO * nEnc * dims.coils;
 
       // do not pass colOffset as last parameter since in case of OS removal

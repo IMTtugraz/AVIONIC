@@ -73,6 +73,8 @@ class OptionsParser
   Dimension dims;
   bool verbose;
   int debugstep;
+  unsigned int slice;
+  int tpat;
 
   std::string sensitivitiesFilename;
   std::string u0Filename;
@@ -111,6 +113,9 @@ class OptionsParser
   void AddAdaptLambdaConfigurationParameters();
 
   void SetMaxIt(int maxIt);
+  
+  void SetStopPDGap(float stopPDGap);
+
   void SetAdaptLambdaParams();
 };
 

@@ -45,7 +45,10 @@ typedef struct PDParams
   /** \brief Step size for difference computation in z-spatial direction */
   RType dz;
 
-  /** \brief Step size for difference computation in spatial direction */
+  /** \brief Minimum value for PD Gap for main iteration. */
+  float stopPDGap;
+
+/** \brief Step size for difference computation in spatial direction */
   RType ds;
 
   /** \brief Step size for difference computation in temporal direction */

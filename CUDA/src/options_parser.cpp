@@ -74,7 +74,7 @@ OptionsParser::OptionsParser()
       po::bool_switch(&adaptLambdaParams.adaptLambda)->default_value(false),
       "flag to enable dynamic adaptation of lambda depending on [adaptlambda] "
       "configuration "
-      "paramters (k,d)")("dens,w", po::value<std::string>(&densityFilename),
+      "parameters (k,d)")("dens,w", po::value<std::string>(&densityFilename),
                          "Density compensation data.")(
       "params,p", po::value<std::string>(&parameterFile)->default_value(
                       std::string(boost::lexical_cast<std::string>(CONFIG_DIR) +
@@ -86,12 +86,18 @@ OptionsParser::OptionsParser()
       "rawdata,r", po::bool_switch(&rawdata)->default_value(false),
       "flag to indicate raw data import")(
       "forceOSRemoval,f", po::bool_switch(&forceOSRemoval)->default_value(false),
-      "flag to force OS removal in raw data preparation");
+      "flag to force OS removal in raw data preparation")(
+      "tpat,t", po::value<int>(&tpat)->default_value(1),
+      "artifical TPAT interleave")(
+      "slice,z", po::value<unsigned int>(&slice)->default_value(0),
+      "slice to reconstruct");
 
   conf.add_options()("method,m", po::value<Method>()->default_value(ICTGV2),
                      "reconstruction method (TV, TGV, TGV_3D, ICTGV2)")(
       "maxIt,i", po::value<int>()->default_value(500),
-      "Maximum number of iterations");
+      "Maximum number of iterations")(
+          "stopPDGap,j", po::value<float>()->default_value(0),
+          "use PDGap as stopping criterion");
 
   AddCoilConstrConfigurationParameters();
   AddTVConfigurationParameters();
@@ -240,6 +246,14 @@ void OptionsParser::SetMaxIt(int maxIt)
   ictgv2Params.maxIt = maxIt;
 }
 
+void OptionsParser::SetStopPDGap(float stopPDGap)
+{
+  tvParams.stopPDGap = stopPDGap;
+  tgv2Params.stopPDGap = stopPDGap;
+  tgv2_3DParams.stopPDGap = stopPDGap;
+  ictgv2Params.stopPDGap = stopPDGap;
+}
+
 void OptionsParser::SetAdaptLambdaParams()
 {
   tvParams.adaptLambdaParams = adaptLambdaParams;
@@ -298,6 +312,8 @@ bool OptionsParser::ParseOptions(int argc, char *argv[])
 
   method = vm["method"].as<Method>();
   SetMaxIt(vm["maxIt"].as<int>());
+  SetStopPDGap(vm["stopPDGap"].as<float>());
+
 
   return true;
 }
