@@ -4,6 +4,7 @@
 
 #include "./base_operator.h"
 #include "agile/calc/fft.hpp"
+#include "cufft.h"
 
 /**
  * \brief Cartesian MR operator utilizing simple masked FFT functionality
@@ -22,6 +23,7 @@ class CartesianOperator : public BaseOperator
                     unsigned frames, RVector &mask);
   CartesianOperator(unsigned width, unsigned height, unsigned coils,
                     unsigned frames, bool centered);
+
   virtual ~CartesianOperator();
 
   /** \brief Cartesian forward operation: computation of coil-summation
@@ -45,7 +47,7 @@ class CartesianOperator : public BaseOperator
    * \return coil summation image, dims: width * height * frames
    * */
   CVector ForwardOperation(CVector &x_gpu, CVector &b1_gpu);
-
+ 
   /** \brief Cartesian Backward operation: computation of coil-wise k-space
    *based on image
    *data
@@ -68,6 +70,8 @@ class CartesianOperator : public BaseOperator
    * */
   CVector BackwardOperation(CVector &x_gpu, CVector &b1_gpu);
 
+  /** \brief Computation of regulariation parameter \lambda according to linear
+   * dependence on acceleration factor. */ 
   RType AdaptLambda(RType k, RType d);
 
   /** \brief Determines whether the centered (shifted) or non-centered FFT has
@@ -82,12 +86,13 @@ class CartesianOperator : public BaseOperator
    */
   RVector &mask;
 
-  /** \brief FFT Operator used in Forward/Backward operations. */
+ /** \brief FFT Operator used in Forward/Backward operations. */
   agile::FFT<CType> *fftOp;
 
  private:
   /** \brief Initialize FFT operator */
   void Init();
+
 };
 
 #endif  // INCLUDE_CARTESIAN_OPERATOR_H_

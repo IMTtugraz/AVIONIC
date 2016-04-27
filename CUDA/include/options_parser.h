@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include "../include/ictgv2.h"
+#include "../include/tgv2_3d.h"
 #include "../include/tv.h"
 #include "../include/coil_construction.h"
 #include "agile/agile.hpp"
@@ -23,6 +24,7 @@ typedef enum Method
 {
   TV,
   TGV2,
+  TGV2_3D,
   ICTGV2
 } Method;
 
@@ -60,6 +62,7 @@ class OptionsParser
   TVParams tvParams;
   TGV2Params tgv2Params;
   ICTGV2Params ictgv2Params;
+  TGV2_3DParams tgv2_3DParams;
   CoilConstructionParams coilParams;
 
   std::string kdataFilename;
@@ -101,6 +104,8 @@ class OptionsParser
 
   void AddTGV2ConfigurationParameters();
 
+  void AddTGV2_3DConfigurationParameters();
+
   void AddICTGV2ConfigurationParameters();
 
   void AddGPUNUFFTConfigurationParameters();
@@ -117,6 +122,9 @@ class OptionsParser
 std::istream &operator>>(std::istream &in, Method &method);
 
 void validate(boost::any &v, const std::vector<std::string> &values,
+              Dimension *target, int c);
+
+void validate3D(boost::any &v, const std::vector<std::string> &values,
               Dimension *target, int c);
 
 #endif  // INCLUDE_OPTIONS_PARSER_H_

@@ -1,10 +1,11 @@
 #include "../include/pd_recon.h"
 #include "../include/cartesian_operator.h"
+#include "../include/cartesian_operator3d.h"
 #include <stdexcept>
 
-PDRecon::PDRecon(unsigned width, unsigned height, unsigned coils,
+PDRecon::PDRecon(unsigned width, unsigned height, unsigned depth, unsigned coils,
                  unsigned frames, BaseOperator *mrOp)
-  : width(width), height(height), coils(coils), frames(frames), mrOp(mrOp),
+  : width(width), height(height), depth(depth), coils(coils), frames(frames), mrOp(mrOp),
     debug(false), debugstep(1)
 {
 }
@@ -61,6 +62,10 @@ void PDRecon::AdaptStepSize(RType nKx, RType nx)
 RType PDRecon::AdaptLambda(RType k, RType d)
 {
   return mrOp->AdaptLambda(k, d);
+}
+
+void PDRecon::TestAdjointness(CVector &b1)
+{
 }
 
 void PDRecon::ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &ds,

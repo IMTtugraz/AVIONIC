@@ -77,7 +77,7 @@ if [ ! -f ./results_cine/${RESULTSFILE}.bin ]
 then
 
   recon_cmd="./CUDA/bin/avionic -i 500 -m ICTGV2 -e -a \
-   	    -p ./CUDA/config/default_cine.cfg -d $nX:$nY:$nENC:$nRO:$nCOILS:$nFRAMES \
+   	    -p ./CUDA/config/default_cine.cfg -d $nX:$nY:0:$nENC:$nRO:0:$nCOILS:$nFRAMES \
  			  $DATAFILE $PATTERNFILE \
 			  ./results_cine/${RESULTSFILE}.bin"
 	echo "------------------------------------------------------------------------"

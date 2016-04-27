@@ -50,7 +50,7 @@ class NoncartesianOperator : public BaseOperator
    * */
   CVector ForwardOperation(CVector &x_gpu, CVector &b1_gpu);
 
-  /** \brief Non-Cartesian Backward operation: computation of coil-wise k-space
+    /** \brief Non-Cartesian Backward operation: computation of coil-wise k-space
    *based on image data
    *
    * \param x_gpu image data, dims: width * height * frames
@@ -69,7 +69,7 @@ class NoncartesianOperator : public BaseOperator
    *frames
    * */
   CVector BackwardOperation(CVector &x_gpu, CVector &b1_gpu);
-
+ 
   RType AdaptLambda(RType k, RType d);
 
   /** \brief Array of gpuNUFFT operators.

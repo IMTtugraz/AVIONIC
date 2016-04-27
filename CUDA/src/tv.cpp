@@ -4,7 +4,7 @@
 
 TV::TV(unsigned width, unsigned height, unsigned coils, unsigned frames,
        BaseOperator *mrOp)
-  : PDRecon(width, height, coils, frames, mrOp)
+  : PDRecon(width, height, 0, coils, frames, mrOp)
 {
   InitParams();
   InitTempVectors();
@@ -12,7 +12,7 @@ TV::TV(unsigned width, unsigned height, unsigned coils, unsigned frames,
 
 TV::TV(unsigned width, unsigned height, unsigned coils, unsigned frames,
        TVParams &params, BaseOperator *mrOp)
-  : PDRecon(width, height, coils, frames, mrOp), params(params)
+  : PDRecon(width, height, 0, coils, frames, mrOp), params(params)
 {
   InitLambda(params.adaptLambdaParams.adaptLambda);
   InitTempVectors();
@@ -67,6 +67,12 @@ PDParams &TV::GetParams()
 {
   return params;
 }
+
+void TV::TestAdjointness(CVector &b1)
+{
+  //TODO: Implement
+} 
+
 
 void TV::AdaptStepSize(CVector &extDiff, CVector &b1)
 {

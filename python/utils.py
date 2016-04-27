@@ -45,8 +45,8 @@ def show_recon(dataFile):
         imgplot = plt.imshow(abs(img));#, cmap=cm.gray)
 
     elif len(imgDim) == 1:
-         imgplot = plot(abs(img))
-
+         imgplot = plt.semilogy(abs(img),'-ro')
+         plt.grid(b=True, which='minor', color='r', linestyle='--')
     plt.show()
 
 

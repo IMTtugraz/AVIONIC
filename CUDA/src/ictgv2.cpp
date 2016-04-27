@@ -2,7 +2,7 @@
 
 ICTGV2::ICTGV2(unsigned width, unsigned height, unsigned coils, unsigned frames,
                BaseOperator *mrOp)
-  : PDRecon(width, height, coils, frames, mrOp)
+  : PDRecon(width, height, 0, coils, frames, mrOp)
 {
   InitParams();
   InitTempVectors();
@@ -10,7 +10,7 @@ ICTGV2::ICTGV2(unsigned width, unsigned height, unsigned coils, unsigned frames,
 
 ICTGV2::ICTGV2(unsigned width, unsigned height, unsigned coils, unsigned frames,
                ICTGV2Params &params, BaseOperator *mrOp)
-  : PDRecon(width, height, coils, frames, mrOp), params(params)
+  : PDRecon(width, height, 0, coils, frames, mrOp), params(params)
 {
   InitLambda(params.adaptLambdaParams.adaptLambda);
   InitTempVectors();
@@ -86,6 +86,11 @@ PDParams &ICTGV2::GetParams()
 {
   return params;
 }
+
+void ICTGV2::TestAdjointness(CVector &b1)
+{
+  //TODO: Implement
+} 
 
 void ICTGV2::AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
                            CVector &extDiff3, std::vector<CVector> &extDiff4,

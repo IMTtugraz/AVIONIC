@@ -39,6 +39,12 @@ class ICTGV2 : public PDRecon
   /** \brief Return reference to the ICTGV2Params.*/
   PDParams &GetParams();
 
+  /** \brief Test adjointness of forward and backward operation, i.e. 
+   * evaluates <K^H v, u> = <v, Ku> on random vectors u,v.
+   */
+  void TestAdjointness(CVector &b1);
+
+
   /** \brief Adapt stepsizes (sigma, tau) by checking the convergence condition
    * based on nKx and nx.
    */
