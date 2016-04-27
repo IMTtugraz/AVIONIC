@@ -76,7 +76,7 @@ if [ ! -f ./results_perfusion/${RESULTSFILE}.bin ]
 then
 
   recon_cmd="./CUDA/bin/avionic -i 500 -m $FUNCTYPE -e -a \
-   	    -p ./CUDA/config/default_perf.cfg -d $nX:$nY:$nRO:$nENC:$nCOILS:$nFRAMES \
+   	    -p ./CUDA/config/default_perf.cfg -d $nX:$nY:0:$nRO:$nENC:0:$nCOILS:$nFRAMES \
  			  $DATAFILE $PATTERNFILE \
 			  ./results_perfusion/${RESULTSFILE}.bin"
 	echo "------------------------------------------------------------------------"

@@ -7,7 +7,7 @@ NoncartesianOperator::NoncartesianOperator(unsigned width, unsigned height,
                                            RVector &kTraj, RVector &dens,
                                            CVector &sens, DType kernelWidth,
                                            DType sectorWidth, DType osf)
-  : BaseOperator(width, height, coils, frames), kTraj(kTraj), dens(dens),
+  : BaseOperator(width, height, 0, coils, frames), kTraj(kTraj), dens(dens),
     sens(sens), nSpokes(nSpokes), nFE(nFE), spokesPerFrame(spokesPerFrame),
     kernelWidth(kernelWidth), sectorWidth(sectorWidth), osf(osf)
 {
@@ -20,7 +20,7 @@ NoncartesianOperator::NoncartesianOperator(
     unsigned width, unsigned height, unsigned coils, unsigned frames,
     unsigned nSpokes, unsigned nFE, unsigned spokesPerFrame, RVector &kTraj,
     RVector &dens, DType kernelWidth, DType sectorWidth, DType osf)
-  : BaseOperator(width, height, coils, frames), kTraj(kTraj), dens(dens),
+  : BaseOperator(width, height, 0, coils, frames), kTraj(kTraj), dens(dens),
     sens(EmptySens), nSpokes(nSpokes), nFE(nFE), spokesPerFrame(spokesPerFrame),
     kernelWidth(kernelWidth), sectorWidth(sectorWidth), osf(osf)
 {
@@ -160,4 +160,5 @@ CVector NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &b1_gpu)
   ForwardOperation(x_gpu, sum_gpu, b1_gpu);
   return sum_gpu;
 }
+
 

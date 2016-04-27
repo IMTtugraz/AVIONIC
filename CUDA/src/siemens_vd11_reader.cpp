@@ -15,9 +15,10 @@ SiemensVD11Reader::~SiemensVD11Reader()
 {
 }
 
+//TODO: check for 3d dimensions (right now just rows2)
 void SiemensVD11Reader::InitRawDataDimensions()
 {
-  unsigned int rows, cols, coils;
+  unsigned int rows, cols, rows2, coils;
   unsigned short int acq, sli, par, echo, pha, rep, set, seg;
 
   rawData.getRawdata_info(rows, cols, coils, acq, sli, par, echo, pha, rep, set,
@@ -34,7 +35,7 @@ void SiemensVD11Reader::InitRawDataDimensions()
             << std::endl;
 
   // TODO check Phase value and fix it
-  rawDataDims = Dimension(cols, rows, cols, rows, coils, pha + 1);
+  rawDataDims = Dimension(cols, rows, rows2, cols, rows, rows2, coils, pha + 1);
 }
 
 void SiemensVD11Reader::LoadRawData()

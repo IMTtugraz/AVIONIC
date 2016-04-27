@@ -3,7 +3,7 @@
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames,
                                      RVector &mask, bool centered)
-  : BaseOperator(width, height, coils, frames), centered(centered), mask(mask)
+  : BaseOperator(width, height, 0, coils, frames), centered(centered), mask(mask)
 {
   Init();
 }
@@ -11,7 +11,7 @@ CartesianOperator::CartesianOperator(unsigned width, unsigned height,
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames,
                                      RVector &mask)
-  : BaseOperator(width, height, coils, frames), centered(true), mask(mask)
+  : BaseOperator(width, height, 0, coils, frames), centered(true), mask(mask)
 {
   Init();
 }
@@ -21,7 +21,7 @@ RVector ZeroMask(0);
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames,
                                      bool centered)
-  : BaseOperator(width, height, coils, frames), centered(centered),
+  : BaseOperator(width, height,  0, coils, frames), centered(centered),
     mask(ZeroMask)
 {
   Init();
@@ -29,7 +29,7 @@ CartesianOperator::CartesianOperator(unsigned width, unsigned height,
 
 CartesianOperator::CartesianOperator(unsigned width, unsigned height,
                                      unsigned coils, unsigned frames)
-  : BaseOperator(width, height, coils, frames), centered(true), mask(ZeroMask)
+  : BaseOperator(width, height,  0, coils, frames), centered(true), mask(ZeroMask)
 {
   Init();
 }
@@ -153,4 +153,5 @@ CVector CartesianOperator::BackwardOperation(CVector &x_gpu, CVector &b1_gpu)
   this->BackwardOperation(x_gpu, z_gpu, b1_gpu);
   return z_gpu;
 }
+
 

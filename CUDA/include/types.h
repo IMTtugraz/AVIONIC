@@ -5,18 +5,20 @@
 #include <complex>
 #include "agile/gpu_vector.hpp"
 
-/** \file Type defs used in ICTGV reconstruction. */
+/** \file Type defs used in AVIONIC reconstruction. */
 
 /** \brief Floating point type definition */
 typedef float DType;
 
 /** \brief Complex type definition */
 typedef std::complex<DType> CType;
+
 /** \brief Complex gpu vector type definition */
 typedef agile::GPUVector<CType> CVector;
 
 /** \brief Real type definition */
 typedef DType RType;
+
 /** \brief Real gpu vector type definition */
 typedef agile::GPUVector<RType> RVector;
 
@@ -29,16 +31,19 @@ typedef struct Dimension
   Dimension()
   {
   }
-  Dimension(unsigned width, unsigned height, unsigned readouts,
-            unsigned encodings, unsigned coils, unsigned frames)
-    : width(width), height(height), readouts(readouts), encodings(encodings),
+  Dimension(unsigned width, unsigned height, unsigned depth,
+	    unsigned readouts, unsigned encodings, unsigned encodings2,
+	    unsigned coils, unsigned frames)
+    : width(width), height(height), depth(depth), readouts(readouts), encodings(encodings), encodings2(encodings2),
       coils(coils), frames(frames)
   {
   }
   unsigned width;
   unsigned height;
+  unsigned depth;
   unsigned readouts;
   unsigned encodings;
+  unsigned encodings2;
   unsigned coils;
   unsigned frames;
 

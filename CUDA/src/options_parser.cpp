@@ -16,6 +16,10 @@ std::istream &operator>>(std::istream &in, Method &method)
   {
     method = TGV2;
   }
+  else if (token == "TGV2_3D")
+  {
+    method = TGV2_3D;
+  }
   else if (token == "ICTGV2")
   {
     method = ICTGV2;
@@ -30,7 +34,7 @@ std::istream &operator>>(std::istream &in, Method &method)
 void validate(boost::any &v, const std::vector<std::string> &values,
               Dimension *target, int c)
 {
-  static boost::regex r("(\\d.*):(\\d.*):(\\d.*):(\\d.*):(\\d.*):(\\d.*)");
+  static boost::regex r("(\\d.*):(\\d.*):(\\d.*):(\\d.*):(\\d.*):(\\d.*):(\\d.*):(\\d.*)");
   // po::validators::check_first_occurence(v);
   const std::string &s = po::validators::get_single_string(values);
   boost::smatch match;
@@ -39,11 +43,13 @@ void validate(boost::any &v, const std::vector<std::string> &values,
   {
     unsigned width = boost::lexical_cast<unsigned>(match[1]);
     unsigned height = boost::lexical_cast<unsigned>(match[2]);
-    unsigned readouts = boost::lexical_cast<unsigned>(match[3]);
-    unsigned encodings = boost::lexical_cast<unsigned>(match[4]);
-    unsigned coils = boost::lexical_cast<unsigned>(match[5]);
-    unsigned frames = boost::lexical_cast<unsigned>(match[6]);
-    v = Dimension(width, height, readouts, encodings, coils, frames);
+    unsigned depth = boost::lexical_cast<unsigned>(match[3]);
+    unsigned readouts = boost::lexical_cast<unsigned>(match[4]);
+    unsigned encodings = boost::lexical_cast<unsigned>(match[5]);
+    unsigned encodings2 = boost::lexical_cast<unsigned>(match[6]);
+    unsigned coils = boost::lexical_cast<unsigned>(match[7]);
+    unsigned frames = boost::lexical_cast<unsigned>(match[8]);
+    v = Dimension(width, height, depth, readouts, encodings, encodings2, coils, frames);
   }
   else
   {
@@ -58,7 +64,7 @@ OptionsParser::OptionsParser()
       "verbose,v", po::bool_switch(&verbose)->default_value(false),
       "verbose console output")("dims,d", po::value<Dimension>(),
                                 "Data dimensions conforming to "
-                                "width:height:readouts:encodings:"
+                                "width:height:depth:readouts:encodings_y:encodings_z:"
                                 "coils:frames")(
       "nonuniform,n", po::bool_switch(&nonuniform)->default_value(false),
       "flag to indicate nonuniform data")(
@@ -86,16 +92,17 @@ OptionsParser::OptionsParser()
       "slice,z", po::value<unsigned int>(&slice)->default_value(0),
       "slice to reconstruct");
 
-    conf.add_options()("method,m", po::value<Method>()->default_value(ICTGV2),
-        "reconstruction method (TV, TGV, ICTGV2)")(
-        "maxIt,i", po::value<int>()->default_value(500),
-        "Maximum number of iterations")(
+  conf.add_options()("method,m", po::value<Method>()->default_value(ICTGV2),
+                     "reconstruction method (TV, TGV, TGV_3D, ICTGV2)")(
+      "maxIt,i", po::value<int>()->default_value(500),
+      "Maximum number of iterations")(
           "stopPDGap,j", po::value<float>()->default_value(0),
           "use PDGap as stopping criterion");
 
   AddCoilConstrConfigurationParameters();
   AddTVConfigurationParameters();
   AddTGV2ConfigurationParameters();
+  AddTGV2_3DConfigurationParameters();
   AddICTGV2ConfigurationParameters();
   AddGPUNUFFTConfigurationParameters();
   AddAdaptLambdaConfigurationParameters();
@@ -121,7 +128,7 @@ OptionsParser::~OptionsParser()
 
 void OptionsParser::Usage()
 {
-  std::cout << "Usage: avionic [options] [-d w:h:nRO:nEnc:c:f "
+  std::cout << "Usage: avionic [options] [-d w:h:d:nRO:nEnc1:nEnc2:c:f "
                "<kdata> <mask/traj> | -r <rawdata>] <output>\n";
   std::cout << "\nAVIONIC: Accelerated Variational dynamic MRI Reconstruction \n\n";
   std::cout << "Required:\n";
@@ -179,6 +186,20 @@ void OptionsParser::AddTGV2ConfigurationParameters()
       "tgv2.alpha1", po::value<RType>(&tgv2Params.alpha1));
 }
 
+void OptionsParser::AddTGV2_3DConfigurationParameters()
+{
+  conf.add_options()("tgv2_3D.dx", po::value<RType>(&tgv2_3DParams.dx))(
+      "tgv2_3D.dy", po::value<RType>(&tgv2_3DParams.dy))(
+      "tgv2_3D.dz", po::value<RType>(&tgv2_3DParams.dz))(
+      "tgv2_3D.sigma", po::value<RType>(&tgv2_3DParams.sigma))(
+      "tgv2_3D.tau", po::value<RType>(&tgv2_3DParams.tau))(
+      "tgv2_3D.sigmaTauRatio", po::value<RType>(&tgv2_3DParams.sigmaTauRatio))(
+      "tgv2_3D.lambda", po::value<RType>(&tgv2_3DParams.lambda))(
+      "tgv2_3D.alpha0", po::value<RType>(&tgv2_3DParams.alpha0))(
+      "tgv2_3D.alpha1", po::value<RType>(&tgv2_3DParams.alpha1));
+}
+
+
 void OptionsParser::AddICTGV2ConfigurationParameters()
 {
   conf.add_options()("ictgv2.ds", po::value<RType>(&ictgv2Params.ds))(
@@ -221,6 +242,7 @@ void OptionsParser::SetMaxIt(int maxIt)
 {
   tvParams.maxIt = maxIt;
   tgv2Params.maxIt = maxIt;
+  tgv2_3DParams.maxIt = maxIt;
   ictgv2Params.maxIt = maxIt;
 }
 
@@ -228,6 +250,7 @@ void OptionsParser::SetStopPDGap(float stopPDGap)
 {
   tvParams.stopPDGap = stopPDGap;
   tgv2Params.stopPDGap = stopPDGap;
+  tgv2_3DParams.stopPDGap = stopPDGap;
   ictgv2Params.stopPDGap = stopPDGap;
 }
 
@@ -235,6 +258,7 @@ void OptionsParser::SetAdaptLambdaParams()
 {
   tvParams.adaptLambdaParams = adaptLambdaParams;
   tgv2Params.adaptLambdaParams = adaptLambdaParams;
+  tgv2_3DParams.adaptLambdaParams = adaptLambdaParams;
   ictgv2Params.adaptLambdaParams = adaptLambdaParams;
 }
 
