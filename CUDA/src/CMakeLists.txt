@@ -4,10 +4,10 @@ add_library(ICTGV ${LIB_SOURCES})
 cuda_add_cufft_to_target(ICTGV)
 
 #main program
-add_executable(avionic_tgv3d main.cpp)
-target_link_libraries(avionic_tgv3d ICTGV ${Boost_LIBRARIES})
+add_executable(avionic main.cpp)
+target_link_libraries(avionic ICTGV ${Boost_LIBRARIES})
 
-set_target_properties(avionic_tgv3d
+set_target_properties(avionic
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"

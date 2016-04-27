@@ -1,23 +1,32 @@
-## AVIONIC
-Accelerated Variational dynamic MRI reconstruction
+# AVIONIC
+Accelerated Variational Dynamic MRI Reconstruction
 
-# Authors
-* Andreas Schwarzl (andreas.schwarzl@student.tugraz.at)
-* Martin Holler (martin.holler@uni-graz.at)
-* Matthias Schloegl (matthias.schloegl@tugraz.at)
+## Contributors
+* [Andreas Schwarzl](https://github.com/andyschwarzl) (Graz University of Technology)
+* [Martin Holler](http://www.uni-graz.at/~holler) (University of Graz) 
+* [Matthias Schloegl](http://www.tugraz.at/institute/imt/people/schloegl/) (Graz University of Technology)
+* [Kristian Bredies](http://www.uni-graz.at/~bredies) (University of Graz) 
 
-# License
+## License
 This software is published under GNU GPLv3. In particular, all source code is provided "as is" without warranty of any kind, either expressed or implied. For details, see the attached LICENSE.
 
-# Reference
-[1]  Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+## General Information
+AVIONIC (Accelerated Variational Dynamic MRI Reconstruction) is an open source software for GPU accelerated reconstruction of hightly undersampled
+dynamic Magnetic Resonance data, such as functional cardiac imaging oder dynamic contrast enhanced (DCE) MRI applications. It also includes a variational
+approach for the estimation of receiver-coil sensitivity profiles from the undersampled data. The current version is able to handle Cartesian and Non-Cartesian
+data if the trajectory information is provided.
 
-[2] Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+If you use this software please cite:
 
-This work is funded and supported by the Austrian Science Fund (FWF) in the context of project ”SFB F3209-19” (Mathematical Optimization and Applications in Biomedical Sciences)
-http://math.uni-graz.at/mobis/
+* Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+
+* Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+
+This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' (Mathematical Optimization and Applications in Biomedical Sciences)
+[MOBIS](http://math.uni-graz.at/mobis/)
+
+For questions and comments on the project please contact [Matthias Schloegl](mailto:matthias.schloegl@tugraz.at)
 ## Dependencies
-
 * CUDA 4.0
 * CMAKE 2.8
 * GCC
@@ -28,7 +37,6 @@ http://math.uni-graz.at/mobis/
 * [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for code docs)
 
 ## Setup
-
 0 Preparations 
 * Make sure that the CUDA environment is set up correctly 
 * Ensure that the DCMDICTPATH environment variable is set correctly, namely with <br>
@@ -95,19 +103,31 @@ and open the file `doc/html/index.html`.
 ```
 avionic --help
 ```
+## DEMO Reconstruction
 
-## Example reconstruction
+Example for ICTGV reconstruction with VISTA pattern and subsampling factor 12
 
-a) Cartesian
+1 CINE cardiac imaging
 ```
-wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_tpat8_sedona.h5
+./demo_avionic_cine.sh --functype=ICTGV2 --pattern=vista --red=12
+```
+
+2 Cardiac perfusion imaging
+```
+./demo_avionic_perf.sh --functype=ICTGV2 --pattern=vista --red=12
+```
+
+## Example reconstruction for ISMRMRD data
+1 Cartesian
+```
+wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_tpat8_sedona.h5
 mkdir ./recon_tpat/
 avionic -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
 ```
 
-a) Radial
+2 Radial
 ```
-wget ftp://ftp.tugraz.at/outgoing/avionic_testfiles/cine_rad_24_sedona.h5
+wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_rad_24_sedona.h5
 mkdir ./recon_rad/
 avionic -r cine_rad_24_sedona.h5 -a -n ./recon_rad/recon.dcm
 

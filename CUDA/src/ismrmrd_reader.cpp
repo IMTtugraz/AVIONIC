@@ -42,6 +42,12 @@ void IsmrmrdReader::InitRawDataDimensions()
 
   rawDataDims.frames = hdr->encoding[0].encodingLimits.phase().maximum + 1;
 
+  if (this->IsPerfusionData())
+  {
+    rawDataDims.frames =
+        hdr->encoding[0].encodingLimits.repetition().maximum + 1;
+  }
+
   // TODO receiverChannel information might not accord with real number of
   // used channels
   if (hdr->acquisitionSystemInformation.is_present() &&
@@ -112,7 +118,14 @@ bool IsmrmrdReader::IsOversampledData() const
   // done depending on acquisition cols compared to recon width!
   return !this->IsNonUniformData() &&
          (hdr->encoding[0].encodedSpace.matrixSize.x >
-              hdr->encoding[0].reconSpace.matrixSize.x);
+          hdr->encoding[0].reconSpace.matrixSize.x);
+}
+
+bool IsmrmrdReader::IsPerfusionData() const
+{
+  // TODO not necessarily
+  return hdr->encoding[0].encodingLimits.phase().maximum <= 1 &&
+         hdr->encoding[0].encodingLimits.repetition().maximum > 1;
 }
 
 Acquisition IsmrmrdReader::GetAcquisition(unsigned index) const
@@ -125,7 +138,10 @@ Acquisition IsmrmrdReader::GetAcquisition(unsigned index) const
   // TODO check index range
   // Compute line Offset due to Partial Fourier in Phase direction
   acq.line = ismrmrdAcq.idx().kspace_encode_step_1;
-  acq.phase = ismrmrdAcq.idx().phase;
+  acq.phase = this->IsPerfusionData() ? ismrmrdAcq.idx().repetition
+                                      : ismrmrdAcq.idx().phase;
+
+  acq.slice = ismrmrdAcq.idx().slice;
 
   //  std::cout << "Line/phase: " << acq.line << "," << acq.phase << std::endl;
 

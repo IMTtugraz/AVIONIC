@@ -41,8 +41,6 @@ CartesianOperator::~CartesianOperator()
 
 void CartesianOperator::Init()
 {
-  std::cout <<"Init2d: height=" << height << " / width=" << width << " / coils = " << coils << std::endl;
- 
   fftOp = new agile::FFT<CType>(height, width);
 }
 

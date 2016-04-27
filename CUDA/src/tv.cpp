@@ -39,6 +39,7 @@ void TV::InitLambda(bool adaptLambda)
 void TV::InitParams()
 {
   params.maxIt = 500;
+  params.stopPDGap = 0;
 
   params.sigma = 1.0 / 3.0;
   params.tau = 1.0 / 3.0;
@@ -99,6 +100,7 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
 
   ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
   Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
+  Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
 
   // primal
   CVector x_old(N);
@@ -126,10 +128,10 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
 
   CVector norm(N);
 
-  unsigned loopCnt = 0;
-  // loop
-  Log("Starting iteration\n");
-  while (loopCnt < params.maxIt)
+  unsigned loopCnt = 0; 
+  // loop 
+  Log("Starting iteration\n"); 
+  while ( loopCnt < params.maxIt )
   {
     // dual ascent step
     utils::Gradient(ext, tempGradient, width, height, params.ds, params.ds,
@@ -169,19 +171,22 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
       CVector temp(N);
       agile::subVector(ext, x, temp);
       AdaptStepSize(temp, b1_gpu);
-
-      if (verbose)
-      {
-        RType pdGap = ComputePDGap(x, y, z, data_gpu, b1_gpu);
-        Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap/N);
-      }
     }
     
-    // compute PD Gap for export
-    if ((debug) && (loopCnt % debugstep == 0))
+    // compute PD Gap (export,verbose,stopping)
+    if ( (verbose && (loopCnt < 10 || (loopCnt % 50 == 0)) ) ||
+         ((debug) && (loopCnt % debugstep == 0)) || 
+         ((params.stopPDGap > 0) && (loopCnt % 20 == 0)) )
     {
-        RType pdGap = ComputePDGap(x, y, z, data_gpu, b1_gpu);
-        pdGapExport.push_back( pdGap/N );
+      RType pdGap =
+            ComputePDGap(x, y, z, data_gpu, b1_gpu);
+      pdGap=pdGap/N;
+ 
+      pdGapExport.push_back( pdGap );
+      Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap);     
+      
+      if ( pdGap < params.stopPDGap )
+        return;
     }
 
     loopCnt++;

@@ -103,7 +103,6 @@ void ExportAdditionalResultsToMatlabBin(const char *outputDir,
   result.copyToHost(resHost);
   std::string outputPath = boost::lexical_cast<std::string>(outputDir) + "/" +
                            boost::lexical_cast<std::string>(filename);
-  //std::cout << "writing output file to: " << outputPath << std::endl;
   agile::writeVectorFile(outputPath.c_str(), resHost);
 }
 
@@ -226,11 +225,37 @@ int main(int argc, char *argv[])
     else
       std::cout << "Mask File " << op.maskFilename  << " successfully loaded." << std::endl;
     
+  
+    // set values in data-array to zero according to mask
+    if (op.method==TGV2_3D)
+    {
+      for (unsigned coil = 0; coil < dims.coils; coil++)
+      {
+        unsigned offset = dims.width * dims.height * dims.depth * coil;
+         agile::lowlevel::multiplyElementwise(
+              kdata.data() + offset, mask.data(),
+              kdata.data() + offset, dims.width * dims.height * dims.depth);
+      }   
+    }
+    else
+    {
+      for (unsigned frame = 0; frame < dims.frames; frame++)
+      {
+        unsigned offset = dims.width * dims.height * dims.coils * frame;
+        for (unsigned coil = 0; coil < dims.coils; coil++)
+          {
+          unsigned int x_offset = offset + coil * dims.width * dims.height;
+          agile::lowlevel::multiplyElementwise(
+              kdata.data() + x_offset, mask.data() + dims.width * dims.height * frame,
+              kdata.data() + x_offset, dims.width * dims.height);
+          }
+      }
+    }
   }
 
   BaseOperator *baseOp = NULL;
 
-  unsigned N;// = dims.width * dims.height;
+  unsigned N;
   if (op.method==TGV2_3D)
     N = dims.width * dims.height * dims.depth;
   else 
@@ -248,7 +273,7 @@ int main(int argc, char *argv[])
   {
     std::cout << "B1 File " << op.sensitivitiesFilename
               << " successfully loaded." << std::endl;
-
+    
     if (LoadGPUVectorFromFile(op.u0Filename, u0))
     {
       std::cout << " initial solution (u0) file " << op.u0Filename
@@ -261,6 +286,14 @@ int main(int argc, char *argv[])
   }
   else
   {
+    
+    if (op.method==TGV2_3D)
+    {
+       std::cerr << "Coil Construction for 3D reconstruction not implemented! Provide b1 seperately!"
+                << std::endl;
+       return -1;
+    }
+    
     std::cout << "Performing Coil Construction!" << std::endl;
     CVector u(N * dims.coils);
     u.assign(N * dims.coils, 0.0);
@@ -304,90 +337,75 @@ int main(int argc, char *argv[])
     if (op.method==TGV2_3D)
     {
       baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
-                                   dims.coils, mask);
+                                   dims.coils, mask, false);
     }
     else
     {
       baseOp = new CartesianOperator(dims.width, dims.height, dims.coils,
-                                   dims.frames, mask);
+                                   dims.frames, mask, false);
     }
   }
 
   // ==================================================================================================================
-  // BEGIN: Perform method type (TV, TGV2, TGV_3D, ICTGV2) reconstruction
+  // BEGIN: Perform iterative (TV, TGV2, TGV_3D, ICTGV2) reconstruction
   // ==================================================================================================================
   PDRecon *recon = NULL;
   GenerateReconOperator(&recon, op, baseOp);
 
-  // TODO: assign x properly!
   CVector x(0); // resize at runtime
-  //agile::copy(u0, x); 
   if (op.method==TGV2_3D)
   {
     x.resize(N, 0.0);
     agile::copy(u0, x);
-    std::cout << "Norm x: " << agile::norm1(x) << std::endl;
   }
   else
   {
-    // Initialize x0
-    //CVector x(N * dims.frames);
     x.resize(N * dims.frames, 0.0);
     for (unsigned frame = 0; frame < dims.frames; frame++)
     {
       utils::SetSubVector(u0, x, frame, N);
     }
   }
+ 
   std::cout << "Initialization time: " << timer.stop() / 1000 << "s"
             << std::endl;
-  std::cout << "norm u0 " << agile::norm1(u0) << "norm x "<< agile::norm1(x) << std::endl;
-  
+
   timer.start();
 
   // run reconstruction
   recon->IterativeReconstruction(kdata, x, b1);
   std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl; 
   // ==================================================================================================================
-  // END: Perform method type (TV, TGV2, TGV_3D, ICTGV2) reconstruction
+  // END: Perform iterative (TV, TGV2, TGV_3D, ICTGV2) reconstruction
   // ==================================================================================================================
 
 
   // ==================================================================================================================
   // BEGIN: Define output 
   // ================================================================================================================== 
-  std::string extension = utils::GetFileExtension(op.outputFilename);
-  std::vector<CType> xHost;
-  if (op.method==TGV2_3D)
-  {
-    //std::vector<CType> xHost(N);
-    xHost.assign(N,0.0);
+    std::string extension = utils::GetFileExtension(op.outputFilename);
+    std::vector<CType> xHost;
     x.copyToHost(xHost);
+ 
+  // write reconstruction to bin file 
+  if (extension.compare(".bin") == 0)
+  {
     std::cout << "writing output file to: " << op.outputFilename << std::endl;
     agile::writeVectorFile(op.outputFilename.c_str(), xHost); 
   }
-  else
+  // write reconstruction to h5 file 
+  else if (extension.compare(".h5") == 0)
   {
-    //std::vector<CType> xHost(N * dims.frames);
-    xHost.assign(N,0.0);
-    x.copyToHost(xHost);
-    std::cout << "writing output file to: " << op.outputFilename << std::endl;
-    agile::writeVectorFile(op.outputFilename.c_str(), xHost);
-  }
- 
-  if (extension.compare(".h5") == 0)
-  {
-    // write reconstruction to h5 file
     std::vector<size_t> dimVec;
     dimVec.push_back(dims.width);
     dimVec.push_back(dims.height);
     dimVec.push_back(dims.frames);
     utils::WriteH5File(op.outputFilename, "recon", dimVec, xHost);
-
   }
+  // write reconstruction to dicom file 
   else if (extension.compare(".dcm") == 0)   
   {
-    // write reconstruction to dicom file
-    agile::DICOM dicomfile;
+   agile::DICOM dicomfile;
     std::string filenamewoe = utils::GetFilename(op.outputFilename);
     std::ostringstream ss;	 
     for (unsigned frame = 0; frame < dims.frames; frame++) 
@@ -428,7 +446,6 @@ int main(int argc, char *argv[])
   if (op.extradata)
     recon->ExportAdditionalResults(outputDir.c_str(),
                                    &ExportAdditionalResultsToMatlabBin);
-
   // ==================================================================================================================
   // END: Define output 
   // ================================================================================================================== 
