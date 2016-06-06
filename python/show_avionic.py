@@ -26,7 +26,4 @@ if not os.path.isfile(args.filename):
     raise SystemExit
 
 print("processing ",args.filename)
-
-recon=ut.readbin_vector(args.filename, args.nx,args.ny,args.nframes);
-ut.show_recon(recon)
- 
+ut.show_all(args.filename, args.nx,args.ny,args.nframes) 
