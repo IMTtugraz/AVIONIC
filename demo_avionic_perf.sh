@@ -95,7 +95,3 @@ echo "==========================================================================
 
 ./python/show_avionic.py -f "./results_perfusion/${RESULTSFILE}.bin" -nx $nENC -ny $nRO -nframes $nFRAMES
 
-if [ -f ./results_perfusion/${RESULTSFILE}_comp.bin ]
-then
- ./python/show_avionic.py -f "./results_perfusion/${RESULTSFILE}_comp.bin" -nx $nENC -ny $nRO -nframes $nFRAMES
-fi
