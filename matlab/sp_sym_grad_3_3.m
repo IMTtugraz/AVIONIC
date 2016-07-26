@@ -1,0 +1,9 @@
+function [y] = sp_sym_grad_3_3(x,Dx,Dy,Dz,ds,dt)
+
+[n,m,t,k] = size(x);
+N = n*m*t;
+
+y = reshape( [ 	  (Dx*reshape(x(:,:,:,1),N,1))/ds ; (Dy*reshape(x(:,:,:,2),N,1))/ds ; (Dz*reshape(x(:,:,:,3),N,1))/dt 	;...
+		  (Dy*reshape(x(:,:,:,1),N,1)     +  Dx*reshape(x(:,:,:,2),N,1) )/(2*ds) 				;...
+		( (Dz*reshape(x(:,:,:,1),N,1))/dt + (Dx*reshape(x(:,:,:,3),N,1))/ds )/2 				;...
+		( (Dz*reshape(x(:,:,:,2),N,1))/dt + (Dy*reshape(x(:,:,:,3),N,1))/ds )/2 ] , n,m,t,6 );

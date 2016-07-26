@@ -24,6 +24,7 @@ def readbin_vector(filename,nx,ny,nframes):
   if iscomplex[0]:
      dt=np.vectorize(complex)(dt[0:size[0]],dt[size[0]:])  
   ncoils=dt.size/(nx*ny*nframes);
+  #print "dim1=",str((ncoils*nx*ny*nframes))," | dim2=",str(size[0])
   if ((ncoils*nx*ny*nframes)==size[0]):
     if ncoils > 1:
       dt=np.transpose(dt.reshape((ncoils,nx,ny,1)),(1,2,0,3));
@@ -47,7 +48,7 @@ def show_all(Filename,nx,ny,nframes):
     ax6 = fig.add_subplot(236)
  
     # Reconstruction
-    recon = readbin_vector(Filename, nx,ny,nframes);
+    recon = readbin_vector(Filename, nx,ny,nframes); 
     ims = []
     imsp = []
     imgDim = list(recon.shape)
