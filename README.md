@@ -18,7 +18,8 @@ data if the trajectory information is provided.
 
 If you use this software please cite:
 * Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf.
-  [Infimal convolution of total generalized variation functionals for dynamic MRI](http://imsc.uni-graz.at/mobis/publications/SFB-Report-2016-002.pdf). Magnetic Resonance in Medicine 2016 (in press); doi: 10.1002/mrm.26352 
+  [Infimal convolution of total generalized variation functionals for dynamic MRI](http://imsc.uni-graz.at/mobis/publications/SFB-Report-2016-002.pdf).
+  _Magnetic Resonance in Medicine_, 2016 (in press); doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) 
 ```
 @article {MRM:MRM26352,
 author = {Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf},
@@ -35,8 +36,8 @@ year = {2016},
 
 * Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
 
-This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' (Mathematical Optimization and Applications in Biomedical Sciences)
-[MOBIS](http://math.uni-graz.at/mobis/)
+This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' [Mathematical Optimization and Applications in Biomedical Sciences](http://imsc.uni-graz.at/mobis/)
+
 
 For questions and comments on the project please contact [Matthias Schloegl](mailto:matthias.schloegl@tugraz.at)
 ## Dependencies
