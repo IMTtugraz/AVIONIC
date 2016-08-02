@@ -17,8 +17,18 @@ approach for the estimation of receiver-coil sensitivity profiles from the under
 data if the trajectory information is provided.
 
 If you use this software please cite:
-
-* Matthias Schloegl, Martin Holler, Kristian Bredies, Karl Kunisch, and Rudolf Stollberger. ICTGV Regularization for Highly Accelerated Dynamic MRI. Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+* Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf. [Infimal convolution of total generalized variation functionals for dynamic MRI]{http://imsc.uni-graz.at/mobis/publications/SFB-Report-2016-002.pdf}. Magnetic Resonance in Medicine 2016 (in press); doi: 10.1002/mrm.26352 
+```
+author = {Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf},
+title = {Infimal convolution of total generalized variation functionals for dynamic MRI},
+journal = {Magnetic Resonance in Medicine},
+issn = {1522-2594},
+url = {http://dx.doi.org/10.1002/mrm.26352},
+doi = {10.1002/mrm.26352},
+pages = {n/a--n/a},
+year = {2016},
+}
+```
 
 * Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
 
