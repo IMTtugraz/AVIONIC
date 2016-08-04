@@ -20,26 +20,49 @@
 #include "../include/cartesian_operator3d.h"
 #include "../include/options_parser.h"
 #include "../include/utils.h"
-
 template <typename TType>
+
 bool LoadGPUVectorFromFile(std::string &filename, TType &data)
 {
-  std::cout << "trying to load data from: " << filename << std::endl;
-  std::vector<typename TType::value_type> dataHost;
+  std::string extension = utils::GetFileExtension(filename);
+  std::cout << "trying to load data from: " << filename << " | Extension: " << extension << std::endl;
 
-  if (!agile::readVectorFile(filename.c_str(), dataHost))
+  std::vector<typename TType::value_type> dataHost;  
+  if (extension.compare(".bin") == 0)
   {
+   if (!agile::readVectorFile(filename.c_str(), dataHost))
+    {
+      return false;
+    }
+    data.assignFromHost(dataHost.begin(), dataHost.end());
+    std::cout << "norm vector: " << agile::norm1(data) << std::endl;
+  }
+  else if (extension.compare(".cfl") == 0)
+  {
+    long dimensions[4];//Dimension dimsread; // = op.dims;
+    //for (int i=0; i < 4; i++)
+    //   dimensions[i]=1;
+
+    utils::ReadCflHeader(filename, dimensions);
+    
+    unsigned N = dimensions[0];
+    for (int i=1; i < 4; i++)
+      N=N*dimensions[i];
+
+    //unsigned N = dimsread.width*dimsread.height*dimsread.depth*dimsread.coils;
+    std::cout << "N= " << N << std::endl;
+    //if (!agile::readCflFile(filename.c_str(), N, dataHost))
+    //{
+    //  return false;
+    //}
+    //data.assignFromHost(dataHost.begin(), dataHost.end());
+    //std::cout << "norm vector: " << agile::norm1(data) << std::endl;
     return false;
   }
-  data.assignFromHost(dataHost.begin(), dataHost.end());
-  return true;
+  else
+    return false;
+return true;
 }
-
-// TODO: import cfl
-//bool LoadGPUVectorFromCFL(std::string &filename, TType &data)
-//{
-//return true;
-//} 
 
 void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
                            BaseOperator *mrOp)
@@ -206,7 +229,30 @@ int main(int argc, char *argv[])
   // density compensation in case of nonuniform data
   RVector w(0);
 
-  Dimension dims = op.dims;
+  // get data dimensions
+  std::string extension = utils::GetFileExtension(op.kdataFilename);
+  std::cout << "Extension:" << extension << std::endl;
+  
+  Dimension dims; // = op.dims;
+  if (extension.compare(".bin") == 0)
+    dims = op.dims;
+  else if (extension.compare(".cfl") == 0)
+  {
+      long dimensions[4];
+      utils::ReadCflHeader(op.kdataFilename, dimensions);
+      dims.width=dimensions[0];
+      dims.height=dimensions[1];
+      dims.depth=dimensions[2];
+ 
+      dims.readouts=dimensions[0];
+      dims.encodings=dimensions[1];
+      dims.encodings2=dimensions[2];
+
+      dims.coils=dimensions[3];
+      dims.frames=dimensions[3];
+      std::cout << "DIMS main; nx: " << dims.width << " / ny:" << dims.height << " / nz:" << dims.depth << " / nc:" << dims.coils << std::endl;
+      std::cout << "DIMS main; nRO: " << dims.readouts << " / nENC1:" << dims.encodings << " / nENC2:" << dims.encodings2 << " / nframes:" << dims.frames << std::endl;
+  }
 
   if (op.rawdata)
   {
@@ -227,28 +273,31 @@ int main(int argc, char *argv[])
     
   
     // set values in data-array to zero according to mask
-    if (op.method==TGV2_3D)
-    {
-      for (unsigned coil = 0; coil < dims.coils; coil++)
+    if (!op.nonuniform)
+    { 
+      if (op.method==TGV2_3D)
       {
-        unsigned offset = dims.width * dims.height * dims.depth * coil;
-         agile::lowlevel::multiplyElementwise(
+        for (unsigned coil = 0; coil < dims.coils; coil++)
+        {
+          unsigned offset = dims.width * dims.height * dims.depth * coil;
+           agile::lowlevel::multiplyElementwise(
               kdata.data() + offset, mask.data(),
               kdata.data() + offset, dims.width * dims.height * dims.depth);
-      }   
-    }
-    else
-    {
-      for (unsigned frame = 0; frame < dims.frames; frame++)
+        }
+      }
+      else
       {
-        unsigned offset = dims.width * dims.height * dims.coils * frame;
-        for (unsigned coil = 0; coil < dims.coils; coil++)
-          {
-          unsigned int x_offset = offset + coil * dims.width * dims.height;
-          agile::lowlevel::multiplyElementwise(
+        for (unsigned frame = 0; frame < dims.frames; frame++)
+        {
+          unsigned offset = dims.width * dims.height * dims.coils * frame;
+          for (unsigned coil = 0; coil < dims.coils; coil++)
+            {
+            unsigned int x_offset = offset + coil * dims.width * dims.height;
+            agile::lowlevel::multiplyElementwise(
               kdata.data() + x_offset, mask.data() + dims.width * dims.height * frame,
               kdata.data() + x_offset, dims.width * dims.height);
-          }
+            }
+        }
       }
     }
   }
@@ -383,7 +432,7 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // BEGIN: Define output 
   // ================================================================================================================== 
-    std::string extension = utils::GetFileExtension(op.outputFilename);
+    //std::string extension = utils::GetFileExtension(op.outputFilename);
     std::vector<CType> xHost;
     x.copyToHost(xHost);
  
@@ -405,7 +454,7 @@ int main(int argc, char *argv[])
   // write reconstruction to dicom file 
   else if (extension.compare(".dcm") == 0)   
   {
-   agile::DICOM dicomfile;
+    agile::DICOM dicomfile;
     std::string filenamewoe = utils::GetFilename(op.outputFilename);
     std::ostringstream ss;	 
     for (unsigned frame = 0; frame < dims.frames; frame++) 

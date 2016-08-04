@@ -616,6 +616,15 @@ void GetSubVector(CVector &full, CVector &stride, unsigned index,
  */
 void SetSubVector(CVector &stride, CVector &full, unsigned index,
                   unsigned strideLength);
+
+
+/**
+ * \brief Get CFL file header information
+*/
+bool ReadCflHeader(const std::string &filename, long * dimensions); //Dimension &dim);
+
+//bool readCflFile(const char* filename, unsigned size, std::vector<CVector> & data);
+ 
 }
 
 #endif  // INCLUDE_UTILS_H_
