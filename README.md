@@ -3,9 +3,9 @@ Accelerated Variational Dynamic MRI Reconstruction
 
 ## Contributors
 * [Andreas Schwarzl](https://github.com/andyschwarzl) (Graz University of Technology)
-* [Martin Holler](http://www.uni-graz.at/~holler) (University of Graz) 
+* [Martin Holler](http://imsc.uni-graz.at/hollerm) (University of Graz) 
 * [Matthias Schloegl](http://www.tugraz.at/institute/imt/people/schloegl/) (Graz University of Technology)
-* [Kristian Bredies](http://www.uni-graz.at/~bredies) (University of Graz) 
+* [Kristian Bredies](http://imsc.uni-graz.at/bredies) (University of Graz) 
 
 ## License
 This software is published under GNU GPLv3. In particular, all source code is provided "as is" without warranty of any kind, either expressed or implied. For details, see the attached LICENSE.
@@ -18,7 +18,7 @@ data if the trajectory information is provided.
 
 If you use this software please cite:
 * Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf.
-  Infimal convolution of total generalized variation functionals for dynamic MRI.
+  __Infimal convolution of total generalized variation functionals for dynamic MRI.__
   _Magnetic Resonance in Medicine_, 2016 (in press); doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) 
 ```
 @article {MRM:MRM26352,
