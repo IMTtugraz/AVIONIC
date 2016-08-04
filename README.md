@@ -18,7 +18,7 @@ data if the trajectory information is provided.
 
 If you use this software please cite:
 * Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf.
-  [Infimal convolution of total generalized variation functionals for dynamic MRI](http://imsc.uni-graz.at/mobis/publications/SFB-Report-2016-002.pdf).
+  Infimal convolution of total generalized variation functionals for dynamic MRI.
   _Magnetic Resonance in Medicine_, 2016 (in press); doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) 
 ```
 @article {MRM:MRM26352,
