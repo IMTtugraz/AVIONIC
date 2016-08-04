@@ -7,6 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include "ismrmrd/ismrmrd.h"
 #include "ismrmrd/dataset.h"
+#include <fstream>
 
 // Transcribed from MATLAB ellipke function
 // for a single value
@@ -707,4 +708,34 @@ void utils::SetSubVector(CVector &stride, CVector &full, unsigned index,
                                full.data() + index * strideLength, 1,
                                strideLength);
 }
+
+
+bool utils::ReadCflHeader(const std::string &filename, long * dimensions)// Dimension &dim)
+{
+ 
+  std::string filenamewoe = utils::GetFilename(filename);
+  std::string hdrfilename = filenamewoe+".hdr"; 
+
+  std::ifstream vec_file(hdrfilename.c_str(), std::ifstream::binary); 
+  if (!vec_file.is_open())
+  {
+      std::cerr << "file not found: " << filename.c_str() << std::endl;
+      return false;
+  }
+
+  // for now assume maximal 5 dimensions (nx,ny,nz,nframes,ncoils) 
+  char * keyword = new char [12]; 
+  vec_file.read(keyword,12);
+  if (std::strcmp(keyword,"# Dimension"))
+  {
+    for (int i=0;i<4;i++)
+    {
+      vec_file >> dimensions[i]; //dims[i];//val;
+    }
+    return true;
+  }
+  else
+    return false;
+}
+
 
