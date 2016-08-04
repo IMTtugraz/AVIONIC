@@ -34,7 +34,7 @@ year = {2016},
 }
 ```
 
-* Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction Proc. Intl. Soc. Mag. Reson. Med. 23, Toronto, Canada; 
+* Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. __A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction.__  _Proc. Intl. Soc. Mag. Reson. Med. 23_, Toronto, Canada; 
 
 This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' [Mathematical Optimization and Applications in Biomedical Sciences](http://imsc.uni-graz.at/mobis/)
 
