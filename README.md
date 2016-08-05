@@ -134,7 +134,7 @@ Example for ICTGV reconstruction with VISTA pattern and subsampling factor 12
 ## Example reconstruction for ISMRMRD data
 1 Cartesian
 ```
-wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_tpat8_sedona.h5
+wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_tpat_8_sedona.h5
 mkdir ./recon_tpat/
 avionic -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
 ```
