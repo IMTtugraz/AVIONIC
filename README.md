@@ -17,9 +17,11 @@ approach for the estimation of receiver-coil sensitivity profiles from the under
 data if the trajectory information is provided.
 
 If you use this software please cite:
-* Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf.
-  __Infimal convolution of total generalized variation functionals for dynamic MRI.__
-  _Magnetic Resonance in Medicine_, 2016 (in press); doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) 
+* Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf. <br>
+  __Infimal convolution of total generalized variation functionals for dynamic MRI.__<br>
+  _Magnetic Resonance in Medicine_, 2016 (in press)<br>
+  doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) 
+
 ```
 @article {MRM:MRM26352,
 author = {Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf},
@@ -34,7 +36,9 @@ year = {2016},
 }
 ```
 
-* Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger. __A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction.__  _Proc. Intl. Soc. Mag. Reson. Med. 23_, Toronto, Canada; 
+* Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger.<br>
+  __A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction.__ <br>
+  _Proc. Intl. Soc. Mag. Reson. Med. 23_, Toronto, Canada 
 
 This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' [Mathematical Optimization and Applications in Biomedical Sciences](http://imsc.uni-graz.at/mobis/)
 
@@ -52,10 +56,10 @@ For questions and comments on the project please contact [Matthias Schloegl](mai
 
 ## Setup
 0 Preparations
-* build dcmtk from source (shared libs on)
- ``` wget https://distfiles.macports.org/dcmtk/dcmtk-3.6.1_20160630.tar.gz ```
-* build hdf5 from source (shared libs on)
- ``` wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.10/src/hdf5-1.8.10.tar.bz2 ```
+* build dcmtk from source (shared libs on) <br>
+ `wget https://distfiles.macports.org/dcmtk/dcmtk-3.6.1_20160630.tar.gz`
+* build hdf5 from source (shared libs on) <br>
+ `wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.10/src/hdf5-1.8.10.tar.bz2`
 * Make sure that the CUDA environment is set up correctly 
 * Ensure that the DCMDICTPATH environment variable is set correctly, namely with <br>
   `export DCMDICTPATH=$DCMDICTPATH:/usr/local/share/dcmtk/dicom.dic:/usr/local/share/dcmtk/private.dic`
