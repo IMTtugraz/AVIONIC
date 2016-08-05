@@ -51,7 +51,11 @@ For questions and comments on the project please contact [Matthias Schloegl](mai
 * [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for code docs)
 
 ## Setup
-0 Preparations 
+0 Preparations
+* build dcmtk from source (shared libs on)
+ ``` wget https://distfiles.macports.org/dcmtk/dcmtk-3.6.1_20160630.tar.gz ```
+* build hdf5 from source (shared libs on)
+ ``` wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.10/src/hdf5-1.8.10.tar.bz2 ```
 * Make sure that the CUDA environment is set up correctly 
 * Ensure that the DCMDICTPATH environment variable is set correctly, namely with <br>
   `export DCMDICTPATH=$DCMDICTPATH:/usr/local/share/dcmtk/dicom.dic:/usr/local/share/dcmtk/private.dic`
