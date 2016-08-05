@@ -432,18 +432,18 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // BEGIN: Define output 
   // ================================================================================================================== 
-    //std::string extension = utils::GetFileExtension(op.outputFilename);
+    std::string extension_out = utils::GetFileExtension(op.outputFilename);
     std::vector<CType> xHost;
     x.copyToHost(xHost);
  
   // write reconstruction to bin file 
-  if (extension.compare(".bin") == 0)
+  if (extension_out.compare(".bin") == 0)
   {
     std::cout << "writing output file to: " << op.outputFilename << std::endl;
     agile::writeVectorFile(op.outputFilename.c_str(), xHost); 
   }
   // write reconstruction to h5 file 
-  else if (extension.compare(".h5") == 0)
+  else if (extension_out.compare(".h5") == 0)
   {
     std::vector<size_t> dimVec;
     dimVec.push_back(dims.width);
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
     utils::WriteH5File(op.outputFilename, "recon", dimVec, xHost);
   }
   // write reconstruction to dicom file 
-  else if (extension.compare(".dcm") == 0)   
+  else if (extension_out.compare(".dcm") == 0)   
   {
     agile::DICOM dicomfile;
     std::string filenamewoe = utils::GetFilename(op.outputFilename);
