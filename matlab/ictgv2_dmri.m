@@ -10,8 +10,8 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
 %
 %   output:
 %    - g2:      ICTGV reconstruction (u)
-%    - comp1:   First component (v)
-%    - comp2:   Second component (u-v)
+%    - comp1:   First component (u-v) - low temporal dynamic
+%    - comp2:   Second component (v) - high temporal dynamic
 %    - par:     Updated input parameter
 %
 %    (debug)
@@ -281,7 +281,7 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
 
     g2    =  x(:,:,:,1);
     comp2 =  x(:,:,:,5);
-    comp1 =  g2-comp1;
+    comp1 =  g2-comp2;
 
     %########################################################################################################
     if debug%Only in debug mode------------------------------------------------------------------------------
