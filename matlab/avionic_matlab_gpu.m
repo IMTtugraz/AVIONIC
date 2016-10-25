@@ -108,7 +108,7 @@ function [ g2, comp1, comp2, b1, u0, pdgap ] = avionic_matlab_gpu( data, par_in,
 
     if exist(['./x3_component'])==2
         comp2 = readbin_vector('./x3_component');
-        comp2 = permute(reshape(comp1,[m,n,nframes]),[2 1 3]);
+        comp2 = permute(reshape(comp2,[m,n,nframes]),[2 1 3]);
         comp1 = g2-comp2;
     end
 
