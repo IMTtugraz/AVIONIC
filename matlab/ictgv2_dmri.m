@@ -121,7 +121,7 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
     %Setup Data and estimate sensitivities
     mri_obj = prepare_data(data, {'u_reg',u_reg; 'b1_reg', b1_reg; 'b1_final_reg', b1_final_reg; ...
         'b1_final_nr_it',b1_final_nr_it; 'uH1mu', uH1mu;});
-    clear data;
+    data = 0;
 
 
     %Get size
@@ -274,11 +274,6 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
 
     end
 
-    display(['Sig:   ',num2str(sig)])
-    display(['Tau:   ',num2str(tau)])
-    display(['Nr-it: ', num2str(k)])
-
-
     g2    =  x(:,:,:,1);
     comp2 =  x(:,:,:,5);
     comp1 =  g2-comp2;
@@ -298,6 +293,12 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
 
 
     eltime = toc;
+
+    
+    display(['Sig:   ',num2str(sig)])
+    display(['Tau:   ',num2str(tau)])
+    display(['Nr-it: ', num2str(k)])
+    display(['recon time: ', num2str(eltime)])
 
 
     %Write parameter-------------------------------

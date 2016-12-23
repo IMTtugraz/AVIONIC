@@ -32,32 +32,42 @@ class RawDataPreparation
   void PrepareDicomData(const std::string &dicomDataPath,
                         const std::string &rawDataPath,
                         std::vector<CType> &data, std::vector<RType> &mask,
-                        std::vector<RType> &w, Dimension &dims);
+                        std::vector<RType> &w, Dimension &dims, CType &datanorm);
 
   void PrepareIsmrmrdData(const std::string &rawDataPath,
                           std::vector<CType> &data, std::vector<RType> &mask,
-                          std::vector<RType> &w, Dimension &dims);
+                          std::vector<RType> &w, Dimension &dims, CType &datanorm);
 
   void PrepareRawData(CVector &kdata, RVector &mask, RVector &w,
-                      Dimension &dims);
+                      Dimension &dims, CType &datanorm);
 
   void PrepareRawData(const std::string &rawDataPath, std::vector<CType> &data,
-                      std::vector<RType> &mask, Dimension &dims);
+                      std::vector<RType> &mask, Dimension &dims, CType &datanorm);
 
   void PrepareRawData(std::vector<CType> &data, std::vector<RType> &mask,
-                      std::vector<RType> &w, Dimension &dims);
+                      std::vector<RType> &w, Dimension &dims, CType &datanorm);
 
-  void NormalizeData(std::vector<CType> &data, const Dimension &dims,
-                     CoilConstruction *coilConstruction);
+  void NormalizeCartData(std::vector<CType> &data, const Dimension &dims,
+                     CoilConstruction *coilConstruction, CType &datanorm);
+
+  void NormalizeCartData(CVector &data, const Dimension &dims,
+                     CoilConstruction *coilConstruction, CType &datanorm);
 
   void NormalizeNonCartData(std::vector<CType> &data, const Dimension &dims,
-                            NoncartesianCoilConstruction *coilConstruction);
+                            NoncartesianCoilConstruction *coilConstruction, CType &datanorm);
+
+  void NormalizeNonCartData(CVector &data, const Dimension &dims,
+                            NoncartesianCoilConstruction *coilConstruction, CType &datanorm);
 
   void GenerateChopMatrix(std::vector<RType> &chopMatrix, unsigned width,
                           unsigned height);
 
   void ChopData(std::vector<CType> &data, std::vector<RType> &mask,
                 const Dimension &dims);
+
+
+  void NormalizeData(CVector &data, RVector &mask, RVector &w, Dimension &dims, CType &datanorm);
+
 
   RType FindNormalizationFactor(std::vector<RType> &data);
 
@@ -91,7 +101,8 @@ class RawDataPreparation
                unsigned colOffset);
 
   void NormalizeData(std::vector<CType> &data, std::vector<RType> &mask,
-                     std::vector<RType> &w, Dimension &dims);
+                     std::vector<RType> &w, Dimension &dims, CType &datanorm);
+
 
   // Operators/Vectors used in remove oversampling path
   agile::FFT<CType> *fftOp;

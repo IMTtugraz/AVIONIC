@@ -158,6 +158,21 @@ void ICTGV2::AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
   Log("new sigma: %.4e new tau: %.4e\n", params.sigma, params.tau);
 }
 
+RType ICTGV2::ComputeDataFidelity(CVector &x1, CVector &data_gpu, CVector &b1_gpu)
+{
+
+    CVector tmp;
+    tmp.resize(data_gpu.size(), 0.0);
+    mrOp->BackwardOperation(x1, tmp, b1_gpu);
+    agile::subVector(tmp,data_gpu,tmp);
+    RType datafidelity;
+    datafidelity = agile::norm2(tmp);
+    datafidelity *= params.lambda/ (RType) 2.0;
+
+    return datafidelity;
+}
+
+
 RType ICTGV2::ComputeGStar(CVector &x1, std::vector<CVector> &y1,
                            std::vector<CVector> &y2, std::vector<CVector> &y3,
                            std::vector<CVector> &y4, CVector &z,
@@ -292,6 +307,8 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
   CVector z(data_gpu.size());
   zTemp.resize(data_gpu.size(), 0.0);
   z.assign(z.size(), 0.0);
+
+  RType datafidelity;
 
   unsigned loopCnt = 0;
   // loop
@@ -434,11 +451,19 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
       pdGapExport.push_back( pdGap );
       Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap);     
  
+      RType ictgv2Norm =
+              utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
+                                params.alpha1, params.alpha, width, height, params.ds,
+                                params.dt, params.ds2, params.dt2);
+
+      datafidelity = ComputeDataFidelity(x1,data_gpu,b1_gpu);
+      Log("Data-Fidelity: %.3e | ICTGV norm: %.3e\n", datafidelity,ictgv2Norm);
+
       if ( pdGap < params.stopPDGap )
         return;
     }
 
-    loopCnt++;
+     loopCnt++;
     if (loopCnt % 10 == 0)
       std::cout << "." << std::flush;
   }

@@ -80,6 +80,7 @@ class OptionsParser
   std::string u0Filename;
   std::string densityFilename;
   bool nonuniform;
+  bool normalize;
   bool extradata;
   GpuNUFFTParams gpuNUFFTParams;
   AdaptLambdaParams adaptLambdaParams;

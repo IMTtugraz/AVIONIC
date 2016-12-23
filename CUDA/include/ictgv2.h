@@ -52,6 +52,10 @@ class ICTGV2 : public PDRecon
                      CVector &extDiff3, std::vector<CVector> &extDiff4,
                      CVector &b1);
 
+  /** \brief Compute Datafidelity
+   */
+  RType ComputeDataFidelity(CVector &x1, CVector &data_gpu, CVector &b1_gpu);
+
   /** \brief G* Computation, needed in ComputePDGap function. */
   RType ComputeGStar(CVector &x1, std::vector<CVector> &y1,
                      std::vector<CVector> &y2, std::vector<CVector> &y3,
@@ -86,6 +90,7 @@ class ICTGV2 : public PDRecon
   void InitDualVectors(unsigned N);
 
   std::vector<CType> pdGapExport;
+  RType datafidelity;
 
   CVector imgTemp;
   CVector zTemp;

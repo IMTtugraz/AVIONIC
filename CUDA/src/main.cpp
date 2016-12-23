@@ -35,7 +35,6 @@ bool LoadGPUVectorFromFile(std::string &filename, TType &data)
       return false;
     }
     data.assignFromHost(dataHost.begin(), dataHost.end());
-    std::cout << "norm vector: " << agile::norm1(data) << std::endl;
   }
   else if (extension.compare(".cfl") == 0)
   {
@@ -117,6 +116,14 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
   }
 }
 
+void PerfromRawdatNormalization(Dimension &dims,OptionsParser &op,
+                      CVector &kdata, RVector &mask, RVector &w, CType &datanorm)
+{
+    std::cout << "Normalize binary data." << std::endl;
+    RawDataPreparation rdp_norm(op, true, true, true, true);
+    rdp_norm.NormalizeData(kdata, mask, w, dims, datanorm);
+}
+
 template <typename TType>
 void ExportAdditionalResultsToMatlabBin(const char *outputDir,
                                         const char *filename,
@@ -128,6 +135,17 @@ void ExportAdditionalResultsToMatlabBin(const char *outputDir,
                            boost::lexical_cast<std::string>(filename);
   agile::writeVectorFile(outputPath.c_str(), resHost);
 }
+
+template <typename TType>
+void ExportAdditionalResultsToMatlabBin2(const char *outputDir,
+                                        const char *filename,
+                                        std::vector<TType> &result)
+{
+  std::string outputPath = boost::lexical_cast<std::string>(outputDir) + "/" +
+                           boost::lexical_cast<std::string>(filename);
+  agile::writeVectorFile(outputPath.c_str(), result);
+}
+
 
 void PerformCartesianCoilConstruction(Dimension &dims, OptionsParser &op,
                                       CVector &kdata, CVector &u, CVector &b1,
@@ -157,6 +175,7 @@ void PerformNonCartesianCoilConstruction(Dimension &dims, OptionsParser &op,
   // or if it has to be loaded from file
   if (w.size() == 0)
   {
+    std::cout << "reloading densitiy compensation data" << std::endl;
     w = RVector(nTraj);
     if (!LoadGPUVectorFromFile(op.densityFilename, w))
     {
@@ -165,6 +184,8 @@ void PerformNonCartesianCoilConstruction(Dimension &dims, OptionsParser &op,
       throw std::invalid_argument(
           "Density compensation data could not be loaded!");
     }
+    // take square-root of densitiy compensation for further processing
+    //agile::sqrt(w,w);
   }
 
   NoncartesianOperator *noncartOp = new NoncartesianOperator(
@@ -181,24 +202,31 @@ void PerformNonCartesianCoilConstruction(Dimension &dims, OptionsParser &op,
 }
 
 void PerformRawDataPreparation(Dimension &dims, OptionsParser &op,
-                               CVector &kdata, RVector &mask, RVector &w)
+                               CVector &kdata, RVector &mask, RVector &w, CType &datanorm)
 {
   RawDataPreparation rdp(op, true, true, true, true);
 
   std::cout << "INFO: Loading RAW data from file/directory: "
             << op.kdataFilename << std::endl;
   std::string outputDir = utils::GetParentDirectory(op.outputFilename);
+  rdp.PrepareRawData(kdata, mask, w, dims, datanorm);
 
-  rdp.PrepareRawData(kdata, mask, w, dims);
+  // write buffer to file
+  //if(std::FILE* f1 = std::fopen("datanorm.bin", "wb")) {
+  //    datanorm.size
+  //    std::fwrite(v.data(), sizeof v[0], v.size(), f1);
+  //    std::fclose(f1);
+  //}
+
 
   // Extract dicom raw data and prepare it
-  if (op.nonuniform)
+  /*if (op.nonuniform)
   {
     ExportAdditionalResultsToMatlabBin(outputDir.c_str(), "w.bin", w);
   }
-
   ExportAdditionalResultsToMatlabBin(outputDir.c_str(), "mask.bin", mask);
   ExportAdditionalResultsToMatlabBin(outputDir.c_str(), "kdata.bin", kdata);
+    */
 }
 
 // ==================================================================================================================
@@ -229,6 +257,9 @@ int main(int argc, char *argv[])
   // density compensation in case of nonuniform data
   RVector w(0);
 
+  // data normalization factor
+  CType datanorm = 1;
+
   // get data dimensions
   std::string extension = utils::GetFileExtension(op.kdataFilename);
   std::cout << "Extension:" << extension << std::endl;
@@ -254,11 +285,14 @@ int main(int argc, char *argv[])
       std::cout << "DIMS main; nRO: " << dims.readouts << " / nENC1:" << dims.encodings << " / nENC2:" << dims.encodings2 << " / nframes:" << dims.frames << std::endl;
   }
 
-  if (op.rawdata)
+  // ==================================================================================================================
+  // perform rawdata preparation
+  // ==================================================================================================================
+  if (op.rawdata) // rawdata input
   {
-    PerformRawDataPreparation(dims, op, kdata, mask, w);
+    PerformRawDataPreparation(dims, op, kdata, mask, w, datanorm);
   }
-  else
+  else // binary input
   {
     std::cout << "Binary files defined...." << std::endl;
     if (!LoadGPUVectorFromFile(op.kdataFilename, kdata))
@@ -270,11 +304,11 @@ int main(int argc, char *argv[])
       return -1;
     else
       std::cout << "Mask File " << op.maskFilename  << " successfully loaded." << std::endl;
-    
   
-    // set values in data-array to zero according to mask
-    if (!op.nonuniform)
+
+    if (!op.nonuniform) // is cartesian data
     { 
+      // set values in data-array to zero according to mask
       if (op.method==TGV2_3D)
       {
         for (unsigned coil = 0; coil < dims.coils; coil++)
@@ -300,18 +334,62 @@ int main(int argc, char *argv[])
         }
       }
     }
-  }
+    else // is non-cartesian data
+    {
+      // load density compensation
+      if (w.size() == 0)
+        {
+        unsigned nFE = dims.readouts;
+        unsigned spokesPerFrame = dims.encodings;
+        unsigned int nTraj = dims.frames * spokesPerFrame * nFE;
+        w = RVector(nTraj);
+        if (!LoadGPUVectorFromFile(op.densityFilename, w))
+        {
+          std::cerr << "Density compensation data could not be loaded!"
+                    << std::endl;
+          throw std::invalid_argument(
+              "Density compensation data could not be loaded!");
+        }
+      }
+
+      // take square-root of densitiy compensation for further processing
+      agile::sqrt(w,w);
+
+      // scale data with density compensation
+      std::cout << "multiplying with density comp" <<std::endl;
+      for (unsigned coil = 0; coil < dims.coils ; coil++)
+      {
+      agile::lowlevel:: multiplyElementwise(kdata.data() + coil * dims.encodings * dims.readouts *dims.frames,
+                                            w.data(), kdata.data() + coil * dims.encodings * dims.readouts *dims.frames,
+                                           dims.encodings * dims.readouts *dims.frames);
+      }
+
+
+    }
+
+    // rawdata normalization
+    if (op.normalize)
+      PerfromRawdatNormalization(dims, op, kdata, mask, w, datanorm);
+
+  } // end binary input
+
+
+  // end rawdata preparation
+  // ==================================================================================================================
 
   BaseOperator *baseOp = NULL;
 
+  // define image space dimension N
   unsigned N;
   if (op.method==TGV2_3D)
     N = dims.width * dims.height * dims.depth;
   else 
     N = dims.width * dims.height;
 
-  CVector b1, u0;
+  // ==================================================================================================================
   // init b1 and u0
+  // ==================================================================================================================
+  CVector b1, u0;
   b1 = CVector(N * dims.coils);
   b1.assign(N * dims.coils, 1.0);
   u0 = CVector(N);
@@ -333,7 +411,7 @@ int main(int argc, char *argv[])
       std::cout << "no initial solution (u0) data provided!" << std::endl;
     }
   }
-  else
+  else // b1 and u0 not provided
   {
     
     if (op.method==TGV2_3D)
@@ -359,10 +437,22 @@ int main(int argc, char *argv[])
 
     ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
                                        "b1_reconstructed.bin", b1);
+
+    if (op.nonuniform)
+      agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);
+
     ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
                                        "u0_reconstructed.bin", u0);
   }
 
+  // end initilize b1, u0
+  // ==================================================================================================================
+
+
+
+  // ==================================================================================================================
+  // initialize operators
+  // ==================================================================================================================
   if (op.nonuniform)
   {
     unsigned nFE = dims.readouts;
@@ -373,7 +463,7 @@ int main(int argc, char *argv[])
               << " sectorWidth:" << op.gpuNUFFTParams.sectorWidth
               << " OSF:" << op.gpuNUFFTParams.osf << std::endl;
 
-    // Create 2d-t MR Operator
+    // Create 2d-t Non-Cartesian MR Operator
     baseOp = new NoncartesianOperator(
         dims.width, dims.height, dims.coils, dims.frames,
         spokesPerFrame * dims.frames, nFE, spokesPerFrame, mask, w, b1,
@@ -388,7 +478,7 @@ int main(int argc, char *argv[])
       baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
                                    dims.coils, mask, false);
     }
-    else
+    else // Create 2d-t Cartesian MR Operator
     {
       baseOp = new CartesianOperator(dims.width, dims.height, dims.coils,
                                    dims.frames, mask, false);
@@ -421,9 +511,16 @@ int main(int argc, char *argv[])
 
   timer.start();
 
+
   // run reconstruction
   recon->IterativeReconstruction(kdata, x, b1);
-  std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl; 
+
+  // rescale
+  std::vector<CType> datanorm_v;
+  datanorm_v.push_back(datanorm);
+  ExportAdditionalResultsToMatlabBin2(outputDir.c_str(),"datanorm_factor.bin",datanorm_v);
+  std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
+
   // ==================================================================================================================
   // END: Perform iterative (TV, TGV2, TGV_3D, ICTGV2) reconstruction
   // ==================================================================================================================
@@ -432,9 +529,9 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // BEGIN: Define output 
   // ================================================================================================================== 
-    std::string extension_out = utils::GetFileExtension(op.outputFilename);
-    std::vector<CType> xHost;
-    x.copyToHost(xHost);
+  std::string extension_out = utils::GetFileExtension(op.outputFilename);
+  std::vector<CType> xHost;
+  x.copyToHost(xHost);
  
   // write reconstruction to bin file 
   if (extension_out.compare(".bin") == 0)

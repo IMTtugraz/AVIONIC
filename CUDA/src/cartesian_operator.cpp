@@ -87,9 +87,15 @@ void CartesianOperator::ForwardOperation(CVector &x_gpu, CVector &sum,
       }
 
       if (centered)
+      {
         fftOp->CenteredForward(x_gpu, z_gpu, x_offset, 0);
+//        fftOp->CenteredInverse(x_gpu, z_gpu, x_offset, 0);
+      }
       else
+      {
         fftOp->Forward(x_gpu, z_gpu, x_offset, 0);
+//        fftOp->Inverse(x_gpu, z_gpu, x_offset, 0);
+      }
 
       // apply adjoint b1 map
       agile::lowlevel::multiplyConjElementwise(
@@ -132,10 +138,15 @@ void CartesianOperator::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
           frame * coils * width * height + coil * width * height;
 
       if (centered)
+      {
         fftOp->CenteredInverse(x_hat_gpu, z_gpu, 0, z_offset);
+//        fftOp->CenteredForward(x_hat_gpu, z_gpu, 0, z_offset);
+      }
       else
+      {
         fftOp->Inverse(x_hat_gpu, z_gpu, 0, z_offset);
-
+//        fftOp->Forward(x_hat_gpu, z_gpu, 0, z_offset);
+      }
       if (!mask.empty())
       {
         agile::lowlevel::multiplyElementwise(

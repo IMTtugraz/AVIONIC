@@ -39,6 +39,7 @@ void NoncartesianOperator::Init()
             << " spokesPerFrame: " << spokesPerFrame << std::endl;
   std::cout << "nSamplesPerFrame: " << nSamplesPerFrame << std::endl;
 
+
   // In order to initialize the gpuNUFFT Operator factory
   // correctly, the trajectory, sensitivity and density
   // data has to reside on CPU memory
@@ -47,8 +48,11 @@ void NoncartesianOperator::Init()
   kTrajData.data = &(kTrajHost[0]);
   kTrajData.dim.length = nSamplesPerFrame;
 
-  densHost = std::vector<RType>(nSamplesPerFrame);
-  dens.copyToHost(densHost);
+  std::cout<< "noncart op init norm(dens)" << agile::norm2(dens)  << std::endl;
+  densHost = std::vector<RType>(nSamplesPerFrame*frames);
+  //dens.copyToHost(densHost);
+  std::fill(densHost.begin(),densHost.end(),1.0);
+
   densData.data = &(densHost[0]);
   densData.dim.length = nSamplesPerFrame;
 
@@ -96,6 +100,10 @@ RType NoncartesianOperator::AdaptLambda(RType k, RType d)
   return lambda;
 }
 
+
+//======================================================================================================
+// image to kdata
+//======================================================================================================
 void NoncartesianOperator::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
                                              CVector &b1_gpu)
 {
@@ -118,20 +126,46 @@ void NoncartesianOperator::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
     dataArray.data =
         (float2 *)(z_gpu.data() + frame * coils * nSamplesPerFrame);
     gpuNUFFTOps[frame]->performForwardGpuNUFFT(imgArray, dataArray);
+
   }
+
+   // Multiply with sqrt of densitiy compensation (square-root of dens. was applied in main)
+  for (unsigned coil = 0; coil < coils ; coil++)
+  {
+  agile::lowlevel:: multiplyElementwise(z_gpu.data() + coil * spokesPerFrame * nFE *frames,
+                                        dens.data(), z_gpu.data() + coil* spokesPerFrame * nFE *frames,
+                                        spokesPerFrame * nFE *frames);
+  }
+
 }
+
+
 
 CVector NoncartesianOperator::BackwardOperation(CVector &x_gpu, CVector &b1_gpu)
 {
   unsigned int N = nSpokes * nFE;
+
   CVector z_gpu(N * coils);
   this->BackwardOperation(x_gpu, z_gpu, b1_gpu);
+
   return z_gpu;
 }
 
+//======================================================================================================
+// kdata to image
+//======================================================================================================
 void NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &sum,
                                             CVector &b1_gpu)
 {
+  // Multiply with sqrt of densitiy compensation  (square-root of dens. was applied in main)
+  for (unsigned coil = 0; coil < coils ; coil++)
+  {
+    agile::lowlevel:: multiplyElementwise(x_gpu.data() + coil * spokesPerFrame * nFE *frames,
+                                        dens.data(), x_gpu.data() + coil * spokesPerFrame * nFE *frames,
+                                        spokesPerFrame * nFE *frames);
+  }
+
+
   // Input kspace Data
   gpuNUFFT::GpuArray<DType2> dataArray;
   dataArray.data = (float2 *)x_gpu.data();
@@ -151,6 +185,8 @@ void NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &sum,
         (float2 *)(x_gpu.data() + frame * coils * nSamplesPerFrame);
     gpuNUFFTOps[frame]->performGpuNUFFTAdj(dataArray, imgArray);
   }
+
+  //agile::scale((CType) (1.0/std::sqrt(4.0*width*height)),x_gpu,x_gpu);
 }
 
 CVector NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &b1_gpu)

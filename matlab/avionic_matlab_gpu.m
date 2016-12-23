@@ -1,10 +1,10 @@
-function [ g2, comp1, comp2, b1, u0, pdgap ] = avionic_matlab_gpu( data, par_in, mask, b1_in)
+function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( data, par_in, mask, b1)
 % simple export and import to gpu from matlab
 
     if nargin < 4
-        b1_in = [];
+        b1 = [];
     end
-    
+
     if nargin < 3
         mask = squeeze(data(:,:,1,:))~=0;
     end
@@ -13,11 +13,11 @@ function [ g2, comp1, comp2, b1, u0, pdgap ] = avionic_matlab_gpu( data, par_in,
     method = 'ICTGV2';
     stop_par = 500;
     parfile = './CUDA/config/default.cfg';
-    
-    lambda = 5.804591; 
-    alpha0 = 1.41421356; 
+
+    lambda = 5.804591;
+    alpha0 = 1.41421356;
     alpha1 = 1;
-    alpha = 0.5; 
+    alpha = 0.5;
     timeSpaceWeight2 = 0.5;
     timeSpaceWeight = 4;
 
@@ -40,98 +40,111 @@ function [ g2, comp1, comp2, b1, u0, pdgap ] = avionic_matlab_gpu( data, par_in,
     %---------------------------------------------------------------------------------------
     %---------------------------------------------------------------------------------------
 
+    id = num2str(round(now*1e5));
+
     % set zero output
-    comp1 = 0; comp2 = 0; pdgap = 0; b1 = 0; u0 = 0;
-    
+    comp1 = 0; comp2 = 0; pdgap = 0; 
+    prescale = 0;
+
     [n,m,ncoils,nframes] = size(data);
-    
+
     mri_obj.data = data;
     mri_obj.mask = mask;
     clear data mask
-    
-    % rescale
+
+    % setup data
     mri_obj = setup_data(mri_obj);
     
-    % normalize data
-    crec = zeros(n,m,ncoils);
-    for j = 1:ncoils
-        data_ = sum( squeeze(mri_obj.data(:,:,j,:)), 3);
-        msum = sum(mri_obj.mask,3);
-        data_(msum>0) = data_(msum>0)./msum(msum>0);
-        crec(:,:,j) = fft2( data_ )./sqrt(n*m);
-    end
-    u = sqrt( sum( abs(crec).^2 , 3) );
-    datanorm = 255./median(u(u>=0.9.*max(u(:))));
-    mri_obj.data = mri_obj.data.*datanorm;      
-
+    eval(['mkdir ',id]);
     % write data to binary file
-    writebin_vector(permute(mri_obj.data,[2 1 3 4]),...
-        ['./data.bin']);     
-    writebin_vector(permute(mri_obj.mask,[2 1 3]),...
-        ['./mask.bin']);
-    
-    if ~isempty(b1_in);   
-        u0 = sum(crec.*datanorm.*conj(b1_in),3);   
-        writebin_vector(permute(b1_in,[2 1 3 4]),...
-            ['./b1.bin']);
+  
+    if ~isempty(b1);
+        crec = zeros(n,m,ncoils);
+        for j = 1:ncoils
+            data_ = sum( squeeze(mri_obj.data(:,:,j,:)), 3);
+            msum = sum(mri_obj.mask,3);
+            data_(msum>0) = data_(msum>0)./msum(msum>0);
+            crec(:,:,j) = fft2( data_ )./sqrt(n*m);
+        end
+        u0 = sum(crec.*conj(b1),3);
+        %u0 = sqrt(sum(abs(crec).^2,3));
+        datanorm_pre = 255./median(abs(u0(abs(u0)>=0.9.*max(abs(u0(:))))));
+        mri_obj.data = mri_obj.data.*datanorm_pre;
+        u0 = u0*datanorm_pre;
+        prescale = 1;
+
+        writebin_vector(permute(b1,[2 1 3 4]),...
+            ['./',id,'/b1.bin']);
         writebin_vector(permute(u0,[2 1]),...
-            ['./u0.bin']);
+            ['./',id,'/u0.bin']);
         clear crec u
 
-        recon_cmd=['avionic -i ',num2str(stop_par),...
-                    ' --ictgv2.lambda=',num2str(lambda),...
-                    ' --ictgv2.timeSpaceWeight=',num2str(timeSpaceWeight),...
-                    ' --ictgv2.timeSpaceWeight2=',num2str(timeSpaceWeight2),...
-                    ' --ictgv2.alpha=',num2str(alpha),...
-                   ' -m ',method,' -e -a -p ',parfile,' -d ', ...
-                    num2str(m),':',num2str(n),':0:',num2str(m),':',num2str(n),':0:',num2str(ncoils), ...
-                    ':',num2str(nframes),' -u ./u0.bin -s ./b1.bin ./data.bin ./mask.bin ./result.bin'];
+        recon_cmd=['avionic -v -o -i ',num2str(stop_par),...
+            ' --ictgv2.lambda=',num2str(lambda),...
+            ' --ictgv2.timeSpaceWeight=',num2str(timeSpaceWeight),...
+            ' --ictgv2.timeSpaceWeight2=',num2str(timeSpaceWeight2),...
+            ' --ictgv2.alpha=',num2str(alpha),...
+            ' -m ',method,' -e -p ',parfile,' -d ', ...
+            num2str(m),':',num2str(n),':0:',num2str(m),':',num2str(n),':0:',num2str(ncoils), ...
+            ':',num2str(nframes),' -u ./',id,'/u0.bin -s ./',id,'/b1.bin ./',id,'/data.bin ./',id,'/mask.bin ./',id,'/result.bin'];
     else
-        recon_cmd=['avionic -i ',num2str(stop_par),...
-                    ' --ictgv2.lambda=',num2str(lambda),...
-                    ' --ictgv2.timeSpaceWeight=',num2str(timeSpaceWeight),...
-                    ' --ictgv2.timeSpaceWeight2=',num2str(timeSpaceWeight2),...
-                    ' --ictgv2.alpha=',num2str(alpha),...
-                   ' -m ',method,' -e -a -p ',parfile,' -d ', ...
-                    num2str(m),':',num2str(n),':0:',num2str(m),':',num2str(n),':0:',num2str(ncoils), ...
-                    ':',num2str(nframes),' ./data.bin ./mask.bin ./result.bin'];
+        recon_cmd=['avionic -v -o -i ',num2str(stop_par),...
+            ' --ictgv2.lambda=',num2str(lambda),...
+            ' --ictgv2.timeSpaceWeight=',num2str(timeSpaceWeight),...
+            ' --ictgv2.timeSpaceWeight2=',num2str(timeSpaceWeight2),...
+            ' --ictgv2.alpha=',num2str(alpha),...
+            ' -m ',method,' -e -p ',parfile,' -d ', ...
+            num2str(m),':',num2str(n),':0:',num2str(m),':',num2str(n),':0:',num2str(ncoils), ...
+            ':',num2str(nframes),' ./',id,'/data.bin ./',id,'/mask.bin ./',id,'/result.bin'];
     end
 
     display(recon_cmd);
+
+    writebin_vector(permute(mri_obj.data,[2 1 3 4]),...
+        ['./',id,'/data.bin']);
+    writebin_vector(permute(mri_obj.mask,[2 1 3]),...
+        ['./',id,'/mask.bin']);
+
     
     % run reconstruction
     unix(recon_cmd);
 
     % read results
-    g2 = readbin_vector('./result.bin');
+    g2 = readbin_vector(['./',id,'/result.bin']);
     g2 = permute(reshape(g2,[m,n,nframes]),[2 1 3]);
 
-    if exist(['./x3_component'])==2
-        comp2 = readbin_vector('./x3_component');
+    if exist(['./',id,'/x3_component'])==2
+        comp2 = readbin_vector(['./',id,'/x3_component']);
         comp2 = permute(reshape(comp2,[m,n,nframes]),[2 1 3]);
         comp1 = g2-comp2;
     end
 
-    if exist(['./PDGap'])==2
-        pdgap = readbin_vector('./PDGap');
+    if exist(['./',id,'/PDGap'])==2
+        pdgap = readbin_vector(['./',id,'/PDGap']);
         pdgap = abs(pdgap);
     end
 
-    if exist(['./b1_reconstructed.bin'])==2
-        b1 = readbin_vector('./b1_reconstructed.bin');
+    if exist(['./',id,'/b1_reconstructed.bin'])==2
+        b1 = readbin_vector(['./',id,'/b1_reconstructed.bin']);
         b1 = permute(reshape(b1,[m,n,ncoils]),[2 1 3]);
     end
 
-    if exist(['./u0_reconstructed.bin'])==2
-        u0 = readbin_vector('./u0_reconstructed.bin');
+    if exist(['./',id,'/u0_reconstructed.bin'])==2
+        u0 = readbin_vector(['./',id,'/u0_reconstructed.bin']);
         u0 = permute(reshape(u0,[m,n]),[2 1]);
     end
 
-    g2 = g2./datanorm;
-    comp1 = comp1./datanorm;
-    comp2 = comp2./datanorm;
+    if exist(['./',id,'/datanorm_factor.bin'])==2
+        datanorm = readbin_vector(['./',id,'/datanorm_factor.bin']);
+    end
+
+
+    if prescale;
+        datanorm = datanorm*datanorm_pre;
+    end
     
+  
     % clean up
-    unix('rm ./u0_reconstructed.bin ./b1_reconstructed.bin ./PDGap ./result.bin ./x3_component ./data.bin ./mask.bin');
+    unix(['rm -rf ./',id])
 
 end

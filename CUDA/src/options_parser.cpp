@@ -68,6 +68,8 @@ OptionsParser::OptionsParser()
                                 "coils:frames")(
       "nonuniform,n", po::bool_switch(&nonuniform)->default_value(false),
       "flag to indicate nonuniform data")(
+                "normalize,o", po::bool_switch(&normalize)->default_value(false),
+                "flag to indicate data normalization")(
       "extradata,e", po::bool_switch(&extradata)->default_value(false),
       "flag to enable export of additional result data")(
       "adaptlambda,a",

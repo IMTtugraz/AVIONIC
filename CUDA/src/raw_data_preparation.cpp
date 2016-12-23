@@ -138,7 +138,7 @@ void RawDataPreparation::ComputePFZeroFillOffset(
 
 // GPU Vector overload
 void RawDataPreparation::PrepareRawData(CVector &kdata, RVector &mask,
-                                        RVector &w, Dimension &dims)
+                                        RVector &w, Dimension &dims, CType &datanorm)
 {
   std::vector<CType> kdataHost;
   std::vector<RType> maskHost;
@@ -168,19 +168,19 @@ void RawDataPreparation::PrepareRawData(CVector &kdata, RVector &mask,
   {
     std::cout << "H5 File passed!!!" << std::endl;
     this->PrepareIsmrmrdData(op.kdataFilename, kdataHost, maskHost, wHost,
-                             dims);
+                             dims, datanorm);
   }
   else if (extension.compare(".bin") == 0)
   {
     std::cout << "AGILE Bin File passed!!!" << std::endl;
     this->PrepareDicomData(op.kdataFilename, outputDir + "/meas.dat", kdataHost,
-                           maskHost, wHost, dims);
+                           maskHost, wHost, dims, datanorm);
   }
   else
   {
     std::cout << "DICOM File passed!!!" << std::endl;
     this->PrepareDicomData(op.kdataFilename, outputDir + "/meas.dat", kdataHost,
-                           maskHost, wHost, dims);
+                           maskHost, wHost, dims, datanorm);
   }
 
   // Copy data to GPU device
@@ -194,14 +194,14 @@ void RawDataPreparation::PrepareRawData(CVector &kdata, RVector &mask,
 void RawDataPreparation::PrepareRawData(const std::string &rawDataPath,
                                         std::vector<CType> &data,
                                         std::vector<RType> &mask,
-                                        Dimension &dims)
+                                        Dimension &dims, CType &datanorm)
 {
   std::vector<RType> w(0);
   // Set MeasDat file
   op.kdataFilename = rawDataPath;
   dataReader = new SiemensVD11Reader(op);
   dataReader->LoadRawData();
-  this->PrepareRawData(data, mask, w, dims);
+  this->PrepareRawData(data, mask, w, dims, datanorm);
 }
 
 void RawDataPreparation::SetTrajectoryData(
@@ -289,7 +289,7 @@ void RawDataPreparation::SetData(Acquisition &line, std::vector<CType> &data,
 
 void RawDataPreparation::NormalizeData(std::vector<CType> &data,
                                        std::vector<RType> &mask,
-                                       std::vector<RType> &w, Dimension &dims)
+                                       std::vector<RType> &w, Dimension &dims, CType &datanorm)
 {
   if (this->nonuniformData)
   {
@@ -316,7 +316,7 @@ void RawDataPreparation::NormalizeData(std::vector<CType> &data,
                                          dims.frames, op.coilParams, nonCartOp);
     coilConstruction->SetVerbose(op.verbose);
 
-    this->NormalizeNonCartData(data, dims, coilConstruction);
+    this->NormalizeNonCartData(data, dims, coilConstruction, datanorm);
 
     delete nonCartOp;
     delete coilConstruction;
@@ -330,7 +330,50 @@ void RawDataPreparation::NormalizeData(std::vector<CType> &data,
     CoilConstruction *coilConstruction =
         new CartesianCoilConstruction(dims.width, dims.height, dims.coils,
                                       dims.frames, op.coilParams, cartOp);
-    this->NormalizeData(data, dims, coilConstruction);
+    this->NormalizeCartData(data, dims, coilConstruction, datanorm);
+    delete cartOp;
+    delete coilConstruction;
+  }
+}
+
+// GPU overload
+void RawDataPreparation::NormalizeData(CVector &data,
+                                       RVector &mask,
+                                       RVector &w, Dimension &dims, CType &datanorm)
+{
+  if (op.nonuniform)
+  {
+    // - generate k-space Trajectory and
+    //   density compensation data
+    // - generate noncart operator
+    //   and coil construction
+    // - perform noncart data normalization
+    unsigned nRO = dims.readouts;
+    unsigned spokesPerFrame = dims.encodings;
+
+    NoncartesianOperator *nonCartOp =
+        new NoncartesianOperator(dims.width, dims.height, dims.coils,
+                                 dims.frames, spokesPerFrame * dims.frames, nRO,
+                                 spokesPerFrame, mask, w, 3, 8, 2.0);
+
+    NoncartesianCoilConstruction *coilConstruction =
+        new NoncartesianCoilConstruction(dims.width, dims.height, dims.coils,
+                                         dims.frames, op.coilParams, nonCartOp);
+    coilConstruction->SetVerbose(op.verbose);
+
+    this->NormalizeNonCartData(data, dims, coilConstruction, datanorm);
+
+    delete nonCartOp;
+    delete coilConstruction;
+  }
+  else
+  {
+    CartesianOperator *cartOp = new CartesianOperator(
+        dims.width, dims.height, dims.coils, dims.frames, mask, true);
+    CoilConstruction *coilConstruction =
+        new CartesianCoilConstruction(dims.width, dims.height, dims.coils,
+                                      dims.frames, op.coilParams, cartOp);
+    this->NormalizeCartData(data, dims, coilConstruction, datanorm);
     delete cartOp;
     delete coilConstruction;
   }
@@ -339,7 +382,7 @@ void RawDataPreparation::NormalizeData(std::vector<CType> &data,
 // Implementation
 void RawDataPreparation::PrepareRawData(std::vector<CType> &data,
                                         std::vector<RType> &mask,
-                                        std::vector<RType> &w, Dimension &dims)
+                                        std::vector<RType> &w, Dimension &dims, CType &datanorm)
 {
   dims = dataReader->GetRawDataDimensions();
   rawDataDims = dataReader->GetRawDataDimensions();
@@ -522,7 +565,7 @@ void RawDataPreparation::PrepareRawData(std::vector<CType> &data,
 
   if (this->normalizeData)
   {
-    this->NormalizeData(data, mask, w, dims);
+    this->NormalizeData(data, mask, w, dims, datanorm);
   }
 
   if (this->applyChop)
@@ -535,13 +578,13 @@ void RawDataPreparation::PrepareIsmrmrdData(const std::string &rawDataPath,
                                             std::vector<CType> &data,
                                             std::vector<RType> &mask,
                                             std::vector<RType> &w,
-                                            Dimension &dims)
+                                            Dimension &dims, CType &datanorm)
 {
   // Generate MeasDat file
   op.kdataFilename = rawDataPath;
   dataReader = new IsmrmrdReader(op);
   dataReader->LoadRawData();
-  this->PrepareRawData(data, mask, w, dims);
+  this->PrepareRawData(data, mask, w, dims, datanorm);
 }
 
 void RawDataPreparation::PrepareDicomData(const std::string &dicomDataPath,
@@ -549,13 +592,13 @@ void RawDataPreparation::PrepareDicomData(const std::string &dicomDataPath,
                                           std::vector<CType> &data,
                                           std::vector<RType> &mask,
                                           std::vector<RType> &w,
-                                          Dimension &dims)
+                                          Dimension &dims, CType &datanorm)
 {
   // Generate MeasDat file
   op.kdataFilename = dicomDataPath;
   dataReader = new DicomReader(op);
   dataReader->LoadRawData();
-  this->PrepareRawData(data, mask, w, dims);
+  this->PrepareRawData(data, mask, w, dims, datanorm);
 }
 
 struct isLargerThan
@@ -597,9 +640,8 @@ RType RawDataPreparation::FindNormalizationFactor(std::vector<RType> &data)
                              "parameters of coil construction.");
 }
 
-void RawDataPreparation::NormalizeNonCartData(
-    std::vector<CType> &data, const Dimension &dims,
-    NoncartesianCoilConstruction *coilConstruction)
+void RawDataPreparation::NormalizeNonCartData(std::vector<CType> &data, const Dimension &dims,
+                                              NoncartesianCoilConstruction *coilConstruction, CType &datanorm)
 {
   std::cout << "Normalize noncart data.." << dims.width
             << " height:  " << dims.height << std::endl;
@@ -636,16 +678,83 @@ void RawDataPreparation::NormalizeNonCartData(
   std::vector<RType> uTemp(u0Abs.size());
   u0Abs.copyToHost(uTemp);
   CType median = FindNormalizationFactor(uTemp);
-  CType datanorm = (CType)255.0 / median;
+  //CType datanorm = (CType)255.0 / median;
 
-  std::cout << "Datanorm:" << datanorm << std::endl;
+  // for non-cartesian data it is important to scale with number of frames
+  datanorm = (CType) dims.frames * (CType)255.0 / median;
+  //datanorm = (CType)255.0 / median;
+
+  std::cout << "datanorm factor (in):" << datanorm << std::endl;
   agile::scale(datanorm, kdata, kdata);
   kdata.copyToHost(data);
 }
 
-void RawDataPreparation::NormalizeData(std::vector<CType> &data,
+// GPU overload
+void RawDataPreparation::NormalizeNonCartData(CVector &data, const Dimension &dims,
+                                              NoncartesianCoilConstruction *coilConstruction, CType &datanorm)
+{
+  std::cout << "Normalize noncart data: witdh:" << dims.width
+            << " height:  " << dims.height << std::endl;
+
+  CVector u(dims.width * dims.height * dims.coils);
+  CVector u0(dims.width * dims.height);
+  u0.assign(u0.size(), 0);
+
+  CVector b1(dims.width * dims.height * dims.coils);
+  CVector crec(dims.width * dims.height * dims.coils);
+  crec.assign(crec.size(), 0);
+
+  //coilConstruction->PerformCoilConstruction(data, u, b1, com);
+   coilConstruction->TimeAveragedReconstruction(data, u0, crec, false);
+
+
+
+  /*  u0.assign(u0.size(), 0);
+  CVector crecTemp(dims.width * dims.height);
+  CVector b1Temp(dims.width * dims.height);
+  for (unsigned coil = 0; coil < dims.coils; coil++)
+  {
+    utils::GetSubVector(crec, crecTemp, coil, dims.width * dims.height);
+    utils::GetSubVector(b1, b1Temp, coil, dims.width * dims.height);
+    agile::multiplyConjElementwise(b1Temp, crecTemp, crecTemp);
+    agile::addVector(u0, crecTemp, u0);
+  }
+  */
+  u0.assign(u0.size(), 0);
+  CVector crecTemp(dims.width * dims.height);
+  RVector crecTempAbs(dims.width * dims.height);
+
+  for (unsigned coil = 0; coil < dims.coils; coil++)
+  {
+    utils::GetSubVector(crec, crecTemp, coil, dims.width * dims.height);
+    agile::absVector(crecTemp,crecTempAbs);
+    agile::multiplyElementwise(crecTempAbs,crecTempAbs,crecTempAbs);
+   // agile::multiplyConjElementwise(crecTemp, crecTemp, crecTemp);
+    agile::addVector(u0, crecTempAbs, u0);
+  }
+  agile::sqrt(u0, u0);
+
+  RVector u0Abs(u0.size());
+  agile::absVector(u0, u0Abs);
+
+  std::vector<RType> uTemp(u0Abs.size());
+  u0Abs.copyToHost(uTemp);
+  CType median = FindNormalizationFactor(uTemp);
+  //CType datanorm = (CType)255.0 / median;
+  //datanorm = (CType)dims.frames * (CType)255.0 / median ;
+  //datanorm = (CType)255.0 / median ;
+
+  // for non-cartesian data it is important to scale with number of frames
+  datanorm = (CType) dims.frames * (CType)255.0 / median;
+
+  std::cout << "datanorm factor (in):" << datanorm << std::endl;
+
+  agile::scale(datanorm, data, data);
+}
+
+void RawDataPreparation::NormalizeCartData(std::vector<CType> &data,
                                        const Dimension &dims,
-                                       CoilConstruction *coilConstruction)
+                                       CoilConstruction *coilConstruction, CType &datanorm)
 {
   CVector kdata(data.size());
   kdata.assignFromHost(data.begin(), data.end());
@@ -661,11 +770,38 @@ void RawDataPreparation::NormalizeData(std::vector<CType> &data,
   std::vector<RType> uTemp(u0Abs.size());
   u0Abs.copyToHost(uTemp);
   CType median = FindNormalizationFactor(uTemp);
-  CType datanorm = (CType)255.0 / median;
+  //CType datanorm = (CType)255.0 / median;
+  //datanorm =  median / (CType)255.0;
+  datanorm = (CType)255.0 / median ;
 
-  std::cout << "Datanorm:" << datanorm << std::endl;
   agile::scale(datanorm, kdata, kdata);
   kdata.copyToHost(data);
+}
+
+// GPU overload
+void RawDataPreparation::NormalizeCartData(CVector &data,
+                                       const Dimension &dims,
+                                       CoilConstruction *coilConstruction, CType &datanorm)
+{
+  CVector u0(dims.width * dims.height);
+  u0.assign(u0.size(), 0);
+
+  CVector crec(dims.width * dims.height * dims.coils);
+  crec.assign(crec.size(), 0);
+  coilConstruction->TimeAveragedReconstruction(data, u0, crec, false);
+  RVector u0Abs(u0.size());
+  agile::absVector(u0, u0Abs);
+
+  std::vector<RType> uTemp(u0Abs.size());
+  u0Abs.copyToHost(uTemp);
+  CType median = FindNormalizationFactor(uTemp);
+  //CType datanorm = (CType)255.0 / median;
+  datanorm = (CType)255.0 / median;
+
+
+  std::cout << "datanorm factor (in):" << datanorm << std::endl;
+  agile::scale(datanorm, data, data);
+
 }
 
 void RawDataPreparation::GenerateChopMatrix(std::vector<RType> &chopMatrix,

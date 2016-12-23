@@ -3,7 +3,7 @@
 %
 %(grad_u)_[i,j]=(u_[i+1,j]-u_[i,j],u_[i,j+1]-u_[i,j])
 
-function [grad] = fcgrad_1(u)
+function [grad] = fgrad_1(u)
 
 n=size(u,1);
 m=size(u,2);
