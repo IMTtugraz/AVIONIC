@@ -405,24 +405,26 @@ RType TGV2Norm(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
  * \param[in] alpha  norm parameter
  * \param[in] width
  * \param[in] height
- * \param[in] ds Step size in spatial dim
+ * \param[in] dx Step size in x-spatial dim
+ * \param[in] dy Step size in y-spatial dim 
  * \param[in] dt Step size in temporal dim (time)
- * \param[in] ds2 Step size 2 in spatial dim
+ * \param[in] dx2 Step size 2 in x-spatial dim
+ * \param[in] dy2 Step size 2 in y-spatial dim 
  * \param[in] dt2 Step size 2 in temporal dim (time)
  * \return ICTGV2 norm
  */
 RType ICTGV2Norm(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
                  CVector &data3_gpu, std::vector<CVector> &data4_gpu,
                  RType alpha0, RType alpha1, RType alpha, unsigned width,
-                 unsigned height, DType ds = 1.0, DType dt = 1.0,
-                 DType ds2 = 1.0, DType dt2 = 1.0);
+                 unsigned height, DType dx = 1.0, DType dy = 1.0, DType dt = 1.0,
+                 DType dx2 = 1.0, DType dy2 = 1.0, DType dt2 = 1.0);
 
 RType ICTGV2Norm(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
                  CVector &data3_gpu, std::vector<CVector> &data4_gpu,
                  std::vector<CVector> &temp3, std::vector<CVector> &temp6,
                  RType alpha0, RType alpha1, RType alpha, unsigned width,
-                 unsigned height, DType ds = 1.0, DType dt = 1.0,
-                 DType ds2 = 1.0, DType dt2 = 1.0);
+                 unsigned height, DType dx = 1.0, DType dy = 1.0, DType dt = 1.0,
+                 DType dx2 = 1.0, DType dy2 = 1.0, DType dt2 = 1.0);
 
 /**
  * \brief Function to perform element-wise division for each vector in the

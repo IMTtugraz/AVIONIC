@@ -45,7 +45,8 @@ void TGV2::InitParams()
   params.sigmaTauRatio = 1.0;
   params.timeSpaceWeight = 5.0;
 
-  params.ds = 1.0;
+  params.dx = 1.0;
+  params.dy = 1.0; 
   params.dt = 1.0;
 
   params.alpha0 = std::sqrt(2);
@@ -90,14 +91,14 @@ void TGV2::AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
                          CVector &b1)
 {
   std::vector<CVector> gradient1 =
-      utils::Gradient(extDiff1, width, height, params.ds, params.ds, params.dt);
+      utils::Gradient(extDiff1, width, height, params.dx, params.dy, params.dt);
   for (unsigned cnt = 0; cnt < 3; cnt++)
   {
     agile::subVector(gradient1[cnt], extDiff2[cnt], gradient1[cnt]);
   }
 
   std::vector<CVector> gradient2 = utils::SymmetricGradient(
-      extDiff2, width, height, params.ds, params.ds, params.dt);
+      extDiff2, width, height, params.dx, params.dy, params.dt);
 
   zTemp = mrOp->BackwardOperation(extDiff1, b1);
 
@@ -145,13 +146,13 @@ RType TGV2::ComputeGStar(CVector &x, std::vector<CVector> &y1,
 
   // G*(-Kx)
   mrOp->ForwardOperation(z, imgTemp, b1_gpu);
-  utils::Divergence(y1, div1Temp, width, height, frames, params.ds, params.ds,
+  utils::Divergence(y1, div1Temp, width, height, frames, params.dx, params.dy,
                     params.dt);
   agile::subVector(imgTemp, div1Temp, div1Temp);
   RType g3 = agile::norm1(div1Temp);
 
-  utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.ds,
-                             params.ds, params.dt);
+  utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.dx,
+                             params.dy, params.dt);
   RType g4 = 0;
   for (unsigned cnt = 0; cnt < 3; cnt++)
   {
@@ -170,7 +171,7 @@ RType TGV2::ComputePDGap(CVector &x1, std::vector<CVector> &x2,
 {
   RType gstar = this->ComputeGStar(x1, y1, y2, z, data_gpu, b1_gpu);
   RType tgv2Norm = utils::TGV2Norm(x1, x2, params.alpha0, params.alpha1, width,
-                                   height, params.ds, params.ds, params.dt);
+                                   height, params.dx, params.dy, params.dt);
   RType PDGap = std::abs(gstar + tgv2Norm);
   return PDGap;
 }
@@ -180,8 +181,8 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 {
   unsigned N = width * height * frames;
  
-  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
-  Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
+  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dy, params.dt);
+  Log("Setting dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt);
   Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
 
 
@@ -227,7 +228,7 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
   {
     // dual ascent step
     // p
-    utils::Gradient(ext1, y1Temp, width, height, params.ds, params.ds,
+    utils::Gradient(ext1, y1Temp, width, height, params.dx, params.dy,
                     params.dt);
     for (unsigned cnt = 0; cnt < 3; cnt++)
     {
@@ -236,7 +237,7 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     }
 
     // q
-    utils::SymmetricGradient(ext2, y2Temp, width, height, params.ds, params.ds,
+    utils::SymmetricGradient(ext2, y2Temp, width, height, params.dx, params.dy,
                              params.dt);
     for (unsigned cnt = 0; cnt < 6; cnt++)
     {
@@ -256,14 +257,14 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     // primal descent
     // ext1
     mrOp->ForwardOperation(z, imgTemp, b1_gpu);
-    utils::Divergence(y1, div1Temp, width, height, frames, params.ds, params.ds,
+    utils::Divergence(y1, div1Temp, width, height, frames, params.dx, params.dy,
                       params.dt);
     agile::subVector(imgTemp, div1Temp, div1Temp);
     agile::subScaledVector(x1, params.tau, div1Temp, ext1);
 
     // ext2
-    utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.ds,
-                               params.ds, params.dt);
+    utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.dx,
+                               params.dy, params.dt);
     for (unsigned cnt = 0; cnt < 3; cnt++)
     {
       agile::addVector(y1[cnt], div2Temp[cnt], div2Temp[cnt]);

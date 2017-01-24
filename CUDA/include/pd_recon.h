@@ -45,14 +45,12 @@ typedef struct PDParams
   /** \brief Step size for difference computation in z-spatial direction */
   RType dz;
 
-  /** \brief Minimum value for PD Gap for main iteration. */
-  float stopPDGap;
-
-/** \brief Step size for difference computation in spatial direction */
-  RType ds;
-
   /** \brief Step size for difference computation in temporal direction */
   RType dt;
+
+
+  /** \brief Minimum value for PD Gap for main iteration. */
+  float stopPDGap;
 
   /** \brief Dual variable step size. */
   RType sigma;
@@ -108,8 +106,8 @@ class PDRecon
    */
   void AdaptStepSize(RType nKx, RType nx);
 
-  /** \brief Compute the weights ds, dt based on the timeSpaceWeight */
-  void ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &ds, RType &dt);
+  /** \brief Compute the weights dx, dy, dt based on the timeSpaceWeight */
+  void ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &dx, RType &dy, RType &dt);
 
   /** \brief Return PDParams reference (abstract method). */
   virtual PDParams &GetParams() = 0;

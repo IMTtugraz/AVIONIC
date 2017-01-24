@@ -12,10 +12,11 @@ typedef struct ICTGV2Params : public TGV2Params
   RType alpha;
   /** \brief spatio-temporal weight.*/
   RType timeSpaceWeight2;
-  /** \brief Step size for difference computation in second spatial direction */
-  RType ds2;
-  /** \brief Step size for difference computation in second temporal direction
-   */
+  /** \brief Step size for difference computation in second x-spatial direction */
+  RType dx2; 
+  /** \brief Step size for difference computation in second y-spatial direction */
+  RType dy2;
+  /** \brief Step size for difference computation in second temporal direction  */
   RType dt2;
 } ICTGV2Params;
 

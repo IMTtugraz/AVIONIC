@@ -166,7 +166,8 @@ void OptionsParser::AddCoilConstrConfigurationParameters()
 
 void OptionsParser::AddTVConfigurationParameters()
 {
-  conf.add_options()("tv.ds", po::value<RType>(&tvParams.ds))(
+  conf.add_options()("tv.dx", po::value<RType>(&tvParams.dx))(
+      "tv.dy", po::value<RType>(&tvParams.dy))(
       "tv.dt", po::value<RType>(&tvParams.dt))(
       "tv.sigma", po::value<RType>(&tvParams.sigma))(
       "tv.tau", po::value<RType>(&tvParams.tau))(
@@ -177,7 +178,8 @@ void OptionsParser::AddTVConfigurationParameters()
 
 void OptionsParser::AddTGV2ConfigurationParameters()
 {
-  conf.add_options()("tgv2.ds", po::value<RType>(&tgv2Params.ds))(
+  conf.add_options()("tgv2.dx", po::value<RType>(&tgv2Params.dx))(
+      "tgv2.dy", po::value<RType>(&tgv2Params.dy))(
       "tgv2.dt", po::value<RType>(&tgv2Params.dt))(
       "tgv2.sigma", po::value<RType>(&tgv2Params.sigma))(
       "tgv2.tau", po::value<RType>(&tgv2Params.tau))(
@@ -204,7 +206,8 @@ void OptionsParser::AddTGV2_3DConfigurationParameters()
 
 void OptionsParser::AddICTGV2ConfigurationParameters()
 {
-  conf.add_options()("ictgv2.ds", po::value<RType>(&ictgv2Params.ds))(
+  conf.add_options()("ictgv2.dx", po::value<RType>(&ictgv2Params.dx))(
+      "ictgv2.dy", po::value<RType>(&ictgv2Params.dy))(
       "ictgv2.dt", po::value<RType>(&ictgv2Params.dt))(
       "ictgv2.sigma", po::value<RType>(&ictgv2Params.sigma))(
       "ictgv2.tau", po::value<RType>(&ictgv2Params.tau))(
@@ -217,7 +220,8 @@ void OptionsParser::AddICTGV2ConfigurationParameters()
       "ictgv2.alpha", po::value<RType>(&ictgv2Params.alpha))(
       "ictgv2.timeSpaceWeight2",
       po::value<RType>(&ictgv2Params.timeSpaceWeight2))(
-      "ictgv2.ds2", po::value<RType>(&ictgv2Params.ds2))(
+      "ictgv2.dx2", po::value<RType>(&ictgv2Params.dx2))(
+      "ictgv2.dy2", po::value<RType>(&ictgv2Params.dy2))(
       "ictgv2.dt2", po::value<RType>(&ictgv2Params.dt2));
 }
 

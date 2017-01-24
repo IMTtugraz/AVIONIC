@@ -68,7 +68,7 @@ void PDRecon::TestAdjointness(CVector &b1)
 {
 }
 
-void PDRecon::ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &ds,
+void PDRecon::ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &dx, RType &dy,
                                       RType &dt)
 {
 
@@ -93,7 +93,12 @@ void PDRecon::ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &ds,
   else
     throw std::invalid_argument("ComputeTimeSpaceWeights: Invalid ratio.");
 
-  ds = 1.0 / w1;
+//  dx = dx / w1;
+//  dy = dy / w1; 
+//  dt = dt / w2;
+
+  dx = 1.0 / w1;
+  dy = 1.0 / w1; 
   dt = 1.0 / w2;
 }
 

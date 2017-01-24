@@ -18,6 +18,7 @@
 #include "../include/tv.h"
 #include "../include/noncartesian_operator.h"
 #include "../include/cartesian_operator3d.h"
+#include "../include/noncartesian_operator3d.h"
 #include "../include/options_parser.h"
 #include "../include/utils.h"
 template <typename TType>

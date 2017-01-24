@@ -302,15 +302,18 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     // extra gradient
     agile::scale(2.0f, ext1, ext1);
     agile::subVector(ext1, x1, ext1);
+    
     // x_n = x_n+1
     agile::copy(x1_old, x1);
-
     for (unsigned cnt = 0; cnt < 3; cnt++)
     {
       agile::scale((DType)2.0, ext2[cnt], ext2[cnt]);
       agile::subVector(ext2[cnt], x2[cnt], ext2[cnt]);
       agile::copy(x2_old[cnt], x2[cnt]);
     }
+
+    // abs constrain on x1
+    
 
     // adapt step size
     if (loopCnt < 10 || (loopCnt % 50 == 0))
@@ -339,7 +342,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
       Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap);     
     }
 
-/*
+
     // adapt step size
     if (loopCnt < 10 || (loopCnt % 50 == 0))
     {
@@ -356,7 +359,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 
       if (verbose)
       {
-        RType pdGap = 1.0;
+        //RType pdGap = 1.0;
         RType pdGap = ComputePDGap(x1, x2, y1, y2, z, data_gpu, b1_gpu);
         Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap/N);
       }  
@@ -368,7 +371,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
         RType pdGap = ComputePDGap(x1, x2, y1, y2, z, data_gpu, b1_gpu);
         pdGapExport.push_back( pdGap/N );
     }
-*/
+
 
     loopCnt++;
     if (loopCnt % 10 == 0)

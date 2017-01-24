@@ -66,17 +66,3 @@ tmp = zeros(n,m,o);
 	grad_v(:,m    ,:,6)=tmp(:,m    ,:) 		    - v(:,m-1  ,:,3);
 
 	grad_v(:,:,:,6)=grad_v(:,:,:,6)./2;                             	%devide by 2
-
-
-
-
-
-
-
-
-
-
-
-
-
-

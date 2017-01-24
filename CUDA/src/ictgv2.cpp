@@ -45,11 +45,13 @@ void ICTGV2::InitParams()
   params.sigmaTauRatio = 1.0;
 
   params.timeSpaceWeight = 6.5;
-  params.ds = 1.0;
+  params.dx = 1.0;
+  params.dy = 1.0; 
   params.dt = 1.0;
 
   params.timeSpaceWeight2 = 2.5;
-  params.ds2 = 1.0;
+  params.dx2 = 1.0;
+  params.dy2 = 1.0; 
   params.dt2 = 1.0;
 
   params.alpha = 0.6423;
@@ -104,7 +106,7 @@ void ICTGV2::AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
   agile::subVector(extDiff1, extDiff3, imgTemp);
 
   // y1
-  utils::Gradient(imgTemp, y2Temp, width, height, params.ds, params.ds,
+  utils::Gradient(imgTemp, y2Temp, width, height, params.dx, params.dy,
                   params.dt);
 
   agile::subVector(y2Temp[0], extDiff2[0], y2Temp[0]);
@@ -115,12 +117,12 @@ void ICTGV2::AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
   utils::SumOfSquares3(y2Temp, tempSum);
 
   // y2
-  utils::SymmetricGradient(extDiff2, y2Temp, width, height, params.ds,
-                           params.ds, params.dt);
+  utils::SymmetricGradient(extDiff2, y2Temp, width, height, params.dx,
+                           params.dy, params.dt);
   utils::SumOfSquares6(y2Temp, tempSum);
 
   // y3
-  utils::Gradient(extDiff3, y2Temp, width, height, params.ds2, params.ds2,
+  utils::Gradient(extDiff3, y2Temp, width, height, params.dx2, params.dy2,
                   params.dt2);
 
   agile::subVector(y2Temp[0], extDiff4[0], y2Temp[0]);
@@ -129,8 +131,8 @@ void ICTGV2::AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
 
   utils::SumOfSquares3(y2Temp, tempSum);
 
-  utils::SymmetricGradient(extDiff4, y2Temp, width, height, params.ds2,
-                           params.ds2, params.dt2);
+  utils::SymmetricGradient(extDiff4, y2Temp, width, height, params.dx2,
+                           params.dy2, params.dt2);
 
   zTemp = mrOp->BackwardOperation(extDiff1, b1);
 
@@ -192,13 +194,13 @@ RType ICTGV2::ComputeGStar(CVector &x1, std::vector<CVector> &y1,
 
   // G*(-Kx)
   mrOp->ForwardOperation(z, imgTemp, b1_gpu);
-  utils::Divergence(y1, div1Temp, width, height, frames, params.ds, params.ds,
+  utils::Divergence(y1, div1Temp, width, height, frames, params.dx, params.dy,
                     params.dt);
   agile::subVector(imgTemp, div1Temp, div1Temp);
   RType g3 = agile::norm1(div1Temp);
 
-  utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.ds,
-                             params.ds, params.dt);
+  utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.dx,
+                             params.dy, params.dt);
   RType g4 = 0;
   for (unsigned cnt = 0; cnt < 3; cnt++)
   {
@@ -207,15 +209,15 @@ RType ICTGV2::ComputeGStar(CVector &x1, std::vector<CVector> &y1,
     g4 += agile::norm1(div2Temp[cnt]);
   }
 
-  utils::Divergence(y1, div1Temp, width, height, frames, params.ds, params.ds,
+  utils::Divergence(y1, div1Temp, width, height, frames, params.dx, params.dy,
                     params.dt);
-  utils::Divergence(y3, div3Temp, width, height, frames, params.ds2, params.ds2,
+  utils::Divergence(y3, div3Temp, width, height, frames, params.dx2, params.dy2,
                     params.dt2);
   agile::subVector(div1Temp, div3Temp, div1Temp);
   RType g5 = agile::norm1(div1Temp);
 
-  utils::SymmetricDivergence(y4, div2Temp, width, height, frames, params.ds2,
-                             params.ds2, params.dt2);
+  utils::SymmetricDivergence(y4, div2Temp, width, height, frames, params.dx2,
+                             params.dy2, params.dt2);
   RType g6 = 0;
   for (unsigned cnt = 0; cnt < 3; cnt++)
   {
@@ -238,8 +240,8 @@ RType ICTGV2::ComputePDGap(CVector &x1, std::vector<CVector> &x2, CVector &x3,
   RType gstar = this->ComputeGStar(x1, y1, y2, y3, y4, z, data_gpu, b1_gpu);
   RType ictgv2Norm =
       utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
-                        params.alpha1, params.alpha, width, height, params.ds,
-                        params.dt, params.ds2, params.dt2);
+                        params.alpha1, params.alpha, width, height, params.dx,
+                        params.dt, params.dy2, params.dt2);
   RType PDGap = std::abs(gstar + ictgv2Norm);
   return PDGap;
 }
@@ -291,10 +293,12 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
                                      CVector &b1_gpu)
 {
   unsigned N = width * height * frames;
-  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
-  Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
-  ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.ds2, params.dt2);
-  Log("Setting ds2: %.3e, dt2: %.3e\n", params.ds2, params.dt2);
+  Log("Initial dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt); 
+  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dy, params.dt);
+  Log("Setting dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt);
+  Log("Initial dx2: %.3e, dy2: %.3e, dt2: %.3e\n", params.dx2, params.dy2, params.dt2);  
+  ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.dx2, params.dy2, params.dt2);
+  Log("Setting dx2: %.3e, dy2: %.3e, dt2: %.3e\n", params.dx2, params.dy2, params.dt2);
   Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
 
   // primal
@@ -318,9 +322,9 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     // dual ascent step
     // p, r
     agile::subVector(ext1, ext3, imgTemp);
-    utils::Gradient(imgTemp, y2Temp, width, height, params.ds, params.ds,
+    utils::Gradient(imgTemp, y2Temp, width, height, params.dx, params.dy,
                     params.dt);
-    utils::Gradient(ext3, y4Temp, width, height, params.ds2, params.ds2,
+    utils::Gradient(ext3, y4Temp, width, height, params.dx2, params.dy2,
                     params.dt2);
     for (unsigned cnt = 0; cnt < 3; cnt++)
     {
@@ -332,10 +336,10 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     }
 
     // q, s
-    utils::SymmetricGradient(ext2, y2Temp, width, height, params.ds, params.ds,
+    utils::SymmetricGradient(ext2, y2Temp, width, height, params.dx, params.dy,
                              params.dt);
-    utils::SymmetricGradient(ext4, y4Temp, width, height, params.ds2,
-                             params.ds2, params.dt2);
+    utils::SymmetricGradient(ext4, y4Temp, width, height, params.dx2,
+                             params.dy2, params.dt2);
     for (unsigned cnt = 0; cnt < 6; cnt++)
     {
       agile::addScaledVector(y2[cnt], params.sigma, y2Temp[cnt], y2[cnt]);
@@ -368,14 +372,14 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     // primal descent
     // ext1
     mrOp->ForwardOperation(z, imgTemp, b1_gpu);
-    utils::Divergence(y1, div1Temp, width, height, frames, params.ds, params.ds,
+    utils::Divergence(y1, div1Temp, width, height, frames, params.dx, params.dy,
                       params.dt);
     agile::subVector(imgTemp, div1Temp, imgTemp);
     agile::subScaledVector(x1, params.tau, imgTemp, ext1);
 
     // ext2
-    utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.ds,
-                               params.ds, params.dt);
+    utils::SymmetricDivergence(y2, div2Temp, width, height, frames, params.dx,
+                               params.dy, params.dt);
     for (unsigned cnt = 0; cnt < 3; cnt++)
     {
       agile::addVector(y1[cnt], div2Temp[cnt], div2Temp[cnt]);
@@ -383,14 +387,14 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     }
 
     // ext3
-    utils::Divergence(y3, div3Temp, width, height, frames, params.ds2,
-                      params.ds2, params.dt2);
+    utils::Divergence(y3, div3Temp, width, height, frames, params.dx2,
+                      params.dy2, params.dt2);
     agile::subVector(div1Temp, div3Temp, div3Temp);
     agile::subScaledVector(x3, params.tau, div3Temp, ext3);
 
     // ext4
-    utils::SymmetricDivergence(y4, div2Temp, width, height, frames, params.ds2,
-                               params.ds2, params.dt2);
+    utils::SymmetricDivergence(y4, div2Temp, width, height, frames, params.dx2,
+                               params.dy2, params.dt2);
     for (unsigned cnt = 0; cnt < 3; cnt++)
     {
       agile::addVector(y3[cnt], div2Temp[cnt], div2Temp[cnt]);
@@ -453,8 +457,8 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
  
       RType ictgv2Norm =
               utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
-                                params.alpha1, params.alpha, width, height, params.ds,
-                                params.dt, params.ds2, params.dt2);
+                                params.alpha1, params.alpha, width, height, params.dx, params.dy,
+                                params.dt, params.dx2, params.dy2, params.dt2);
 
       datafidelity = ComputeDataFidelity(x1,data_gpu,b1_gpu);
       Log("Data-Fidelity: %.3e | ICTGV norm: %.3e\n", datafidelity,ictgv2Norm);

@@ -47,8 +47,10 @@ void TV::InitParams()
   params.sigmaTauRatio = 1.0;
   params.timeSpaceWeight = 5.0;
 
-  params.ds = 1.0;
+  params.dx = 1.0;
+  params.dy = 1.0; 
   params.dt = 1.0;
+
   params.adaptLambdaParams.k = 0.4 * 0.2991;
   params.adaptLambdaParams.d = 10.0 * 0.2991;
   InitLambda(true);
@@ -77,7 +79,7 @@ void TV::TestAdjointness(CVector &b1)
 void TV::AdaptStepSize(CVector &extDiff, CVector &b1)
 {
   std::vector<CVector> gradient =
-      utils::Gradient(extDiff, width, height, params.ds, params.ds, params.dt);
+      utils::Gradient(extDiff, width, height, params.dx, params.dy, params.dt);
 
   zTemp = mrOp->BackwardOperation(extDiff, b1);
 
@@ -98,8 +100,8 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
 {
   unsigned N = width * height * frames;
 
-  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
-  Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
+  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dy, params.dt);
+  Log("Setting dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt);
   Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
 
   // primal
@@ -134,7 +136,7 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
   while ( loopCnt < params.maxIt )
   {
     // dual ascent step
-    utils::Gradient(ext, tempGradient, width, height, params.ds, params.ds,
+    utils::Gradient(ext, tempGradient, width, height, params.dx, params.dy,
                     params.dt);
     agile::addScaledVector(y[0], params.sigma, tempGradient[0], y[0]);
     agile::addScaledVector(y[1], params.sigma, tempGradient[1], y[1]);
@@ -150,7 +152,7 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
     agile::scale((float)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
     // primal descent
     mrOp->ForwardOperation(z, imgTemp, b1_gpu);
-    utils::Divergence(y, divTemp, width, height, frames, params.ds, params.ds,
+    utils::Divergence(y, divTemp, width, height, frames, params.dx, params.dy,
                       params.dt);
     agile::subVector(imgTemp, divTemp, divTemp);
     agile::subScaledVector(x, params.tau, divTemp, ext);
@@ -212,7 +214,7 @@ RType TV::ComputeGStar(CVector &x, std::vector<CVector> &y, CVector &z,
 
   // G*(-Kx)
   mrOp->ForwardOperation(z, imgTemp, b1_gpu);
-  utils::Divergence(y, divTemp, width, height, frames, params.ds, params.ds,
+  utils::Divergence(y, divTemp, width, height, frames, params.dx, params.dy,
                     params.dt);
   agile::subVector(imgTemp, divTemp, divTemp);
   RType g3 = agile::norm1(divTemp);
@@ -226,7 +228,7 @@ RType TV::ComputePDGap(CVector &x, std::vector<CVector> &y, CVector &z,
 {
   RType gstar = this->ComputeGStar(x, y, z, data_gpu, b1_gpu);
   RType tvNorm =
-      utils::TVNorm(x, width, height, params.ds, params.ds, params.dt);
+      utils::TVNorm(x, width, height, params.dx, params.dy, params.dt);
   RType PDGap = std::abs(gstar + tvNorm);
   return PDGap;
 }
