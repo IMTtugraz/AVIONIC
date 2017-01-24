@@ -294,10 +294,12 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 {
   unsigned N = width * height * frames;
   Log("Initial dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt); 
-  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dy, params.dt);
+  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dt);
+  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dy, params.dt); 
   Log("Setting dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt);
   Log("Initial dx2: %.3e, dy2: %.3e, dt2: %.3e\n", params.dx2, params.dy2, params.dt2);  
-  ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.dx2, params.dy2, params.dt2);
+  ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.dx2, params.dt2);
+  ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.dy2, params.dt2); 
   Log("Setting dx2: %.3e, dy2: %.3e, dt2: %.3e\n", params.dx2, params.dy2, params.dt2);
   Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
 

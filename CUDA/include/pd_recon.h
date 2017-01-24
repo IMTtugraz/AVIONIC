@@ -107,7 +107,7 @@ class PDRecon
   void AdaptStepSize(RType nKx, RType nx);
 
   /** \brief Compute the weights dx, dy, dt based on the timeSpaceWeight */
-  void ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &dx, RType &dy, RType &dt);
+  void ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &ds, RType &dt);
 
   /** \brief Return PDParams reference (abstract method). */
   virtual PDParams &GetParams() = 0;
