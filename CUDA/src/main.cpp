@@ -117,7 +117,7 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
   }
 }
 
-void PerfromRawdatNormalization(Dimension &dims,OptionsParser &op,
+void PerformRawdataNormalization(Dimension &dims,OptionsParser &op,
                       CVector &kdata, RVector &mask, RVector &w, CType &datanorm)
 {
     std::cout << "Normalize binary data." << std::endl;
@@ -188,6 +188,7 @@ void PerformNonCartesianCoilConstruction(Dimension &dims, OptionsParser &op,
     // take square-root of densitiy compensation for further processing
     //agile::sqrt(w,w);
   }
+ 
 
   NoncartesianOperator *noncartOp = new NoncartesianOperator(
       dims.width, dims.height, dims.coils, dims.frames,
@@ -201,6 +202,48 @@ void PerformNonCartesianCoilConstruction(Dimension &dims, OptionsParser &op,
   nonCartCoilConstruction.PerformCoilConstruction(kdata, u, b1, com);
   delete noncartOp;
 }
+
+void PerformInitalizationGivenB1(Dimension &dims, OptionsParser &op,
+                                         CVector &kdata, CVector &u0,
+                                         CVector &b1, RVector &mask, RVector &w,
+                                         communicator_type &com)
+{
+  unsigned nFE = dims.readouts;
+  unsigned spokesPerFrame = dims.encodings;
+  
+  NoncartesianOperator *noncartOp = new NoncartesianOperator(
+      dims.width, dims.height, dims.coils, dims.frames,
+      spokesPerFrame * dims.frames, nFE, spokesPerFrame, mask, w);
+
+  NoncartesianCoilConstruction nonCartCoilConstruction(
+      dims.width, dims.height, dims.coils, dims.frames, op.coilParams,
+      noncartOp);
+
+  CVector tmp_crec(dims.width * dims.height);
+  tmp_crec.assign(tmp_crec.size(), 0);
+
+  CVector tmp_b1(dims.width * dims.height);
+  tmp_b1.assign(tmp_b1.size(), 0);
+
+  CVector crec(dims.width * dims.height * dims.coils);
+  crec.assign(crec.size(), 0);
+
+  nonCartCoilConstruction.SetVerbose(op.verbose);
+  nonCartCoilConstruction.TimeAveragedReconstruction(kdata, u0, crec, false);
+
+  for (unsigned coil = 0; coil < dims.coils; coil++)
+   {
+    utils::GetSubVector(crec, tmp_crec, coil, dims.width * dims.height);
+    utils::GetSubVector(b1, tmp_b1, coil, dims.width * dims.height); 
+    agile::multiplyConjElementwise(tmp_b1, tmp_crec, tmp_b1);
+    agile::addVector(u0, tmp_b1, u0);
+  }
+  agile::scale((CType) 0.5, u0, u0);
+
+
+  delete noncartOp;
+}
+
 
 void PerformRawDataPreparation(Dimension &dims, OptionsParser &op,
                                CVector &kdata, RVector &mask, RVector &w, CType &datanorm)
@@ -353,8 +396,9 @@ int main(int argc, char *argv[])
         }
       }
 
+      
       // take square-root of densitiy compensation for further processing
-      agile::sqrt(w,w);
+       agile::sqrt(w,w);
 
       // scale data with density compensation
       std::cout << "multiplying with density comp" <<std::endl;
@@ -364,13 +408,13 @@ int main(int argc, char *argv[])
                                             w.data(), kdata.data() + coil * dims.encodings * dims.readouts *dims.frames,
                                            dims.encodings * dims.readouts *dims.frames);
       }
-
-
+    // square again because sqrt implemented in gpuNUFFT
+      agile::pow((RType) 2.0,w,w);
     }
 
     // rawdata normalization
     if (op.normalize)
-      PerfromRawdatNormalization(dims, op, kdata, mask, w, datanorm);
+      PerformRawdataNormalization(dims, op, kdata, mask, w, datanorm);
 
   } // end binary input
 
@@ -409,7 +453,15 @@ int main(int argc, char *argv[])
     }
     else
     {
+      std::cout << "b1norm = " << agile::norm1(b1) << std::endl;
+    
       std::cout << "no initial solution (u0) data provided!" << std::endl;
+      PerformInitalizationGivenB1(dims, op, kdata, u0, b1, mask, w, com);
+   //   ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+   //                                    "u0_reconstructed.bin", u0);
+   //   ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+   //                                    "b1_reconstructed.bin", b1);
+      std::cout << "b1norm = " << agile::norm1(b1) << std::endl;
     }
   }
   else // b1 and u0 not provided
@@ -436,16 +488,20 @@ int main(int argc, char *argv[])
     }
     utils::GetSubVector(u, u0, dims.coils - 1, N);
 
-    ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-                                       "b1_reconstructed.bin", b1);
+  //  ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+  //                                     "b1_reconstructed.bin", b1);
 
-    if (op.nonuniform)
-      agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);
+    //if (op.nonuniform)
+      //agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);
 
-    ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-                                       "u0_reconstructed.bin", u0);
+//    ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+//                                       "u0_reconstructed.bin", u0);
   }
-
+  ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+                                     "u0_reconstructed.bin", u0);
+  ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+                                     "b1_reconstructed.bin", b1);
+  
   // end initilize b1, u0
   // ==================================================================================================================
 

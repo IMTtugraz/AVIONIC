@@ -114,13 +114,13 @@ void NoncartesianCoilConstruction::TimeAveragedReconstruction(CVector &kdata,
     agile::addVector(u, temp, u);
   }
   agile::sqrt(u, u);
+  //agile::scale((CType) 0.5, u, u);
 
   if (applyPhase)
   {
     agile::phaseVector(angle, angleReal);
     agile::scale(CType(0, 1.0), angleReal, angle);
     agile::expVector(angle, angle);
-
     agile::multiplyElementwise(u, angle, u);
   }
   delete gpuNUFFTOp;

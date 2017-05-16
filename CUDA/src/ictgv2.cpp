@@ -461,8 +461,11 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
               utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
                                 params.alpha1, params.alpha, width, height, params.dx, params.dy,
                                 params.dt, params.dx2, params.dy2, params.dt2);
-
+      ictgvNormExport.push_back(ictgv2Norm);
+     
       datafidelity = ComputeDataFidelity(x1,data_gpu,b1_gpu);
+      dataFidelityExport.push_back(datafidelity);
+
       Log("Data-Fidelity: %.3e | ICTGV norm: %.3e\n", datafidelity,ictgv2Norm);
 
       if ( pdGap < params.stopPDGap )
@@ -485,8 +488,16 @@ void ICTGV2::ExportAdditionalResults(const char *outputDir,
   {
     CVector pdGapExportGPU(pdGapExport.size());
     pdGapExportGPU.assignFromHost(pdGapExport.begin(), pdGapExport.end());
-
     (*callback)(outputDir, "PDGap", pdGapExportGPU);
+   
+    CVector ictgvNormExportGPU(ictgvNormExport.size());
+    ictgvNormExportGPU.assignFromHost(ictgvNormExport.begin(), ictgvNormExport.end());
+    (*callback)(outputDir, "ICTGVnorm", ictgvNormExportGPU);
+
+    CVector dataFidelityExportGPU(dataFidelityExport.size());
+    dataFidelityExportGPU.assignFromHost(dataFidelityExport.begin(), dataFidelityExport.end());
+    (*callback)(outputDir, "DATAfidelity", dataFidelityExportGPU);
+ 
   }
   // TODO
   // other components?

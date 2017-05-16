@@ -91,6 +91,9 @@ class ICTGV2 : public PDRecon
   void InitDualVectors(unsigned N);
 
   std::vector<CType> pdGapExport;
+  std::vector<CType> dataFidelityExport;
+  std::vector<CType> ictgvNormExport;
+ 
   RType datafidelity;
 
   CVector imgTemp;

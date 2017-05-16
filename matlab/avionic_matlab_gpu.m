@@ -1,4 +1,4 @@
-function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( data, par_in, mask, b1)
+function [ g2, comp1, comp2, b1, u0, pdgap, datanorm, ictgvnorm, datafid ] = avionic_matlab_gpu( data, par_in, mask, b1)
 % simple export and import to gpu from matlab
 
     if nargin < 4
@@ -47,8 +47,8 @@ function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( dat
     id = num2str(round(now*1e5));
 
     % set zero output
-    comp1 = 0; comp2 = 0; pdgap = 0; 
-    prescale = 0;
+    comp1 = 0; comp2 = 0; pdgap = 0; u0 = 0;
+    prescale = 0; ictgvnorm = 0; datafid = 0;
 
     [n,m,ncoils,nframes] = size(data);
 
@@ -79,19 +79,19 @@ function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( dat
     end
     
     if ~isempty(b1);
-        crec = zeros(n,m,ncoils);
-        for j = 1:ncoils
-            data_ = sum( squeeze(mri_obj.data(:,:,j,:)), 3);
-            msum = sum(mri_obj.mask,3);
-            data_(msum>0) = data_(msum>0)./msum(msum>0);
-            crec(:,:,j) = fft2( data_ )./sqrt(n*m);
-        end
-        u0 = sum(crec.*conj(b1),3);
-        %u0 = sqrt(sum(abs(crec).^2,3));
-        datanorm_pre = 255./median(abs(u0(abs(u0)>=0.9.*max(abs(u0(:))))));
-        mri_obj.data = mri_obj.data.*datanorm_pre;
-        u0 = u0*datanorm_pre;
-        prescale = 1;
+%         crec = zeros(n,m,ncoils);
+%         for j = 1:ncoils
+%             data_ = sum( squeeze(mri_obj.data(:,:,j,:)), 3);
+%             msum = sum(mri_obj.mask,3);
+%             data_(msum>0) = data_(msum>0)./msum(msum>0);
+%             crec(:,:,j) = fft2( data_ )./sqrt(n*m);
+%         end
+%         u0 = sum(crec.*conj(b1),3);
+%         %u0 = sqrt(sum(abs(crec).^2,3));
+%         datanorm_pre = 255./median(abs(u0(abs(u0)>=0.9.*max(abs(u0(:))))));
+%         mri_obj.data = mri_obj.data.*datanorm_pre;
+%         u0 = u0*datanorm_pre;
+%         prescale = 1;
 
         writebin_vector(permute(b1,[2 1 3 4]),...
             ['./',id,'/b1.bin']);
@@ -99,7 +99,7 @@ function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( dat
             ['./',id,'/u0.bin']);
         clear crec u
 
-        recon_cmd=['avionic -v -o -i ',num2str(stop_par),...
+        recon_cmd=['avionic -o -i ',num2str(stop_par),...
             ' --ictgv2.lambda=',num2str(lambda),...
             ' --ictgv2.timeSpaceWeight=',num2str(timeSpaceWeight),...
             ' --ictgv2.timeSpaceWeight2=',num2str(timeSpaceWeight2),...
@@ -109,7 +109,7 @@ function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( dat
             num2str(m),':',num2str(n),':0:',num2str(m),':',num2str(n),':0:',num2str(ncoils), ...
             ':',num2str(nframes),' -u ./',id,'/u0.bin -s ./',id,'/b1.bin ./',id,'/data.bin ./',id,'/mask.bin ./',id,'/result.bin'];
     else
-        recon_cmd=['avionic -v -o -i ',num2str(stop_par),...
+        recon_cmd=['avionic -o -i ',num2str(stop_par),...
             ' --ictgv2.lambda=',num2str(lambda),...
             ' --ictgv2.timeSpaceWeight=',num2str(timeSpaceWeight),...
             ' --ictgv2.timeSpaceWeight2=',num2str(timeSpaceWeight2),...
@@ -146,6 +146,14 @@ function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( dat
         pdgap = abs(pdgap);
     end
 
+    if exist(['./',id,'/ICTGVnorm'])==2
+        ictgvnorm = readbin_vector(['./',id,'/ICTGVnorm']);      
+    end
+    
+    if exist(['./',id,'/DATAfidelity'])==2
+        datafid = readbin_vector(['./',id,'/DATAfidelity']);
+    end
+
     if exist(['./',id,'/b1_reconstructed.bin'])==2
         b1 = readbin_vector(['./',id,'/b1_reconstructed.bin']);
         b1 = permute(reshape(b1,[m,n,ncoils]),[2 1 3]);
@@ -153,7 +161,9 @@ function [ g2, comp1, comp2, b1, u0, pdgap, datanorm ] = avionic_matlab_gpu( dat
 
     if exist(['./',id,'/u0_reconstructed.bin'])==2
         u0 = readbin_vector(['./',id,'/u0_reconstructed.bin']);
+        if length(u0)==n*m
         u0 = permute(reshape(u0,[m,n]),[2 1]);
+        end
     end
 
     if exist(['./',id,'/datanorm_factor.bin'])==2

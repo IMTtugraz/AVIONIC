@@ -681,8 +681,8 @@ void RawDataPreparation::NormalizeNonCartData(std::vector<CType> &data, const Di
   //CType datanorm = (CType)255.0 / median;
 
   // for non-cartesian data it is important to scale with number of frames
-  datanorm = (CType) dims.frames * (CType)255.0 / median;
-  //datanorm = (CType)255.0 / median;
+  //datanorm = (CType) dims.frames * (CType)255.0 / median;
+  datanorm = (CType)255.0 / median;
 
   std::cout << "datanorm factor (in):" << datanorm << std::endl;
   agile::scale(datanorm, kdata, kdata);
@@ -745,7 +745,9 @@ void RawDataPreparation::NormalizeNonCartData(CVector &data, const Dimension &di
   //datanorm = (CType)255.0 / median ;
 
   // for non-cartesian data it is important to scale with number of frames
-  datanorm = (CType) dims.frames * (CType)255.0 / median;
+  //datanorm = (CType) dims.frames * (CType)255.0 / median;
+  datanorm =  (CType)255.0 / median;
+
 
   std::cout << "datanorm factor (in):" << datanorm << std::endl;
 

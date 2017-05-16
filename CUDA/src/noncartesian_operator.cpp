@@ -50,8 +50,8 @@ void NoncartesianOperator::Init()
 
   std::cout<< "noncart op init norm(dens)" << agile::norm2(dens)  << std::endl;
   densHost = std::vector<RType>(nSamplesPerFrame*frames);
-  //dens.copyToHost(densHost);
-  std::fill(densHost.begin(),densHost.end(),1.0);
+  dens.copyToHost(densHost);
+  //std::fill(densHost.begin(),densHost.end(),1.0);
 
   densData.data = &(densHost[0]);
   densData.dim.length = nSamplesPerFrame;
@@ -128,15 +128,15 @@ void NoncartesianOperator::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
     gpuNUFFTOps[frame]->performForwardGpuNUFFT(imgArray, dataArray);
 
   }
-
-   // Multiply with sqrt of densitiy compensation (square-root of dens. was applied in main)
+/*
+  // Multiply with sqrt of densitiy compensation (square-root of dens. was applied in main)
   for (unsigned coil = 0; coil < coils ; coil++)
   {
   agile::lowlevel:: multiplyElementwise(z_gpu.data() + coil * spokesPerFrame * nFE *frames,
                                         dens.data(), z_gpu.data() + coil* spokesPerFrame * nFE *frames,
                                         spokesPerFrame * nFE *frames);
   }
-
+*/
 }
 
 
@@ -157,6 +157,7 @@ CVector NoncartesianOperator::BackwardOperation(CVector &x_gpu, CVector &b1_gpu)
 void NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &sum,
                                             CVector &b1_gpu)
 {
+ /*
   // Multiply with sqrt of densitiy compensation  (square-root of dens. was applied in main)
   for (unsigned coil = 0; coil < coils ; coil++)
   {
@@ -165,6 +166,7 @@ void NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &sum,
                                         spokesPerFrame * nFE *frames);
   }
 
+*/
 
   // Input kspace Data
   gpuNUFFT::GpuArray<DType2> dataArray;
@@ -186,7 +188,6 @@ void NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &sum,
     gpuNUFFTOps[frame]->performGpuNUFFTAdj(dataArray, imgArray);
   }
 
-  //agile::scale((CType) (1.0/std::sqrt(4.0*width*height)),x_gpu,x_gpu);
 }
 
 CVector NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &b1_gpu)
@@ -194,6 +195,8 @@ CVector NoncartesianOperator::ForwardOperation(CVector &x_gpu, CVector &b1_gpu)
   unsigned N = width * height * frames;
   CVector sum_gpu(N);
   ForwardOperation(x_gpu, sum_gpu, b1_gpu);
+  //agile::scale((CType) 0.5,x_gpu,x_gpu);
+
   return sum_gpu;
 }
 
