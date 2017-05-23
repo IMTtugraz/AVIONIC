@@ -77,7 +77,7 @@ sudo make install
 
 2 Install gpuNUFFT 
 ```
-git clone https://github.com/andyschwarzl/gpuNUFFT.git
+git clone --branch deapo-scaling https://github.com/andyschwarzl/gpuNUFFT.git
 cd gpuNUFFT/CUDA
 mkdir build
 cd build
