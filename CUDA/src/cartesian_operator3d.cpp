@@ -134,7 +134,7 @@ CVector CartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &b1_gpu)
 void CartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
                                           CVector &b1_gpu)
 {
- 
+
   unsigned N = width * height * depth;
   CVector x_hat_gpu(N);
   const CType* in_data = x_hat_gpu.data();

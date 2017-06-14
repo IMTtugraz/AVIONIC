@@ -35,11 +35,6 @@ void NoncartesianOperator::Init()
 {
   nSamplesPerFrame = nFE * spokesPerFrame;
 
-  std::cout << "nSpokes: " << nSpokes << " nFE: " << nFE
-            << " spokesPerFrame: " << spokesPerFrame << std::endl;
-  std::cout << "nSamplesPerFrame: " << nSamplesPerFrame << std::endl;
-
-
   // In order to initialize the gpuNUFFT Operator factory
   // correctly, the trajectory, sensitivity and density
   // data has to reside on CPU memory
@@ -48,7 +43,6 @@ void NoncartesianOperator::Init()
   kTrajData.data = &(kTrajHost[0]);
   kTrajData.dim.length = nSamplesPerFrame;
 
-  std::cout<< "noncart op init norm(dens)" << agile::norm2(dens)  << std::endl;
   densHost = std::vector<RType>(nSamplesPerFrame*frames);
   dens.copyToHost(densHost);
   //std::fill(densHost.begin(),densHost.end(),1.0);

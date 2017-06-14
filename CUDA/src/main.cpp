@@ -295,6 +295,7 @@ int main(int argc, char *argv[])
 
   // kdata
   CVector kdata;
+
   // kspace mask/trajectory
   RVector mask;
 
@@ -313,6 +314,7 @@ int main(int argc, char *argv[])
     dims = op.dims;
   else if (extension.compare(".cfl") == 0)
   {
+    //TODO: finish implementation
       long dimensions[4];
       utils::ReadCflHeader(op.kdataFilename, dimensions);
       dims.width=dimensions[0];
@@ -332,7 +334,7 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // perform rawdata preparation
   // ==================================================================================================================
-  if (op.rawdata) // rawdata input
+  if (op.rawdata) // ismrmrd input
   {
     PerformRawDataPreparation(dims, op, kdata, mask, w, datanorm);
   }
@@ -376,13 +378,13 @@ int main(int argc, char *argv[])
               kdata.data() + x_offset, dims.width * dims.height);
             }
         }
-      }
+      } // end if 3D recon
     }
     else // is non-cartesian data
     {
       // load density compensation
       if (w.size() == 0)
-        {
+      {
         unsigned nFE = dims.readouts;
         unsigned spokesPerFrame = dims.encodings;
         unsigned int nTraj = dims.frames * spokesPerFrame * nFE;
@@ -396,21 +398,32 @@ int main(int argc, char *argv[])
         }
       }
 
-      
       // take square-root of densitiy compensation for further processing
-       agile::sqrt(w,w);
+      agile::sqrt(w,w);
 
       // scale data with density compensation
-      std::cout << "multiplying with density comp" <<std::endl;
-      for (unsigned coil = 0; coil < dims.coils ; coil++)
+      if (op.method==TGV2_3D)
       {
-      agile::lowlevel:: multiplyElementwise(kdata.data() + coil * dims.encodings * dims.readouts *dims.frames,
-                                            w.data(), kdata.data() + coil * dims.encodings * dims.readouts *dims.frames,
-                                           dims.encodings * dims.readouts *dims.frames);
+        std::cout << "mutliplying" << std::endl;
+        for (unsigned coil = 0; coil < dims.coils ; coil++)
+        {
+          agile::lowlevel:: multiplyElementwise(  kdata.data() + coil * dims.encodings * dims.readouts,
+                                                  w.data(), kdata.data() + coil * dims.encodings * dims.readouts,
+                                                  dims.encodings * dims.readouts  );
+        }  
       }
-    // square again because sqrt implemented in gpuNUFFT
+      else
+      { 
+        for (unsigned coil = 0; coil < dims.coils ; coil++)
+        {
+          agile::lowlevel:: multiplyElementwise(  kdata.data() + coil * dims.encodings * dims.readouts *dims.frames,
+                                                  w.data(), kdata.data() + coil * dims.encodings * dims.readouts *dims.frames,
+                                                  dims.encodings * dims.readouts * dims.frames  );
+        }
+      }
+      // square again because sqrt implemented in gpuNUFFT
       agile::pow((RType) 2.0,w,w);
-    }
+    } // end is non-cartesian data
 
     // rawdata normalization
     if (op.normalize)
@@ -457,23 +470,17 @@ int main(int argc, char *argv[])
     
       std::cout << "no initial solution (u0) data provided!" << std::endl;
       PerformInitalizationGivenB1(dims, op, kdata, u0, b1, mask, w, com);
-   //   ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-   //                                    "u0_reconstructed.bin", u0);
-   //   ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-   //                                    "b1_reconstructed.bin", b1);
-      std::cout << "b1norm = " << agile::norm1(b1) << std::endl;
+      //std::cout << "b1norm = " << agile::norm1(b1) << std::endl;
     }
   }
   else // b1 and u0 not provided
   {
-    
     if (op.method==TGV2_3D)
     {
        std::cerr << "Coil Construction for 3D reconstruction not implemented! Provide b1 seperately!"
-                << std::endl;
+                 << std::endl;
        return -1;
-    }
-    
+    } 
     std::cout << "Performing Coil Construction!" << std::endl;
     CVector u(N * dims.coils);
     u.assign(N * dims.coils, 0.0);
@@ -488,14 +495,9 @@ int main(int argc, char *argv[])
     }
     utils::GetSubVector(u, u0, dims.coils - 1, N);
 
-  //  ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-  //                                     "b1_reconstructed.bin", b1);
-
     //if (op.nonuniform)
       //agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);
 
-//    ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-//                                       "u0_reconstructed.bin", u0);
   }
   ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
                                      "u0_reconstructed.bin", u0);
@@ -510,30 +512,44 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // initialize operators
   // ==================================================================================================================
-  if (op.nonuniform)
+  
+  if (op.nonuniform) // Build Non-Cartesian Operators
   {
-    unsigned nFE = dims.readouts;
-    unsigned spokesPerFrame = dims.encodings;
-
     std::cout << "Init NonCartesian Operator using kernelWidth:"
               << op.gpuNUFFTParams.kernelWidth
               << " sectorWidth:" << op.gpuNUFFTParams.sectorWidth
               << " OSF:" << op.gpuNUFFTParams.osf << std::endl;
 
-    // Create 2d-t Non-Cartesian MR Operator
-    baseOp = new NoncartesianOperator(
-        dims.width, dims.height, dims.coils, dims.frames,
-        spokesPerFrame * dims.frames, nFE, spokesPerFrame, mask, w, b1,
-        op.gpuNUFFTParams.kernelWidth, op.gpuNUFFTParams.sectorWidth,
-        op.gpuNUFFTParams.osf);
-  }
-  else
-  {
-    // Create 3d MR Operator
-    if (op.method==TGV2_3D)
+    if (op.method==TGV2_3D) // Create 3d MR Operator
     {
-      baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
-                                   dims.coils, mask, false);
+      std::cout << "3D operator" <<std::endl;
+      baseOp = new NoncartesianOperator3D(  dims.width, dims.height, dims.depth, dims.coils,
+                                            dims.encodings, dims.readouts, 100,
+                                            mask, w, b1,
+                                            op.gpuNUFFTParams.kernelWidth, op.gpuNUFFTParams.sectorWidth,
+                                            op.gpuNUFFTParams.osf);
+    }
+    else
+    { 
+      std::cout << "2D-time operator" <<std::endl;
+ 
+      unsigned nFE = dims.readouts;
+      unsigned spokesPerFrame = dims.encodings;
+
+      baseOp = new NoncartesianOperator(  dims.width, dims.height, dims.coils, dims.frames,
+                                          spokesPerFrame * dims.frames, nFE, spokesPerFrame,
+                                          mask, w, b1,
+                                          op.gpuNUFFTParams.kernelWidth, op.gpuNUFFTParams.sectorWidth,
+                                          op.gpuNUFFTParams.osf);
+    }
+  std::cout << "... finished" <<std::endl;
+  }
+  else // Create Cartesian Operators
+  {    
+    if (op.method==TGV2_3D) // Create 3d MR Operator
+    {
+       baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
+                                     dims.coils, mask, false);
     }
     else // Create 2d-t Cartesian MR Operator
     {

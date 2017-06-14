@@ -14,7 +14,7 @@ NoncartesianOperator3D::NoncartesianOperator3D( unsigned width, unsigned height,
   Init();
 }
 
-CVector EmptySens(0);
+CVector EmptySens3d(0);
 
 NoncartesianOperator3D::NoncartesianOperator3D( unsigned width, unsigned height,
                                                 unsigned depth, unsigned coils,
@@ -23,7 +23,7 @@ NoncartesianOperator3D::NoncartesianOperator3D( unsigned width, unsigned height,
                                                 RVector &kTraj, RVector &dens,
                                                 DType kernelWidth, DType sectorWidth, DType osf)
   : BaseOperator(width, height, 0, coils, frames), kTraj(kTraj), dens(dens),
-    sens(EmptySens), nSpokes(nSpokes), nFE(nFE), spokesPerFrame(spokesPerFrame),
+    sens(EmptySens3d), nSpokes(nSpokes), nFE(nFE), spokesPerFrame(spokesPerFrame),
     kernelWidth(kernelWidth), sectorWidth(sectorWidth), osf(osf)
 {
   Init();
@@ -36,30 +36,29 @@ NoncartesianOperator3D::~NoncartesianOperator3D()
 void NoncartesianOperator3D::Init()
 {
 
-  unsigned nSamples  = nFE * nSpokes;
-  std::cout << "nSpokes: " << nSpokes << " nFE: " << nFE << std::endl;
+  nSamples  = nFE * nSpokes;
+  std::cout << "nSpokes: " << nSpokes << " nFE: " << nFE
+     << " nSamples: " << nSamples << std::endl;
 
 
   // In order to initialize the gpuNUFFT Operator factory
   // correctly, the trajectory, sensitivity and density
   // data has to reside on CPU memory
-  kTrajHost = std::vector<RType>(2 * nSamplesPerFrame);
+  kTrajHost = std::vector<RType>(3 * nSamples);
   kTraj.copyToHost(kTrajHost);
   kTrajData.data = &(kTrajHost[0]);
   kTrajData.dim.length = nSamples;
 
-  std::cout<< "noncart op init norm(dens)" << agile::norm2(dens)  << std::endl;
   densHost = std::vector<RType>(nSamples);
-
-  //dens.copyToHost(densHost);
-  std::fill(densHost.begin(),densHost.end(),1.0);
+  dens.copyToHost(densHost);
+  //std::fill(densHost.begin(),densHost.end(),1.0);
 
   densData.data = &(densHost[0]);
   densData.dim.length = nSamples;
 
-  imgDims.width = width;
+  imgDims.width  = width;
   imgDims.height = height;
-  imgDims.depth = depth;
+  imgDims.depth  = depth;
 
   bool hasCoilData = sens.size() > 0;
   if (hasCoilData)
@@ -70,20 +69,21 @@ void NoncartesianOperator3D::Init()
     sensData.dim = imgDims;
     sensData.dim.channels = coils;
   }
-
+  
   gpuNUFFT::GpuNUFFTOperatorFactory factory;
-  gpuNUFFTOps = std::vector<gpuNUFFT::GpuNUFFTOperator *>(0);
-  kTrajData.data = &(kTrajHost[0]);
-  densData.data = &(densHost[0]);
+ //gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = NULL;
+  //kTrajData.data = &(kTrajHost[0]);
+  //densData.data = &(densHost[0]);
   if (hasCoilData)
   {
-    gpuNUFFTOps[0] = factory.createGpuNUFFTOperator(
+    gpuNUFFTOp = factory.createGpuNUFFTOperator(
         kTrajData, densData, sensData, kernelWidth, sectorWidth, osf,
         imgDims);
+    std::cout << "Creating gpuNUFFT Operator of Type " << gpuNUFFTOp->getType()<<std::endl;
   }
   else
   {
-    gpuNUFFTOps[0] = factory.createGpuNUFFTOperator(
+    gpuNUFFTOp  = factory.createGpuNUFFTOperator(
         kTrajData, densData, kernelWidth, sectorWidth, osf,
         imgDims);
   }
@@ -106,6 +106,7 @@ RType NoncartesianOperator3D::AdaptLambda(RType k, RType d)
 void NoncartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
                                              CVector &b1_gpu)
 {
+
   // Input Image Array¬
   gpuNUFFT::GpuArray<CufftType> imgArray;
   imgArray.data = (CufftType *)x_gpu.data();
@@ -114,24 +115,24 @@ void NoncartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
   // Output KSpace Array¬
   gpuNUFFT::GpuArray<DType2> dataArray;
   dataArray.data = (float2 *)z_gpu.data();
-  dataArray.dim.length = nSamplesPerFrame;
-  dataArray.dim.channels =
+  dataArray.dim.length = nSamples;
+  dataArray.dim.channels = 
       coils;  // < essential to ensure gpuNUFFT multi-coil performance
+ // Perform FT Operation
+  imgArray.data = (float2 *)(x_gpu.data());
+  dataArray.data =  (float2 *)(z_gpu.data());
+ 
+  gpuNUFFTOp->performForwardGpuNUFFT(imgArray, dataArray);
 
-  // Perform FT Operation
-    imgArray.data = (float2 *)(x_gpu.data());
-    dataArray.data =
-        (float2 *)(z_gpu.data() );
-    gpuNUFFTOps[0]->performForwardGpuNUFFT(imgArray, dataArray);
-
-   // Multiply with sqrt of densitiy compensation (square-root of dens. was applied in main)
+  /*
+  // Multiply with sqrt of densitiy compensation (square-root of dens. was applied in main)
   for (unsigned coil = 0; coil < coils ; coil++)
   {
   agile::lowlevel:: multiplyElementwise(z_gpu.data() + coil * nSamples,
                                         dens.data(), z_gpu.data() + coil*nSamples,
-                                        spokesPerFrame * nSamples);
+                                        nSamples);
   }
-
+  */
 }
 
 
@@ -152,6 +153,8 @@ CVector NoncartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &b1_gp
 void NoncartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
                                             CVector &b1_gpu)
 {
+  
+ /* 
   // Multiply with sqrt of densitiy compensation  (square-root of dens. was applied in main)
   for (unsigned coil = 0; coil < coils ; coil++)
   {
@@ -159,7 +162,7 @@ void NoncartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
                                         dens.data(), x_gpu.data() + coil * nSamples,
                                         nSamples);
   }
-
+*/
 
   // Input kspace Data
   gpuNUFFT::GpuArray<DType2> dataArray;
@@ -177,7 +180,7 @@ void NoncartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
   imgArray.data = (CufftType *)(sum.data());
   dataArray.data =
       (float2 *)(x_gpu.data() );
-  gpuNUFFTOps[0]->performGpuNUFFTAdj(dataArray, imgArray);
+  gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imgArray);
 
 }
 

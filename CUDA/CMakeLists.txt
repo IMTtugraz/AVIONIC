@@ -55,7 +55,7 @@ include_directories(${Boost_INCLUDE_DIR})
 SET(ISMRMRD_HOME /usr/local CACHE STRING "Path to ISMRMRD install directory")
 list(APPEND CMAKE_MODULE_PATH "${ISMRMRD_HOME}/share/ismrmrd/cmake")
 
-find_package(Ismrmrd REQUIRED)
+find_package(ISMRMRD REQUIRED)
 include_directories(${ISMRMRD_INCLUDE_DIR})
 link_libraries(${ISMRMRD_LIBRARIES})
 

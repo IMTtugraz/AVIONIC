@@ -134,8 +134,12 @@ RType TGV2_3D::ComputeGStar(CVector &x, std::vector<CVector> &y1,
 {
   unsigned N = width * height * depth;
   // F(Kx)
-  CVector zTemp(N * coils);
-  CVector g(N * coils);
+  CVector zTemp(0);
+  zTemp.resize(data_gpu.size(), 0.0);
+    // old CVector zTemp(N * coils);
+  CVector g(data_gpu.size());
+    // old CVector g(N * coils);
+ 
   mrOp->BackwardOperation(x, zTemp, b1_gpu);
   agile::subVector(zTemp, data_gpu, g);
 
@@ -192,11 +196,10 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     TestAdjointness(b1_gpu);
 
   unsigned N = width * height * depth;
-
   //TODO: compute for dx,dy,dz
   //ComputeTimeSpaceWeights(params.timeSpaceWeight, params.ds, params.dt);
   //Log("Setting ds: %.3e, dt: %.3e\n", params.ds, params.dt);
-   Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
+  //Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
 
 
   std::vector<CVector> x2;
@@ -233,10 +236,16 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     y2[cnt].assign(N, 0);
     y2Temp.push_back(CVector(N));
   }
-  CVector z(N * coils);
-  CVector zTemp(N * coils);
-  z.assign(N * coils, 0.0);
-  zTemp.assign(N * coils, 0.0);
+  
+  CVector z(data_gpu.size());
+  CVector zTemp(data_gpu.size());
+  z.assign(z.size(), 0.0);
+  zTemp.assign(zTemp.size(), 0.0);
+
+  //CVector z(N * coils);
+  //CVector zTemp(N * coils);
+  //z.assign(N * coils, 0.0);
+  //zTemp.assign(N * coils, 0.0);
 
   CVector imgTemp(N);
 
@@ -266,10 +275,10 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     {
       agile::addScaledVector(y2[cnt], params.sigma, y2Temp[cnt], y2[cnt]);
     }
-   
+  
     mrOp->BackwardOperation(ext1, zTemp, b1_gpu);
     agile::addScaledVector(z, params.sigma, zTemp, z);
-   
+  
     // Proximal mapping
     utils::ProximalMap3(y1, (DType)1.0 / params.alpha1);
     utils::ProximalMap6(y2, (DType)1.0 / params.alpha0);

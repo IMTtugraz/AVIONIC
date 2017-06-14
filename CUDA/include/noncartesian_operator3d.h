@@ -68,12 +68,6 @@ class NoncartesianOperator3D : public BaseOperator
  
   RType AdaptLambda(RType k, RType d);
 
-  /** \brief Array of gpuNUFFT operators.
-   * Since each trajectory differs from frame to frame, it is necessary to
-   * create multiple gpuNUFFT operators.
-   * */
-  std::vector<gpuNUFFT::GpuNUFFTOperator *> gpuNUFFTOps;
-
   /** \brief K-space trajectory data vector. */
   RVector &kTraj;
   /** \brief K-space trajectory density compensation vector. */
@@ -81,9 +75,6 @@ class NoncartesianOperator3D : public BaseOperator
   /** \brief Coil sensitivity data vector. */
   CVector &sens;
 
-  /** \brief Total number of samples  */
-  unsigned nSamples;
-  
   /** \brief Total number of spokes  */
   unsigned nSpokes;
   /** \brief Total number of read-out steps  (frequency encoding) */
@@ -95,8 +86,15 @@ class NoncartesianOperator3D : public BaseOperator
   /** \brief Initialization of gpuNUFFT operator */
   void Init();
 
+  /** \brief Total number of samples  */
+  unsigned int nSamples;
+
   /** \brief Number of samples per frame, i.e. nFE * spokesPerFrame (not used for 3D) */
   unsigned int nSamplesPerFrame;
+
+  /** \brief 3D gpuNUFFT operator. */
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp;
+
 
   std::vector<DType> kTrajHost;
   /** \brief K-space trajectory data as gpuNUFFT compatible array. */
