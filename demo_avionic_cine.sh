@@ -58,11 +58,12 @@ echo "==========================================================================
 if [ ! -f $DATAFILE ]
 then
   wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cardiac_cine_data.bin
+  #wget https://zenodo.org/record/807196/files/cardiac_cine_data.bin
 fi
 
 if [ ! -f $PATTERNFILE ]
 then
-  wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/$PATTERNFILE
+  wget https://zenodo.org/record/807196/files/$PATTERNFILE
 fi
 
 echo "==================================================================================="
@@ -76,8 +77,8 @@ nX=$nENC;nY=$nRO;
 if [ ! -f ./results_cine/${RESULTSFILE}.bin ]
 then
 
-  recon_cmd="./CUDA/bin/avionic -i 500 -m ICTGV2 -e -a \
-   	    -p ./CUDA/config/default_cine.cfg -d $nX:$nY:0:$nENC:$nRO:0:$nCOILS:$nFRAMES \
+  recon_cmd="./CUDA/bin/avionic -o -i 500 -m ICTGV2 -e -a \
+   	    -p ./CUDA/config/default_cine.cfg -d $nX:$nY:0:$nRO:$nENC:0:$nCOILS:$nFRAMES \
  			  $DATAFILE $PATTERNFILE \
 			  ./results_cine/${RESULTSFILE}.bin"
 	echo "------------------------------------------------------------------------"

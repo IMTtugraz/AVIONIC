@@ -38,13 +38,13 @@ def readbin_vector(filename,nx,ny,nframes):
   #print "dim1=",str((ncoils*nx*ny*nframes))," | dim2=",str(size[0])
   if ((ncoils*nx*ny*nframes)==size[0]):
     if ncoils > 1:
-      dt=np.transpose(dt.reshape((ncoils,nx,ny,1)),(2,1,0,3));
-      dt=np.squeeze(dt);
-      dt= np.flipud(dt);
+      dt = np.transpose(dt.reshape((ncoils,nx,ny,1)),(1,2,0,3));
+      dt = np.squeeze(dt);
+      #dt = np.flipud(dt);
     else:
-      dt=np.transpose(dt.reshape((nframes,nx,ny,ncoils)),(2,1,0,3));
-      dt=np.squeeze(dt);
-      dt= np.flipud(dt);
+      dt = np.transpose(dt.reshape((nframes,nx,ny,ncoils)),(1,2,0,3));
+      dt = np.squeeze(dt);
+      #dt = np.flipud(dt);
   return dt
 
 

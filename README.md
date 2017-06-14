@@ -157,22 +157,22 @@ Results are exported to dicom format
 
 1 Cartesian
 ```
-wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_tpat_8_sedona.h5
+wget https://zenodo.org/record/807635/files/cine_tpat_8_sedona.h5 --no-check-certificate
 mkdir ./recon_tpat/
-avionic -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
+avionic  -o -p ./CUDA/config/default_cine.cfg  -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
 ```
 
 2 Radial
 ```
-wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_rad_24_sedona.h5
+wget https://zenodo.org/record/807635/files/cine_rad_24_sedona.h5 --no-check-certificate
 mkdir ./recon_rad/
-avionic -r cine_rad_24_sedona.h5 -a -n ./recon_rad/recon.dcm
+avionic -o -p ./CUDA/config/default_cine.cfg -r cine_rad_24_sedona.h5 -a -n ./recon_rad/recon.dcm
 ```
 
 ## Demo 3: Reconstruction of MATLAB data with demo script 
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.808150.svg)](https://doi.org/10.5281/zenodo.808150)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.808309.svg)](https://doi.org/10.5281/zenodo.808309)
 
 Please look into demo_avionic.m
 

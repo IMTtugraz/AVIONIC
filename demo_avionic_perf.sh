@@ -56,12 +56,12 @@ echo "Downloading Data"
 echo "==================================================================================="
 if [ ! -f $DATAFILE ]
 then
-  wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cardiac_perfusion_data.bin
+  wget https://zenodo.org/record/807196/files/cardiac_perfusion_data.bin
 fi
 
 if [ ! -f $PATTERNFILE ]
 then
-  wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/$PATTERNFILE
+   wget https://zenodo.org/record/807196/files/$PATTERNFILE
 fi
 
 echo "==================================================================================="
@@ -75,7 +75,7 @@ nX=$nRO;nY=$nENC;
 if [ ! -f ./results_perfusion/${RESULTSFILE}.bin ]
 then
 
-  recon_cmd="./CUDA/bin/avionic -i 500 -m $FUNCTYPE -e -a \
+  recon_cmd="./CUDA/bin/avionic -o -i 500 -m $FUNCTYPE -e -a \
    	    -p ./CUDA/config/default_perf.cfg -d $nX:$nY:0:$nRO:$nENC:0:$nCOILS:$nFRAMES \
  			  $DATAFILE $PATTERNFILE \
 			  ./results_perfusion/${RESULTSFILE}.bin"
@@ -93,5 +93,5 @@ echo "==========================================================================
 echo "Display Results"
 echo "==================================================================================="
 
-./python/show_avionic.py -f "./results_perfusion/${RESULTSFILE}.bin" -nx $nENC -ny $nRO -nframes $nFRAMES
+./python/show_avionic.py -f "./results_perfusion/${RESULTSFILE}.bin" -nx $nRO -ny $nENC -nframes $nFRAMES
 
