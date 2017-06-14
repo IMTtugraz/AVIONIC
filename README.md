@@ -125,7 +125,16 @@ and open the file `doc/html/index.html`.
 ```
 avionic --help
 ```
-## DEMO Reconstruction
+## DEMO 1: Reconstruction from BINARY data for retrospectively accelerated cine cardiac and cardiac perfusion data (shell script)
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.807196.svg)](https://doi.org/10.5281/zenodo.807196)
+ 
+Available examples for sampling patterns: "vista", "vd" (variable density), "uni" uniformly sampled
+Available acceleration factors: 4,8,12,16
+Available functional types: ICTGV2, TGV2, TV 
+
+Results are exported again to binary format
 
 Example for ICTGV reconstruction with VISTA pattern and subsampling factor 12
 
@@ -139,7 +148,13 @@ Example for ICTGV reconstruction with VISTA pattern and subsampling factor 12
 ./demo_avionic_perf.sh --functype=ICTGV2 --pattern=vista --red=12
 ```
 
-## Example reconstruction for ISMRMRD data
+## DEMO 2: Reconstruction from ISMRMRD data for real accelerated cine cardiac data (T-Pat and radial acquisition)
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.807635.svg)](https://doi.org/10.5281/zenodo.807635)
+
+Results are exported to dicom format
+
 1 Cartesian
 ```
 wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_tpat_8_sedona.h5
@@ -152,5 +167,26 @@ avionic -r cine_tpat_8_sedona.h5 -a ./recon_tpat/recon.dcm
 wget ftp://ftp.tugraz.at/outgoing/AVIONIC/avionic_testdata/cine_rad_24_sedona.h5
 mkdir ./recon_rad/
 avionic -r cine_rad_24_sedona.h5 -a -n ./recon_rad/recon.dcm
+```
 
+## Demo 3: Reconstruction of MATLAB data with demo script 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.808150.svg)](https://doi.org/10.5281/zenodo.808150)
+
+
+Please look into demo_avionic.m
+
+1 Cartesian testdata for dynamic MRI reconstruction with ICTGV, spatio-temp. TGV2 or spatio-temp. TV
+
+testdata_cinecardiac_avionic.mat: Cartesian acquired fully-sampled retrospectively gated CINE cardiac data (bSSFP) in short-axis view
+
+ 
+2 Cartesian volumetric testdata for static TGV reconstruction, example for retrospective acceleration with CAIPIRINHA
+
+testdata_cart_avionic_tgv3d.mat: Cartesian VIBE data of the left hand with partial-fourier acquisition
+
+ 
+3 Non-Cartesian volumetric testdata_for static TGV2 reconstruction, retrospective acceleration possible by selection a lower number of spokes
+
+noncart_avionic_tgv3d.mat: radial VIBE data of the human brain with golden-angle stack-of-stars sampling 
 
