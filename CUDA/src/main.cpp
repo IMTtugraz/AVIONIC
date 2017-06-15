@@ -120,9 +120,13 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
 void PerformRawdataNormalization(Dimension &dims,OptionsParser &op,
                       CVector &kdata, RVector &mask, RVector &w, CType &datanorm)
 {
-    std::cout << "Normalize binary data." << std::endl;
-    RawDataPreparation rdp_norm(op, true, true, true, true);
+  std::cout << "Normalize binary data." << std::endl;
+  RawDataPreparation rdp_norm(op, true, true, true, true);
+  if (op.method==TGV2_3D) 
+    rdp_norm.NormalizeData3D(kdata, mask, w, dims, datanorm); 
+  else
     rdp_norm.NormalizeData(kdata, mask, w, dims, datanorm);
+
 }
 
 template <typename TType>

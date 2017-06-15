@@ -379,6 +379,52 @@ void RawDataPreparation::NormalizeData(CVector &data,
   }
 }
 
+
+
+// GPU rawdata normalization 3D 
+void RawDataPreparation::NormalizeData3D(CVector &data, RVector &mask,
+                                       RVector &w, Dimension &dims, CType &datanorm)
+{
+  unsigned N = dims.width * dims.height * dims.depth;
+  
+  //TODO: find other way to implement this,
+  //right now not normalized to SOS reconstruction but only to sum over complex valued channels (bad)
+  CVector tmp_b1(N);
+  tmp_b1.assign(tmp_b1.size(), (CType) 1.0);
+
+
+  if (op.nonuniform)
+  { 
+    NoncartesianOperator3D *nonCartOp3D = new NoncartesianOperator3D(  dims.width, dims.height, dims.depth, dims.coils,
+                                            dims.encodings, dims.readouts, 100,
+                                            mask, w, tmp_b1, 3, 8, 2.0);
+    CVector imgTemp(N);
+    nonCartOp3D->ForwardOperation(data, imgTemp, tmp_b1);
+    std::vector<RType> uTemp(N);
+    imgTemp.copyToHost(uTemp);
+    CType median = FindNormalizationFactor(uTemp);
+    datanorm = (CType)255.0 / median;
+    delete nonCartOp3D;
+  }
+  else
+  {
+    CartesianOperator3D *CartOp3D =  new CartesianOperator3D(dims.width, dims.height, dims.depth,
+                                     dims.coils, mask, false);
+ 
+  
+    CVector imgTemp(N);
+    CartOp3D->ForwardOperation(data, imgTemp, tmp_b1);
+    std::vector<RType> uTemp(N);
+    imgTemp.copyToHost(uTemp);
+    CType median = FindNormalizationFactor(uTemp);
+    datanorm = (CType)255.0 / median;
+    delete CartOp3D;
+
+  }
+}
+
+
+
 // Implementation
 void RawDataPreparation::PrepareRawData(std::vector<CType> &data,
                                         std::vector<RType> &mask,
