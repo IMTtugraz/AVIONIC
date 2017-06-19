@@ -15,6 +15,9 @@
 #include "../include/cartesian_coil_construction.h"
 #include "../include/noncartesian_coil_construction.h"
 #include "../include/ictgv2.h"
+#include "../include/ictv.h"
+#include "../include/tgv2.h"
+#include "../include/tgv2_3d.h"
 #include "../include/tv.h"
 #include "../include/noncartesian_operator.h"
 #include "../include/cartesian_operator3d.h"
@@ -94,6 +97,13 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
     std::cout << "TGV2_3D" << std::endl;
     *recon = new class TGV2_3D(dims.width, dims.height, dims.depth, dims.coils,
                             options.tgv2_3DParams, mrOp);
+    break;
+  }
+  case ICTV:
+  {
+    std::cout << "ICTV" << std::endl;
+    *recon = new class ICTV(dims.width, dims.height, dims.coils, dims.frames,
+                              options.ictvParams, mrOp);
     break;
   }
   case ICTGV2:

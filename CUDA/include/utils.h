@@ -361,6 +361,7 @@ std::vector<CVector> SymmetricDivergence2D(std::vector<CVector> &gradient,
 RType TVNorm(CVector &data_gpu, unsigned width, unsigned height, DType dx = 1.0,
              DType dy = 1.0, DType dt = 1.0);
 
+
 /**
  * \brief Computation of TGV2 norm
  *
@@ -387,6 +388,28 @@ RType TGV2Norm(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
                std::vector<CVector> &temp3, std::vector<CVector> &temp6,
                RType alpha0, RType alpha1, unsigned width, unsigned height,
                DType dx = 1.0, DType dy = 1.0, DType dz = 1.0);
+
+/**
+ * \brief Computation of ICTV norm
+ *
+ * \f$ TV_{\alpha_1}(x) = \alpha_1 \sum |\nabla x | 
+ * 
+ * \param[in] data1_gpu data vector, gradient (x)
+ * \param[in] alpha1 norm parameter
+ * \param[in] width
+ * \param[in] height
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim (time)
+ * \return TGV2 norm
+ */
+RType ICTVNorm(CVector &data1_gpu, CVector &data3_gpu,
+               RType alpha1, RType alpha,
+               unsigned width, unsigned height,
+               DType dx  = 1.0, DType dy  = 1.0, DType dt  = 1.0,
+               DType dx2 = 1.0, DType dy2 = 1.0, DType dt2 = 1.0);
+
+
 
 /**
  * \brief Computation of ICTGV2 norm

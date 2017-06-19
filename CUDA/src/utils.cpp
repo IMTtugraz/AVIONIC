@@ -497,8 +497,8 @@ utils::SymmetricDivergence2D(std::vector<CVector> &gradient, unsigned width,
   return divergence;
 }
 
-RType utils::TVNorm(CVector &data_gpu, unsigned width, unsigned height,
-                    DType dx, DType dy, DType dt)
+RType utils::TVNorm(  CVector &data_gpu, unsigned width, unsigned height,
+                      DType dx, DType dy, DType dt)
 {
   std::vector<CVector> gradient =
       utils::Gradient(data_gpu, width, height, dx, dy, dt);
@@ -553,6 +553,30 @@ RType utils::TGV2Norm(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
 
   return norm;
 }
+
+RType utils::ICTVNorm(  CVector &data1, 
+                        CVector &data3, 
+                        RType alpha1, RType alpha,
+                        unsigned width, unsigned height,
+                        DType dx,  DType dy,  DType dt, 
+                        DType dx2, DType dy2, DType dt2)
+{
+  unsigned N = data1.size();
+  CVector temp(N);
+  agile::subVector(data1, data3, temp);
+
+  RType n1 = 
+      utils::TVNorm(temp, width, height, dx, dy, dt);
+
+  RType n2 = 
+      utils::TVNorm(data3, width, height, dx2, dy2, dt2);
+
+
+  RType denom = std::min(alpha, (RType)1.0 - alpha);
+  RType norm = alpha1 * (alpha / denom) * (n1) + alpha1 * ((1.0 - alpha) / denom) * (n2);
+  return norm;
+}
+
 
 RType utils::ICTGV2Norm(CVector &data1, std::vector<CVector> &data2,
                         CVector &data3, std::vector<CVector> &data4,

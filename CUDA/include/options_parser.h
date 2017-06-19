@@ -8,6 +8,8 @@
 #include <fstream>
 #include <iostream>
 #include "../include/ictgv2.h"
+#include "../include/ictv.h"
+#include "../include/tgv2.h"
 #include "../include/tgv2_3d.h"
 #include "../include/tv.h"
 #include "../include/coil_construction.h"
@@ -25,6 +27,7 @@ typedef enum Method
   TV,
   TGV2,
   TGV2_3D,
+  ICTV,
   ICTGV2
 } Method;
 
@@ -61,6 +64,7 @@ class OptionsParser
 
   TVParams tvParams;
   TGV2Params tgv2Params;
+  ICTVParams ictvParams;
   ICTGV2Params ictgv2Params;
   TGV2_3DParams tgv2_3DParams;
   CoilConstructionParams coilParams;
@@ -106,6 +110,8 @@ class OptionsParser
   void AddTGV2ConfigurationParameters();
 
   void AddTGV2_3DConfigurationParameters();
+
+  void AddICTVConfigurationParameters();
 
   void AddICTGV2ConfigurationParameters();
 

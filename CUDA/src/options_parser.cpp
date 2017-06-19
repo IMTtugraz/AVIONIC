@@ -20,6 +20,10 @@ std::istream &operator>>(std::istream &in, Method &method)
   {
     method = TGV2_3D;
   }
+  else if (token == "ICTV")
+  {
+    method = ICTV;
+  } 
   else if (token == "ICTGV2")
   {
     method = ICTGV2;
@@ -105,6 +109,7 @@ OptionsParser::OptionsParser()
   AddTVConfigurationParameters();
   AddTGV2ConfigurationParameters();
   AddTGV2_3DConfigurationParameters();
+  AddICTVConfigurationParameters(); 
   AddICTGV2ConfigurationParameters();
   AddGPUNUFFTConfigurationParameters();
   AddAdaptLambdaConfigurationParameters();
@@ -203,7 +208,25 @@ void OptionsParser::AddTGV2_3DConfigurationParameters()
       "tgv2_3D.alpha1", po::value<RType>(&tgv2_3DParams.alpha1));
 }
 
-
+void OptionsParser::AddICTVConfigurationParameters()
+{
+  conf.add_options()("ictv.dx", po::value<RType>(&ictvParams.dx))(
+      "ictv.dy", po::value<RType>(&ictvParams.dy))(
+      "ictv.dt", po::value<RType>(&ictvParams.dt))(
+      "ictv.sigma", po::value<RType>(&ictvParams.sigma))(
+      "ictv.tau", po::value<RType>(&ictvParams.tau))(
+      "ictv.sigmaTauRatio", po::value<RType>(&ictvParams.sigmaTauRatio))(
+      "ictv.timeSpaceWeight",
+      po::value<RType>(&ictvParams.timeSpaceWeight))(
+      "ictv.lambda", po::value<RType>(&ictvParams.lambda))(
+      "ictv.alpha1", po::value<RType>(&ictvParams.alpha1))(
+      "ictv.alpha", po::value<RType>(&ictvParams.alpha))(
+      "ictv.timeSpaceWeight2",
+      po::value<RType>(&ictvParams.timeSpaceWeight2))(
+      "ictv.dx2", po::value<RType>(&ictvParams.dx2))(
+      "ictv.dy2", po::value<RType>(&ictvParams.dy2))(
+      "ictv.dt2", po::value<RType>(&ictvParams.dt2));
+}
 void OptionsParser::AddICTGV2ConfigurationParameters()
 {
   conf.add_options()("ictgv2.dx", po::value<RType>(&ictgv2Params.dx))(
@@ -249,6 +272,7 @@ void OptionsParser::SetMaxIt(int maxIt)
   tvParams.maxIt = maxIt;
   tgv2Params.maxIt = maxIt;
   tgv2_3DParams.maxIt = maxIt;
+  ictvParams.maxIt = maxIt;
   ictgv2Params.maxIt = maxIt;
 }
 
@@ -257,6 +281,7 @@ void OptionsParser::SetStopPDGap(float stopPDGap)
   tvParams.stopPDGap = stopPDGap;
   tgv2Params.stopPDGap = stopPDGap;
   tgv2_3DParams.stopPDGap = stopPDGap;
+  ictvParams.stopPDGap = stopPDGap;
   ictgv2Params.stopPDGap = stopPDGap;
 }
 
@@ -265,6 +290,7 @@ void OptionsParser::SetAdaptLambdaParams()
   tvParams.adaptLambdaParams = adaptLambdaParams;
   tgv2Params.adaptLambdaParams = adaptLambdaParams;
   tgv2_3DParams.adaptLambdaParams = adaptLambdaParams;
+  ictvParams.adaptLambdaParams = adaptLambdaParams;
   ictgv2Params.adaptLambdaParams = adaptLambdaParams;
 }
 
