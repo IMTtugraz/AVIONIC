@@ -385,12 +385,12 @@ void RawDataPreparation::NormalizeData(CVector &data,
 void RawDataPreparation::NormalizeData3D(CVector &data, RVector &mask,
                                        RVector &w, Dimension &dims, CType &datanorm)
 {
-  unsigned N = dims.width * dims.height * dims.depth;
-  
+
+  unsigned N = dims.width * dims.height * dims.depth;  
   //TODO: find other way to implement this,
   //right now not normalized to SOS reconstruction but only to sum over complex valued channels (bad)
-  CVector tmp_b1(N);
-  tmp_b1.assign(tmp_b1.size(), (CType) 1.0);
+  CVector tmp_b1(N*dims.coils);
+  tmp_b1.assign(tmp_b1.size(), 1.0);
 
 
   if (op.nonuniform)
@@ -398,29 +398,27 @@ void RawDataPreparation::NormalizeData3D(CVector &data, RVector &mask,
     NoncartesianOperator3D *nonCartOp3D = new NoncartesianOperator3D(  dims.width, dims.height, dims.depth, dims.coils,
                                             dims.encodings, dims.readouts, 100,
                                             mask, w, tmp_b1, 3, 8, 2.0);
-    CVector imgTemp(N);
-    nonCartOp3D->ForwardOperation(data, imgTemp, tmp_b1);
+
+    CVector imgTemp = nonCartOp3D->ForwardOperation(data,tmp_b1);
     std::vector<RType> uTemp(N);
     imgTemp.copyToHost(uTemp);
     CType median = FindNormalizationFactor(uTemp);
-    datanorm = (CType)255.0 / median;
+    datanorm = (CType)255.0 / median / (CType) 4.0;
     delete nonCartOp3D;
   }
   else
   {
     CartesianOperator3D *CartOp3D =  new CartesianOperator3D(dims.width, dims.height, dims.depth,
                                      dims.coils, mask, false);
- 
-  
-    CVector imgTemp(N);
-    CartOp3D->ForwardOperation(data, imgTemp, tmp_b1);
+
+    CVector imgTemp =  CartOp3D->ForwardOperation(data, tmp_b1);
     std::vector<RType> uTemp(N);
     imgTemp.copyToHost(uTemp);
     CType median = FindNormalizationFactor(uTemp);
     datanorm = (CType)255.0 / median;
     delete CartOp3D;
-
   }
+  std::cout << "datanorm="<< datanorm << std::endl;
 }
 
 
