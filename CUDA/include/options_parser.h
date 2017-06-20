@@ -79,7 +79,8 @@ class OptionsParser
   int debugstep;
   unsigned int slice;
   int tpat;
-
+  int gpu_device_nr;
+  
   std::string sensitivitiesFilename;
   std::string u0Filename;
   std::string densityFilename;

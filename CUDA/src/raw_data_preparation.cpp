@@ -403,7 +403,8 @@ void RawDataPreparation::NormalizeData3D(CVector &data, RVector &mask,
     std::vector<RType> uTemp(N);
     imgTemp.copyToHost(uTemp);
     CType median = FindNormalizationFactor(uTemp);
-    datanorm = (CType)255.0 / median / (CType) 4.0;
+    CType scalefacnoncart = (CType)dims.width*(CType)1.5708/(CType)(dims.encodings / dims.depth);
+    datanorm = (CType)255.0 * scalefacnoncart / median ;
     delete nonCartOp3D;
   }
   else

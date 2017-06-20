@@ -299,8 +299,19 @@ int main(int argc, char *argv[])
 
   std::string outputDir = utils::GetParentDirectory(op.outputFilename);
 
-  communicator_type com;
-  com.allocateGPU();
+  communicator_type com; 
+  if (op.gpu_device_nr == -1)
+    com.allocateGPU();
+  else
+  {
+    std::cout << "GPU Device NR: " << op.gpu_device_nr << std::endl;
+    int num_gpus = agile::GPUEnvironment::getNumGPUs()-1;
+    if(op.gpu_device_nr > num_gpus)
+      return -1;
+    else
+      agile::GPUEnvironment::allocateGPU(op.gpu_device_nr);
+  }
+
   agile::GPUTimer timer;
   timer.start();
 
