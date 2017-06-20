@@ -40,7 +40,12 @@ year = {2016},
   __A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction.__ <br>
   _Proc. Intl. Soc. Mag. Reson. Med. 23_, Toronto, Canada 
 
+## Acknowledgement
 This work is funded and supported by the Austrian Science Fund (FWF) in the context of project 'SFB F3209-19' [Mathematical Optimization and Applications in Biomedical Sciences](http://imsc.uni-graz.at/mobis/)
+We also gratefully acknowledge the support of NVIDIA Corporation with the donation of the Tesla K40c GPU used for this research.
+[![FWF]()(http://fwf.ac.at/)]
+[![MOBIS]()(http://imsc.uni-graz.at/mobis/)]
+[![NVIDIA](https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg)(http://nvidia.com/)]
 
 
 For questions and comments on the project please contact [Matthias Schloegl](mailto:matthias.schloegl@tugraz.at)
