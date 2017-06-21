@@ -96,7 +96,7 @@ OptionsParser::OptionsParser()
       "tpat,t", po::value<int>(&tpat)->default_value(1),
       "artifical TPAT interleave")(
       "slice,z", po::value<unsigned int>(&slice)->default_value(0),
-      "slice to reconstruct");
+      "slice to reconstruct")("gpudevice,b", po::value<int>(&gpu_device_nr)->default_value(-1),"GPU Device Nr");
 
   conf.add_options()("method,m", po::value<Method>()->default_value(ICTGV2),
                      "reconstruction method (TV, TGV, TGV_3D, ICTGV2)")(
