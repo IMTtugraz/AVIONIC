@@ -14,11 +14,11 @@ use_gpu = 1;
 % get rawdata
 unix(['wget https://zenodo.org/record/808309/files/testdata_cart_cine_avionic.mat --no-check-certificate']);
 load testdata_cart_cine_avionic
-[n,m,ncoils,nframes]  = size(data);
+[nslices,m,ncoils,nframes]  = size(data);
 
 % simulate undersampling
 % (requires VISTA: https://github.com/osu-cmr/vista) in matlab path
-mri_obj.mask = simulate_pattern(n,m,nframes,acc,pattern);
+mri_obj.mask = simulate_pattern(nslices,m,nframes,acc,pattern);
 mri_obj.data = data.*permute(repmat(mask,[1 1 1 ncoils]),[1 2 4 3]);
 clear data
 % reconstruction
@@ -75,36 +75,44 @@ load testdata_noncart_avionic_tgv3d.mat
 % dataset acquired with 550 spokes (fully sampled equals 400 spokes)
 nspokes_acc = 21;
 
-[nRO,nspokes,nPH2,ncoils]= size(rawdata(:,1:nspokes_acc,:,:));
+[nRO,nspokes,nslices,ncoils]= size(rawdata(:,1:nspokes_acc,:,:));
 
 col                 = @(x) x(:);
 
+osf = 2; % oversampling
+wg  = 3; % kernel width
+sw  = 16; % parallel sectors
 FT2 = gpuNUFFT([col(traj(:,1:nspokes_acc,:,1)),col(traj(:,1:nspokes_acc,:,2)),...
-    col(traj(:,1:nspokes_acc,:,3))]',ones(size((dcf(:)))),osf,wg,sw,[nFE/2,nFE/2,nslices],[],true);
+    col(traj(:,1:nspokes_acc,:,3))]',ones(size((dcf(:)))),...
+    osf,wg,sw,[nRO/2,nRO/2,nslices],[],true);
 
-for coil=1:ncoils
-    
-   img(:,:,:,coil )= FT2'*col(rawdata(:,1:nspokes_acc,:,coil).*(dcf)); 
-   
+for coil=1:ncoils    
+   img(:,:,:,coil )= FT2'*col(rawdata(:,1:nspokes_acc,:,coil).*(dcf(:,1:nspokes_acc,:))); 
 end
 
 
+triv_recon = sum(conj(b1).*img,4);
+
 mri_obj.data        = reshape((rawdata(:,1:nspokes_acc,:,:))...
-                      ,[nRO nspokes_acc*nPH2 1 ncoils]);
+                      ,[nRO nspokes_acc*nslices 1 ncoils]);
 mri_obj.traj        = [ col(traj(:,1:nspokes_acc,:,1)),...
                         col(traj(:,1:nspokes_acc,:,2)),...
                         col(traj(:,1:nspokes_acc,:,3))];
-mri_obj.dcf         = reshape(dcf(:,1:nspokes_acc,:),[nRO,nspokes_acc*nPH2]);
+mri_obj.dcf         = reshape(dcf(:,1:nspokes_acc,:),[nRO,nspokes_acc*nslices]);
 mri_obj.b1          = b1;
 [n,m,l,ncoils]      = size(mri_obj.b1);
 mri_obj.imgdims     = [n,m,l];
 mri_obj.u0          = zeros(n,m,l)+1i.*zeros(n,m,l);
 
-recon_tgv3d_noncart ...
-                = avionic_matlab_gpu( mri_obj,...
-                {'method','TGV2_3D';'stop_par',500;'isnoncart',1;'dx',1;'dy',1;'dz',3});
+
+recon_tgv3d_noncart = ...
+                 avionic_matlab_gpu( mri_obj,...
+                {'method','TGV2_3D';'stop_par',500;...
+                'isnoncart',1;'dx',1;'dy',1;'dz',3;'scale',1});
 
 
 % display results
 implay(vidnorm(abs(recon_tgv3d_noncart)));
+
+
 

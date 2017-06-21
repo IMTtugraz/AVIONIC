@@ -175,7 +175,7 @@ avionic -o -p ./CUDA/config/default_cine.cfg -r cine_rad_24_sedona.h5 -a -n ./re
 ## Demo 3: Reconstruction of MATLAB data with demo script 
 
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.808309.svg)](https://doi.org/10.5281/zenodo.808309)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.815385.svg)](https://doi.org/10.5281/zenodo.815385)
 
 Please look into demo_avionic.m
 

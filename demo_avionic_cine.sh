@@ -77,7 +77,7 @@ nX=$nENC;nY=$nRO;
 if [ ! -f ./results_cine/${RESULTSFILE}.bin ]
 then
 
-  recon_cmd="./CUDA/bin/avionic -o -i 500 -m ICTGV2 -e -a \
+  recon_cmd="./CUDA/bin/avionic -o -i 500 -m $FUNCTYPE -e -a \
    	    -p ./CUDA/config/default_cine.cfg -d $nX:$nY:0:$nRO:$nENC:0:$nCOILS:$nFRAMES \
  			  $DATAFILE $PATTERNFILE \
 			  ./results_cine/${RESULTSFILE}.bin"

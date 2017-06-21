@@ -74,6 +74,10 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
     b1_final_reg = 0.1;
     b1_final_nr_it = 1000;
     uH1mu = 1e-5;
+    
+    datanorm = 1;
+    ref = 0;
+    conf = 0;
 
 
     %Read parameter-------------------------------------------------------------------------
@@ -121,7 +125,7 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
     %Setup Data and estimate sensitivities
     mri_obj = prepare_data(data, {'u_reg',u_reg; 'b1_reg', b1_reg; 'b1_final_reg', b1_final_reg; ...
         'b1_final_nr_it',b1_final_nr_it; 'uH1mu', uH1mu;});
-    data = 0;
+    data = 0; datanorm = mri_obj.datanorm;
 
 
     %Get size
@@ -271,6 +275,9 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
         end%------------------------------------------------------------------------------------------------------
         %########################################################################################################
 
+        if ref~=0
+           conv(k) = sum(sum(sum(abs(x(:,:,:,1))-ref,1),2),3);
+        end
 
     end
 
