@@ -12,7 +12,7 @@ method  = 'ICTGV2'; % 'TGV2', 'TV'
 use_gpu = 1;
 
 % get rawdata
-unix(['wget https://zenodo.org/record/808309/files/testdata_cart_cine_avionic.mat --no-check-certificate']);
+unix(['wget https://zenodo.org/record/815385/files/testdata_cart_cine_avionic.mat --no-check-certificate']);
 load testdata_cart_cine_avionic
 [nslices,m,ncoils,nframes]  = size(data);
 
@@ -50,7 +50,7 @@ implay(vidnorm(abs(recon_avionic)));
 %% 2)   static Cartesian MRI reconstruction 3D volume with TGV 
 %       Dataset: Cartesian VIBE (partial Fourier), simulate additional CAIPIRINHA undersampling
 
-unix(['wget https://zenodo.org/record/808309/files/testdata_cart_avionic_tgv3d.mat --no-check-certificate' ]);
+unix(['wget https://zenodo.org/record/815385/files/testdata_cart_avionic_tgv3d.mat --no-check-certificate' ]);
 load testdata_cart_avionic_tgv3d.mat
 
 acc          = 6;       % acceleration factor
@@ -69,7 +69,7 @@ implay(vidnorm(abs(recon_tgv3d_cart)));
 %% 3)   static Non-Cartesian MRI reconstruction 3D volume with TGV 
 %       Dataset: radial VIBE
 
-unix(['wget https://zenodo.org/record/808309/files/testdata_noncart_avionic_tgv3d.mat --no-check-certificate']);
+unix(['wget https://zenodo.org/record/815385/files/testdata_noncart_avionic_tgv3d.mat --no-check-certificate']);
 load testdata_noncart_avionic_tgv3d.mat
 
 % dataset acquired with 550 spokes (fully sampled equals 400 spokes)

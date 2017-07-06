@@ -491,11 +491,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-      std::cout << "b1norm = " << agile::norm1(b1) << std::endl;
-    
       std::cout << "no initial solution (u0) data provided!" << std::endl;
       PerformInitalizationGivenB1(dims, op, kdata, u0, b1, mask, w, com);
-      //std::cout << "b1norm = " << agile::norm1(b1) << std::endl;
     }
   }
   else // b1 and u0 not provided
@@ -520,10 +517,14 @@ int main(int argc, char *argv[])
     }
     utils::GetSubVector(u, u0, dims.coils - 1, N);
 
-    //if (op.nonuniform)
-      //agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);
-
   }
+
+  if (op.nonuniform)
+  {
+   agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);  
+   std::cout << "scaling u0" << std::endl; 
+  }
+
   ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
                                      "u0_reconstructed.bin", u0);
   ExportAdditionalResultsToMatlabBin(outputDir.c_str(),

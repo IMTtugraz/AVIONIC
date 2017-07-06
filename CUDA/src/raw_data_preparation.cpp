@@ -723,11 +723,11 @@ void RawDataPreparation::NormalizeNonCartData(std::vector<CType> &data, const Di
   std::vector<RType> uTemp(u0Abs.size());
   u0Abs.copyToHost(uTemp);
   CType median = FindNormalizationFactor(uTemp);
-  //CType datanorm = (CType)255.0 / median;
-
-  // for non-cartesian data it is important to scale with number of frames
-  //datanorm = (CType) dims.frames * (CType)255.0 / median;
   datanorm = (CType)255.0 / median;
+
+  // for non-cartesian data it is important to scale with number of encodings
+  // datanorm = (CType)dims.frames*(CType)255.0/median;
+  // datanorm = (CType)255.0 / median * (CType) dims.encodings;
 
   std::cout << "datanorm factor (in):" << datanorm << std::endl;
   agile::scale(datanorm, kdata, kdata);
@@ -752,8 +752,6 @@ void RawDataPreparation::NormalizeNonCartData(CVector &data, const Dimension &di
   //coilConstruction->PerformCoilConstruction(data, u, b1, com);
    coilConstruction->TimeAveragedReconstruction(data, u0, crec, false);
 
-
-
   /*  u0.assign(u0.size(), 0);
   CVector crecTemp(dims.width * dims.height);
   CVector b1Temp(dims.width * dims.height);
@@ -765,6 +763,7 @@ void RawDataPreparation::NormalizeNonCartData(CVector &data, const Dimension &di
     agile::addVector(u0, crecTemp, u0);
   }
   */
+   
   u0.assign(u0.size(), 0);
   CVector crecTemp(dims.width * dims.height);
   RVector crecTempAbs(dims.width * dims.height);
@@ -785,14 +784,13 @@ void RawDataPreparation::NormalizeNonCartData(CVector &data, const Dimension &di
   std::vector<RType> uTemp(u0Abs.size());
   u0Abs.copyToHost(uTemp);
   CType median = FindNormalizationFactor(uTemp);
-  //CType datanorm = (CType)255.0 / median;
-  //datanorm = (CType)dims.frames * (CType)255.0 / median ;
-  //datanorm = (CType)255.0 / median ;
+  datanorm = (CType)255.0 / median;
 
-  // for non-cartesian data it is important to scale with number of frames
-  //datanorm = (CType) dims.frames * (CType)255.0 / median;
-  datanorm =  (CType)255.0 / median;
-
+  // for non-cartesian data it is important to scale with number of encodings
+  // datanorm =  (CType)255.0 / median * (CType)dims.encodings;
+  // datanorm =  (CType)255.0 / median;
+  // datanorm = (CType)dims.frames*(CType)255.0/median ;
+ 
 
   std::cout << "datanorm factor (in):" << datanorm << std::endl;
 

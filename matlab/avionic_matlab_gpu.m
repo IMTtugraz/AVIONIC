@@ -19,6 +19,8 @@ dt = 1;
 
 scale = 0;
 isnoncart = 0;
+adapt_lambda = 0;
+debug = 0;
 
 %Read parameter-------------------------------------------------------------------------
 %Input: par_in--------------------------------------------------------------------------
@@ -54,6 +56,18 @@ else
     scalestr = ' ';
 end
 
+
+if adapt_lambda
+    alstr = ' -a ';
+else
+    alstr = ' ';
+end
+
+if debug
+    debugstr = ' -v ';
+else
+    debugstr = ' ';
+end
 %--------------------------------------------------------------------
 % define method
 %---------------------------------------------------------------------
@@ -215,7 +229,7 @@ end
 %------------------------------------------------------------------
 % Define Recon Command
 %------------------------------------------------------------------
-recon_cmd=['avionic -v ',scalestr, ' -i ',num2str(stop_par),...
+recon_cmd=['avionic ',scalestr,alstr,debugstr, ' -i ',num2str(stop_par),...
     methodstr,...
     voxelscalestr,...
     ' -m ',method,' -e -p ',parfile,' -d ', dimstr,...

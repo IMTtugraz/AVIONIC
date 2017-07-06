@@ -77,7 +77,7 @@ function [g2,comp1,comp2,par,b1,tvt,gap,g2_out,sig_out,tau_out] = ictgv2_dmri(da
     
     datanorm = 1;
     ref = 0;
-    conf = 0;
+    conv = 0;
 
 
     %Read parameter-------------------------------------------------------------------------
