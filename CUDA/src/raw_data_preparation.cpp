@@ -723,11 +723,10 @@ void RawDataPreparation::NormalizeNonCartData(std::vector<CType> &data, const Di
   std::vector<RType> uTemp(u0Abs.size());
   u0Abs.copyToHost(uTemp);
   CType median = FindNormalizationFactor(uTemp);
-  datanorm = (CType)255.0 / median;
 
-  // for non-cartesian data it is important to scale with number of encodings
-  // datanorm = (CType)dims.frames*(CType)255.0/median;
-  // datanorm = (CType)255.0 / median * (CType) dims.encodings;
+  // for non-cartesian data it is important to scale with number of encodings if the density compensation is scaled according to undersampling
+  // with factor N*pi/(4*spokesperframe)
+  datanorm = (CType)255.0 * (CType)dims.frames /  median ;
 
   std::cout << "datanorm factor (in):" << datanorm << std::endl;
   agile::scale(datanorm, kdata, kdata);
@@ -784,16 +783,12 @@ void RawDataPreparation::NormalizeNonCartData(CVector &data, const Dimension &di
   std::vector<RType> uTemp(u0Abs.size());
   u0Abs.copyToHost(uTemp);
   CType median = FindNormalizationFactor(uTemp);
-  datanorm = (CType)255.0 / median;
 
-  // for non-cartesian data it is important to scale with number of encodings
-  // datanorm =  (CType)255.0 / median * (CType)dims.encodings;
-  // datanorm =  (CType)255.0 / median;
-  // datanorm = (CType)dims.frames*(CType)255.0/median ;
- 
+  // for non-cartesian data it is important to scale with number of encodings if the density compensation is scaled according to undersampling
+  // with factor N*pi/(4*spokesperframe)
+  datanorm = (CType)255.0 * (CType)dims.frames /  median ;
 
   std::cout << "datanorm factor (in):" << datanorm << std::endl;
-
   agile::scale(datanorm, data, data);
 }
 
@@ -815,8 +810,7 @@ void RawDataPreparation::NormalizeCartData(std::vector<CType> &data,
   std::vector<RType> uTemp(u0Abs.size());
   u0Abs.copyToHost(uTemp);
   CType median = FindNormalizationFactor(uTemp);
-  //CType datanorm = (CType)255.0 / median;
-  //datanorm =  median / (CType)255.0;
+
   datanorm = (CType)255.0 / median ;
 
   agile::scale(datanorm, kdata, kdata);
