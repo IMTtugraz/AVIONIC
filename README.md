@@ -20,7 +20,8 @@ If you use this software please cite:
 * Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf. <br>
   __Infimal convolution of total generalized variation functionals for dynamic MRI.__<br>
   _Magnetic Resonance in Medicine_, 2017; 78(1):142-155<br>
-  doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) 
+  doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) <br>
+  OA: [EuroPubMed](http://europepmc.org/articles/PMC5553112)
 
 ```
 @article {MRM:MRM26352,
