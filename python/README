@@ -1,0 +1,7 @@
+dependencies: 
+
+sudo zypper install python-devel
+sudo zypper install hdf5 hdf5-devel
+sudo zypper install Tk-devel python-matplotlib-tk
+
+easy_install --user -U argparse decorator distribute numpy progressbar py pycuda pyfft pytest pytools scikits.cuda scipy Cython h5py matplotlib backend_tkagg
