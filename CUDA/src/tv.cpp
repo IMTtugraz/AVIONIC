@@ -147,10 +147,10 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
     agile::addScaledVector(z, params.sigma, zTemp, z);
 
     // Proximal mapping
-    utils::ProximalMap3(y, 1.0);
+    utils::ProximalMap3(y, (DType)1.0);
 
     agile::subScaledVector(z, params.sigma, data_gpu, z);
-    agile::scale((float)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
+    agile::scale((DType)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
     // primal descent
     mrOp->ForwardOperation(z, imgTemp, b1_gpu);
     utils::Divergence(y, divTemp, width, height, frames, params.dx, params.dy,
@@ -162,7 +162,7 @@ void TV::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_gpu)
     agile::copy(ext, x_old);
 
     // extra gradient
-    agile::scale(2.0f, ext, ext);
+    agile::scale((DType)2.0, ext, ext);
     agile::subVector(ext, x, ext);
 
     // x_n = x_n+1

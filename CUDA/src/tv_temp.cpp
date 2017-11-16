@@ -130,11 +130,12 @@ void TVTEMP::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_
     mrOp->BackwardOperation(ext, zTemp, b1_gpu);
     agile::addScaledVector(z, params.sigma, zTemp, z);
 
+    Log("Still everything ok\n");
     // Proximal mapping
     utils::ProximalMap1D(y, (DType)1.0);
 
     agile::subScaledVector(z, params.sigma, data_gpu, z);
-    agile::scale((float)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
+    agile::scale((DType)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
 
     // primal descent
     mrOp->ForwardOperation(z, imgTemp, b1_gpu);
@@ -146,7 +147,7 @@ void TVTEMP::IterativeReconstruction(CVector &data_gpu, CVector &x, CVector &b1_
     agile::copy(ext, x_old);
 
     // extra gradient
-    agile::scale(2.0f, ext, ext);
+    agile::scale((DType)2.0, ext, ext);
     agile::subVector(ext, x, ext);
 
     // x_n = x_n+1
@@ -195,7 +196,7 @@ RType TVTEMP::ComputeGStar(CVector &x, std::vector<CVector> &y, CVector &z,
 
   // F*(z)
   RType g2 = std::real(agile::getScalarProduct(data_gpu, z));
-  g2 += 1.0 / (2.0 * params.lambda) * std::real(agile::getScalarProduct(z, z));
+  g2 += (RType)1.0 / ((RType)2.0 * params.lambda) * std::real(agile::getScalarProduct(z, z));
 
   // G*(-Kx)
   mrOp->ForwardOperation(z, imgTemp, b1_gpu);

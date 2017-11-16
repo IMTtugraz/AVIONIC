@@ -291,7 +291,7 @@ void ICTV::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 
     // prox operator z
     agile::subScaledVector(z, params.sigma, data_gpu, z);
-    agile::scale((float)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
+    agile::scale((DType)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
 
     //---------------------------------------------------------------------
     // primal descent
@@ -314,8 +314,8 @@ void ICTV::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     agile::copy(ext3, x3_old);
 
     // extra gradient
-    agile::scale(2.0f, ext1, ext1);
-    agile::scale(2.0f, ext3, ext3);
+    agile::scale((DType)2.0, ext1, ext1);
+    agile::scale((DType)2.0, ext3, ext3);
     agile::subVector(ext1, x1, ext1);
     agile::subVector(ext3, x3, ext3);
 

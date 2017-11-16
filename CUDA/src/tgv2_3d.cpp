@@ -284,7 +284,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     utils::ProximalMap6(y2, (DType)1.0 / params.alpha0);
 
     agile::subScaledVector(z, params.sigma, data_gpu, z);
-    agile::scale((float)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
+    agile::scale((DType)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
   
     // primal descent
     // ext1
@@ -309,7 +309,7 @@ void TGV2_3D::IterativeReconstruction(CVector &data_gpu, CVector &x1,
       agile::copy(ext2[cnt], x2_old[cnt]);
 
     // extra gradient
-    agile::scale(2.0f, ext1, ext1);
+    agile::scale((DType)2.0, ext1, ext1);
     agile::subVector(ext1, x1, ext1);
     
     // x_n = x_n+1
