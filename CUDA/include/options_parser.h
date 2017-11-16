@@ -12,6 +12,7 @@
 #include "../include/tgv2.h"
 #include "../include/tgv2_3d.h"
 #include "../include/tv.h"
+#include "../include/tv_temp.h"
 #include "../include/coil_construction.h"
 #include "agile/agile.hpp"
 #include "agile/io/file.hpp"
@@ -25,6 +26,7 @@ namespace po = boost::program_options;
 typedef enum Method
 {
   TV,
+  TVtemp,
   TGV2,
   TGV2_3D,
   ICTV,
@@ -63,6 +65,7 @@ class OptionsParser
   bool ParseOptions(int argc, char *argv[]);
 
   TVParams tvParams;
+  TVtempParams tvtempParams;
   TGV2Params tgv2Params;
   ICTVParams ictvParams;
   ICTGV2Params ictgv2Params;
@@ -107,6 +110,8 @@ class OptionsParser
   void AddCoilConstrConfigurationParameters();
 
   void AddTVConfigurationParameters();
+
+  void AddTVtempConfigurationParameters();
 
   void AddTGV2ConfigurationParameters();
 

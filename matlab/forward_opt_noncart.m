@@ -12,7 +12,7 @@ for frame = 1:nframes
    
     im_ = zeros(n,m);
     for coil = 1:ncoils
-         im_ =  im_ +  nufft_adj(col(squeeze(kdata(:,:,coil,frame))) ,nufft_st{frame}).*conj(b1(:,:,coil))./sqrt(prod(nufft_st{frame}.Kd)); 
+         im_ =  im_ +  nufft_adj(col(squeeze(kdata(:,:,coil,frame))) ,nufft_st{frame}).*conj(b1(:,:,coil))./sqrt(n*m);%prod(nufft_st{frame}.Kd)); 
     end
     im(:,:,frame) = im_;
 end

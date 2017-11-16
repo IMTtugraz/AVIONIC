@@ -80,6 +80,9 @@ switch method
     case 'serktrpca'
         errorv = -10*log10( (norm( reshape(x,[n*m nframes])-reshape(y,[n*m nframes]),'fro')^2)/(norm(reshape(y,[n*m nframes]),'fro')^2) );
         errorvroi = 0;
+    case 'psnr'
+        errorv    = psnr(x,y,max(abs(y(:))));
+        errorvroi = psnr(xroi,yroi,max(abs(y(:))));
     otherwise
         error('no valid metric')
         

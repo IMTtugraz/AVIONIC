@@ -40,7 +40,7 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in)
     mri_obj.data = mri_obj.data.*permute(repmat(sqrt(mri_obj.dcf),[1 1 1 ncoils]),[1 2 4 3]);
 
     N = imgdims;
-    K = floor(N*2);
+    K = floor(N*1.5);
     n_shift = N/2;
 
     col = @(x) x(:);
@@ -52,7 +52,7 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in)
     % ATTENTION: consider sqrt(w) !
     for j = 1 : ncoils
         crec(:,:,j) = nufft_adj( col( mri_obj.data(:,:,j,:) )...
-            .* sqrt(mri_obj.dcf(:)) ,nufft_st_u0)./nframes./sqrt(prod(nufft_st_u0.Kd));
+            .* sqrt(mri_obj.dcf(:)) ,nufft_st_u0)./nframes./sqrt(prod(N));%nufft_st_u0.Kd));
     end
     clear nufft_st_u0;
 
@@ -67,7 +67,7 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in)
         u0 = sqrt(sum(abs(crec).^2,3));
     end
     u0datanorm = abs(u0);
-    datanorm = 255./median(u0datanorm(u0datanorm>=0.9.*max(u0datanorm(:))));
+    datanorm = 255./median(u0datanorm(u0datanorm>=0.9.*max(u0datanorm(:))))/nframes;
     
     mri_obj.data = mri_obj.data.*datanorm;
     mri_obj.datanorm = datanorm;

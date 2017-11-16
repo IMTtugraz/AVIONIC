@@ -26,8 +26,10 @@ link_libraries (${AGILE_LIBRARIES})
 
 # DCMTK
 # for DCMTK - Dicom ToolKit¬
-SET(DCMTK_DIR /usr/local/include/dcmtk CACHE STRING "Path to DCMTK root directory")
+#SET(DCMTK_DIR /usr/local/include/dcmtk CACHE STRING "Path to DCMTK root directory")
 
+SET(DCMTK_DIR /usr/local/include/dcmtk CACHE STRING "Path to DCMTK root directory")
+# 
 ADD_DEFINITIONS(-DHAVE_CONFIG_H)
 
 SET(DCMTK_config_INCLUDE_DIR ${DCMTK_DIR}/config)

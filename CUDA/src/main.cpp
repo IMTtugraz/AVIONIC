@@ -18,6 +18,7 @@
 #include "../include/ictv.h"
 #include "../include/tgv2.h"
 #include "../include/tgv2_3d.h"
+#include "../include/tv_temp.h"
 #include "../include/tv.h"
 #include "../include/noncartesian_operator.h"
 #include "../include/cartesian_operator3d.h"
@@ -83,6 +84,13 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
     std::cout << "TV" << std::endl;
     *recon = new class TV(dims.width, dims.height, dims.coils, dims.frames,
                           options.tvParams, mrOp);
+    break;
+  }
+  case TVtemp:
+  {
+    std::cout << "TVTEMP" << std::endl;
+    *recon = new class TVTEMP(dims.width, dims.height, dims.coils, dims.frames,
+                          options.tvtempParams, mrOp);
     break;
   }
   case TGV2:
@@ -585,7 +593,7 @@ int main(int argc, char *argv[])
   }
 
   // ==================================================================================================================
-  // BEGIN: Perform iterative (TV, TGV2, TGV_3D, ICTGV2) reconstruction
+  // BEGIN: Perform iterative (TV, TVtemp, TGV2, TGV_3D, ICTV, ICTGV2) reconstruction
   // ==================================================================================================================
   PDRecon *recon = NULL;
   GenerateReconOperator(&recon, op, baseOp);
@@ -621,7 +629,7 @@ int main(int argc, char *argv[])
   std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
 
   // ==================================================================================================================
-  // END: Perform iterative (TV, TGV2, TGV_3D, ICTGV2) reconstruction
+  // END: Perform iterative (TV, TVtemp, TGV2, TGV_3D, ICTV, ICTGV2) reconstruction
   // ==================================================================================================================
 
 
@@ -650,6 +658,9 @@ int main(int argc, char *argv[])
   // write reconstruction to dicom file 
   else if (extension_out.compare(".dcm") == 0)   
   {
+    std::cout << "currently not supported" << std::endl;
+
+/*
     agile::DICOM dicomfile;
     std::string filenamewoe = utils::GetFilename(op.outputFilename);
     std::ostringstream ss;	 
@@ -680,6 +691,7 @@ int main(int argc, char *argv[])
  
       ss.str("");   
     }
+*/
   }
   else
   {

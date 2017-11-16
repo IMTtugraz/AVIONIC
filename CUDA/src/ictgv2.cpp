@@ -316,7 +316,16 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
   zTemp.resize(data_gpu.size(), 0.0);
   z.assign(z.size(), 0.0);
 
-  RType datafidelity;
+  RType datafidelity =
+             ComputeDataFidelity(x1,data_gpu,b1_gpu);
+  dataFidelityExport.push_back(datafidelity);
+
+  RType ictgv2Norm =
+              utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
+                                params.alpha1, params.alpha, width, height, params.dx, params.dy,
+                                params.dt, params.dx2, params.dy2, params.dt2);
+  ictgvNormExport.push_back(ictgv2Norm);
+     
 
   unsigned loopCnt = 0;
   // loop

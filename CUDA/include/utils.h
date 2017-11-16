@@ -48,6 +48,30 @@ std::vector<CVector> Gradient(CVector &data_gpu, unsigned width,
                               unsigned height, DType dx = 1.0, DType dy = 1.0,
                               DType dz = 1.0);
 
+
+
+/** \brief Compute temporal gradient for given 2d-t image data vector.
+ *
+ * \param[in] data_gpu 3-d data vector, dim width*height*frames
+ * \param[in] width
+ * \param[in] height
+ * \param[in] dt Step size in t dim
+ * \param[out] gradient components stored  in vector as (dt)
+ * */
+void Gradient_temp(CVector &data_gpu, std::vector<CVector> &gradient, unsigned width,
+              unsigned height,  DType dt = 1.0);
+
+/** \brief Compute temporal gradient for given 2d-t image data vector.
+ *
+ * \param[in] data_gpu 3-d data vector, dim width*height*frames
+ * \param[in] width
+ * \param[in] height
+ * \param[in] dt Step size in t dim
+ * \return gradient components stored component-wise in vector as (dt)
+ * */
+std::vector<CVector> Gradient_temp(CVector &data_gpu, unsigned width,
+                              unsigned height, DType dt = 1.0);
+
 /** \brief Compute 2-d gradient for given image data vector.
  *
  * \param[in] data_gpu 2-d data vector, dim width*height*frames
@@ -89,6 +113,15 @@ void GradientNorm2D(const std::vector<CVector> &gradient, CVector &norm);
 /** \brief Computation of norm, i.e. sqrt(abs(dx).^2 + abs(dy).^2)
  * */
 CVector GradientNorm2D(const std::vector<CVector> &gradient);
+
+/** \brief Computation of norm, i.e. sqrt(abs(dt).^2 )
+ * */
+void GradientNorm1D(const std::vector<CVector> &gradient, CVector &norm);
+
+/** \brief Computation of norm, i.e. sqrt(abs(dt).^2)
+ * */
+CVector GradientNorm1D(const std::vector<CVector> &gradient);
+
 
 /** \brief Compute 3-d second symmetric gradient for given image gradient
  *vector.
@@ -222,6 +255,45 @@ void Divergence(std::vector<CVector> &gradient, CVector &divergence,
 CVector Divergence(std::vector<CVector> &gradient, unsigned width,
                    unsigned height, unsigned frames, DType dx = 1.0,
                    DType dy = 1.0, DType dz = 1.0);
+
+/** \brief Compute temporal divergence with backward differences for given 2d-time
+ * one component vector (i.e. gradient).
+ *
+ * Since, \f$grad^* = -div\f$
+ * the divergence
+ * \f$div = -\nabla \cdot p \f$
+ * is computed as dual operator of the gradient (minus div).
+ *
+ * \param[in] gradient vector of temporal gradient (dt)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] frames
+ * \param[in] dt Step size in t dim
+ * \param[out] divergence computed divergence
+ * */
+void Divergence_temp(std::vector<CVector> &gradient, CVector &divergence,
+                unsigned width, unsigned height, unsigned frames,
+                DType dz = 1.0);
+
+/** \brief Compute temporal divergence with backward differences for given 2d-time
+ * one component vector (i.e. gradient).
+ *
+ * Since, \f$grad^* = -div\f$
+ * the divergence
+ * \f$div = -\nabla \cdot p \f$
+ * is computed as dual operator of the gradient (minus div).
+ *
+ * \param[in] gradient vector of temporal gradient (dt)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] frames
+ * \param[in] dt Step size in t dim
+ * \return divergence computed divergence
+ * */
+CVector Divergence_temp(std::vector<CVector> &gradient, unsigned width,
+                   unsigned height, unsigned frames, DType dt = 1.0);
+
+
 
 /** \brief Compute 2-d divergence with backward differences for given 2-d
  *component vector (i.e. gradient).
@@ -483,6 +555,18 @@ void DivideVectorElementwise(std::vector<CVector> &y, CVector v,
  */
 void DivideVectorScaledElementwise(std::vector<CVector> &y, CVector &v,
                                    RType scale, unsigned vecElements);
+
+/**
+ * \brief Perform proximal mapping for each 1-d gradient vector component y by
+ *scaled gradient norm
+ *
+ * \f$ y[i] \leftarrow \frac{y[i]}{max(scale \cdot norm(y),1.0)} element-wise
+ *\f$
+ *
+ * \param[in,out] y gradient vecotr
+ * \param[in] scale factor
+ */
+void ProximalMap1D(std::vector<CVector> &y, RType scale);
 
 /**
  * \brief Perform proximal mapping for each 2-d gradient vector component y by

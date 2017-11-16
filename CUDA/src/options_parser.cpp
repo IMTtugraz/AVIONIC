@@ -12,6 +12,10 @@ std::istream &operator>>(std::istream &in, Method &method)
   {
     method = TV;
   }
+  if (token == "TVTEMP")
+  {
+    method = TVtemp;
+  }
   else if (token == "TGV2")
   {
     method = TGV2;
@@ -107,6 +111,7 @@ OptionsParser::OptionsParser()
 
   AddCoilConstrConfigurationParameters();
   AddTVConfigurationParameters();
+  AddTVtempConfigurationParameters();
   AddTGV2ConfigurationParameters();
   AddTGV2_3DConfigurationParameters();
   AddICTVConfigurationParameters(); 
@@ -179,6 +184,15 @@ void OptionsParser::AddTVConfigurationParameters()
       "tv.sigmaTauRatio", po::value<RType>(&tvParams.sigmaTauRatio))(
       "tv.timeSpaceWeight", po::value<RType>(&tvParams.timeSpaceWeight))(
       "tv.lambda", po::value<RType>(&tvParams.lambda));
+}
+
+void OptionsParser::AddTVtempConfigurationParameters()
+{
+  conf.add_options()("tvtemp.dt", po::value<RType>(&tvtempParams.dt))(
+      "tvtemp.sigma", po::value<RType>(&tvtempParams.sigma))(
+      "tvtemp.tau", po::value<RType>(&tvtempParams.tau))(
+      "tvtemp.sigmaTauRatio", po::value<RType>(&tvtempParams.sigmaTauRatio))(
+      "tvtemp.lambda", po::value<RType>(&tvtempParams.lambda));
 }
 
 void OptionsParser::AddTGV2ConfigurationParameters()
@@ -270,6 +284,7 @@ void OptionsParser::AddAdaptLambdaConfigurationParameters()
 void OptionsParser::SetMaxIt(int maxIt)
 {
   tvParams.maxIt = maxIt;
+  tvtempParams.maxIt = maxIt;
   tgv2Params.maxIt = maxIt;
   tgv2_3DParams.maxIt = maxIt;
   ictvParams.maxIt = maxIt;
@@ -279,6 +294,7 @@ void OptionsParser::SetMaxIt(int maxIt)
 void OptionsParser::SetStopPDGap(float stopPDGap)
 {
   tvParams.stopPDGap = stopPDGap;
+  tvtempParams.stopPDGap = stopPDGap;
   tgv2Params.stopPDGap = stopPDGap;
   tgv2_3DParams.stopPDGap = stopPDGap;
   ictvParams.stopPDGap = stopPDGap;
@@ -288,6 +304,7 @@ void OptionsParser::SetStopPDGap(float stopPDGap)
 void OptionsParser::SetAdaptLambdaParams()
 {
   tvParams.adaptLambdaParams = adaptLambdaParams;
+  tvtempParams.adaptLambdaParams = adaptLambdaParams;
   tgv2Params.adaptLambdaParams = adaptLambdaParams;
   tgv2_3DParams.adaptLambdaParams = adaptLambdaParams;
   ictvParams.adaptLambdaParams = adaptLambdaParams;
