@@ -82,7 +82,7 @@ std::vector<CVector> utils::Gradient(CVector &data_gpu, unsigned width,
 }
 
 void utils::Gradient_temp(CVector &data_gpu, std::vector<CVector> &gradient,
-                     unsigned width, unsigned height,DType dt)
+                     unsigned width, unsigned height, DType dt)
 {
   unsigned int N = data_gpu.size();
 

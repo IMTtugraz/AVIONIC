@@ -1,4 +1,4 @@
-function mri_obj = prepare_data_noncart(mri_obj, par_in)
+function mri_obj = prepare_data_noncart(mri_obj, par_in, gpu)
 
     %Set parameter#############################################################
     % Standard parameters for artifial subsampling on self-generated datasets
@@ -13,7 +13,7 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in)
     
     
     % non-uniform fft parameters
-    J = [5,5];               % nufft kernelsize
+    J = [6,6];               % nufft kernelsize
     interptype = 'kaiser';   % nufft interpolation kernel: 'minmax:kb', 'kaiser'
     imgdims = [256,256];
 
@@ -35,6 +35,9 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in)
     end
     %---------------------------------------------------------------------------
     
+    if nargin <3
+	gpu = 0;
+    end
     [nsamplesonspoke,spokesperframe,ncoils,nframes] = size(mri_obj.data);
       
     mri_obj.data = mri_obj.data.*permute(repmat(sqrt(mri_obj.dcf),[1 1 1 ncoils]),[1 2 4 3]);
@@ -45,17 +48,31 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in)
 
     col = @(x) x(:);
     om = [real(mri_obj.traj(:)), imag(mri_obj.traj(:))];
-    nufft_st_u0 = nufft_init(om*2*pi,N,J,K,n_shift,interptype);
+    
+    if gpu
 
-    % Calculate time-averaged image
-    % coil-wise time-averaged data from all spokes
-    % ATTENTION: consider sqrt(w) !
-    for j = 1 : ncoils
-        crec(:,:,j) = nufft_adj( col( mri_obj.data(:,:,j,:) )...
-            .* sqrt(mri_obj.dcf(:)) ,nufft_st_u0)./nframes./sqrt(prod(N));%nufft_st_u0.Kd));
+       osf     = 1.5; % oversampling: 1.5 1.25
+       wg      = 6; % kernel width: 5 7
+       sw      = 8; % parallel sectors' width: 12 16
+    
+   	 FT = gpuNUFFT(om',(mri_obj.dcf(:)),osf,wg,sw,imgdims,[]);
+       for j = 1 : ncoils
+		 crec(:,:,j) = FT'*( col( mri_obj.data(:,:,j,:) ) )./nframes;
+       end
+
+
+    else
+	    nufft_st_u0 = nufft_init(om*2*pi,N,J,K,n_shift,interptype);
+
+	    % Calculate time-averaged image
+	    % coil-wise time-averaged data from all spokes
+	    % ATTENTION: consider sqrt(w) !
+	    for j = 1 : ncoils
+		crec(:,:,j) = nufft_adj( col( mri_obj.data(:,:,j,:) )...
+		    		.* sqrt(mri_obj.dcf(:)) ,nufft_st_u0)./nframes./sqrt(prod(N));%nufft_st_u0.Kd));
+	    end
+	    clear nufft_st_u0;
     end
-    clear nufft_st_u0;
-
     [n,m,ncoils]        = size(crec);
     mri_obj.datadims    = [nsamplesonspoke,spokesperframe,ncoils,nframes];
     mri_obj.imgdims     = [n,m,ncoils];
@@ -67,19 +84,21 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in)
         u0 = sqrt(sum(abs(crec).^2,3));
     end
     u0datanorm = abs(u0);
-    datanorm = 255./median(u0datanorm(u0datanorm>=0.9.*max(u0datanorm(:))))/nframes;
+    datanorm = 255./median(u0datanorm(u0datanorm>=0.9.*max(u0datanorm(:))));
     
     mri_obj.data = mri_obj.data.*datanorm;
     mri_obj.datanorm = datanorm;
  
    
     % pre-calculate gridding kernels for time-frames --> input for forward_opt_noncart and backward_opt_noncart
-    for frame=1:nframes
+    if ~isfield(mri_obj,'nufft_st') && ~gpu
+      for frame=1:nframes
         om = [ real(col(mri_obj.traj(:,:,frame))), ...
                imag(col(mri_obj.traj(:,:,frame)))]*2*pi;
         nufft_st{frame} = nufft_init(om,N,J,K,n_shift,interptype);
+      end
+      mri_obj.nufft_st = nufft_st;
     end
-    mri_obj.nufft_st = nufft_st;
 
        
     % coil sensitivity estimation
