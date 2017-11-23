@@ -122,8 +122,8 @@ for k = 1:maxiter
     
      %Adapt stepsize
      if (k<10) || (rem(k,50) == 0) 
-  %       [sig,tau] = steps_ls_pd(ext-x,sig,tau,K);
-  %       display(['sig=',num2str(sig),' | tau=',num2str(tau)]);
+         [sig,tau] = steps_ls_pd(ext-x,sig,tau,K);
+         display(['sig=',num2str(sig),' | tau=',num2str(tau)]);
      end
      
      if ~isempty(ref) && (rem(k,10)==0)
