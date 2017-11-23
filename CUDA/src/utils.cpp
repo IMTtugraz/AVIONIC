@@ -580,10 +580,12 @@ RType utils::ICTVNorm(  CVector &data1,
 
 RType utils::ICTGV2Norm(CVector &data1, std::vector<CVector> &data2,
                         CVector &data3, std::vector<CVector> &data4,
-                        RType alpha0, RType alpha1, RType alpha, unsigned width,
-                        unsigned height, DType dx, DType dy, DType dt, 
-                        DType dx2, DType dy2, DType dt2)
+                        RType alpha0, RType alpha1, RType alpha, 
+                        unsigned width, unsigned height,
+                        DType dx,  DType dy,  DType dt, 
+                        DType dx2, DType dy2, DType dt2, RType normfac)
 {
+  std::cout << "normfac(in)=" << normfac << std::endl;
   unsigned N = data1.size();
   CVector temp(N);
   agile::subVector(data1, data3, temp);
@@ -594,18 +596,18 @@ RType utils::ICTGV2Norm(CVector &data1, std::vector<CVector> &data2,
   RType n2 = utils::TGV2Norm(data3, data4, alpha0, alpha1, width, height, dx2,
                              dy2, dt2);
 
-  RType denom = std::min(alpha, (RType)1.0 - alpha);
-  RType norm = (alpha / denom) * (n1) + ((1.0 - alpha) / denom) * (n2);
+  RType denom = std::min(normfac*alpha, normfac*( (RType)1.0 - alpha));
+  RType norm = (normfac*alpha / denom) * (n1) + (normfac*(1.0 - alpha) / denom) * (n2);
   return norm;
 }
 
 RType utils::ICTGV2Norm(CVector &data1, std::vector<CVector> &data2,
                         CVector &data3, std::vector<CVector> &data4,
-                        std::vector<CVector> &temp3,
-                        std::vector<CVector> &temp6, RType alpha0, RType alpha1,
-                        RType alpha, unsigned width, unsigned height,
+                        std::vector<CVector> &temp3,  std::vector<CVector> &temp6,
+                        RType alpha0, RType alpha1, RType alpha,
+                        unsigned width, unsigned height,
                         DType dx, DType dy, DType dt,
-                        DType dx2, DType dy2, DType dt2)
+                        DType dx2, DType dy2, DType dt2, RType normfac)
 {
   unsigned N = data1.size();
   CVector temp(N);

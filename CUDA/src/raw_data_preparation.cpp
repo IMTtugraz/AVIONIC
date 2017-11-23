@@ -199,7 +199,9 @@ void RawDataPreparation::PrepareRawData(const std::string &rawDataPath,
   std::vector<RType> w(0);
   // Set MeasDat file
   op.kdataFilename = rawDataPath;
+  std::cout << "path="<<rawDataPath<<std::endl;
   dataReader = new SiemensVD11Reader(op);
+  std::cout << "datareader:" << dataReader << std::endl;
   dataReader->LoadRawData();
   this->PrepareRawData(data, mask, w, dims, datanorm);
 }

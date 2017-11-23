@@ -17,10 +17,11 @@ dy = 1;
 dz = 1;
 dt = 1;
 
+verbose = 0;
 scale = 0;
 isnoncart = 0;
 adapt_lambda = 0;
-debug = 0;
+debug_step = 0;
 
 %Read parameter-------------------------------------------------------------------------
 %Input: par_in--------------------------------------------------------------------------
@@ -56,6 +57,11 @@ else
     scalestr = ' ';
 end
 
+if verbose
+    verbosestr = ' -v ';
+else
+    verbosestr = ' ';
+end
 
 if adapt_lambda
     alstr = ' -a ';
@@ -63,8 +69,8 @@ else
     alstr = ' ';
 end
 
-if debug
-    debugstr = ' -v ';
+if debug_step
+    debugstr = [' -g ',num2str(debug_step)];
 else
     debugstr = ' ';
 end
@@ -229,7 +235,7 @@ end
 %------------------------------------------------------------------
 % Define Recon Command
 %------------------------------------------------------------------
-recon_cmd=['avionic ',scalestr,alstr,debugstr, ' -i ',num2str(stop_par),...
+recon_cmd=['avionic ',verbosestr,scalestr,alstr,debugstr, ' -i ',num2str(stop_par),...
     methodstr,...
     voxelscalestr,...
     ' -m ',method,' -e -p ',parfile,' -d ', dimstr,...
@@ -291,29 +297,33 @@ end
 
 function b1u0str = exportb1u0(mri_obj,id,orderb1,orderu0)
 
-
-%------------------------------------------------------------------
-% B1 Given or not
-%------------------------------------------------------------------
-if isfield(mri_obj,'b1');
-    %writebin_vector((mri_obj.b1),...
-    %  ['./',id,'/b1.bin']);
-    writebin_vector(permute(mri_obj.b1,orderb1),...
-        ['./',id,'/b1.bin']);
-    %writebin_vector(permute(mri_obj.b1,[1 2 3 4]),...
-    %     ['./',id,'/b1.bin']);
-    
-    if isfield(mri_obj,'u0');
-        %writebin_vector((mri_obj.u0),...
-        %    ['./',id,'/u0.bin']);
-        writebin_vector(permute(mri_obj.u0,orderu0),...
-            ['./',id,'/u0.bin']);
-        %writebin_vector(permute(mri_obj.u0,[2 1 3]),...
-        %    ['./',id,'/u0.bin']);
-    end
-    b1u0str = [' -u ./',id,'/u0.bin -s ./',id,'/b1.bin '];
-else
     b1u0str = '';
-end
 
+    %------------------------------------------------------------------
+    % B1 Given or not
+    %------------------------------------------------------------------
+    if isfield(mri_obj,'b1');
+        %writebin_vector((mri_obj.b1),...
+        %  ['./',id,'/b1.bin']);
+        writebin_vector(permute(mri_obj.b1,orderb1),...
+            ['./',id,'/b1.bin']);
+        %writebin_vector(permute(mri_obj.b1,[1 2 3 4]),...
+        %     ['./',id,'/b1.bin']);
+         b1u0str = cat(2,b1u0str,[' -s ./',id,'/b1.bin ']);
+    end
+
+    %------------------------------------------------------------------
+    % U0 Given or not
+    %------------------------------------------------------------------
+    if isfield(mri_obj,'u0');
+            %writebin_vector((mri_obj.u0),...
+            %    ['./',id,'/u0.bin']);
+            writebin_vector(permute(mri_obj.u0,orderu0),...
+                ['./',id,'/u0.bin']);
+            %writebin_vector(permute(mri_obj.u0,[2 1 3]),...
+            %    ['./',id,'/u0.bin']);
+            b1u0str = cat(2,b1u0str,[' -u ./',id,'/u0.bin ']);
+    end
+
+   
 end

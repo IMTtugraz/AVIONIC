@@ -299,11 +299,14 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
   ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dt);
   ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dy, params.dt); 
   Log("Setting dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt);
+ 
   Log("Initial dx2: %.3e, dy2: %.3e, dt2: %.3e\n", params.dx2, params.dy2, params.dt2);  
   ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.dx2, params.dt2);
   ComputeTimeSpaceWeights(params.timeSpaceWeight2, params.dy2, params.dt2); 
   Log("Setting dx2: %.3e, dy2: %.3e, dt2: %.3e\n", params.dx2, params.dy2, params.dt2);
+ 
   Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
+
 
   // primal
   InitPrimalVectors(N);
@@ -318,6 +321,50 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 
   RType datafidelity;
 
+  // Additional normalization
+  //-----------------------------------------------------------------------------------------
+  RType tsw1parnorm = 4.0;
+  RType tsw2parnorm = 0.5;
+  RType alphanorm   = 0.5;
+  RType dxnorm  = params.dx;
+  RType dynorm  = params.dy;
+  RType dx2norm = params.dx2;
+  RType dy2norm = params.dy2;
+  RType dtnorm  = params.dt;
+  RType dt2norm = params.dt2;
+
+  ComputeTimeSpaceWeights(tsw1parnorm, dxnorm, dtnorm);
+  ComputeTimeSpaceWeights(tsw1parnorm, dynorm, dtnorm);
+  ComputeTimeSpaceWeights(tsw2parnorm, dx2norm, dt2norm);
+  ComputeTimeSpaceWeights(tsw2parnorm, dy2norm, dt2norm);
+  std::cout << "tsw1|dxn|dyn=" << tsw1parnorm << " | " << dxnorm << " | " << dynorm << " | " << dtnorm << std::endl;
+  RType ictgv2NormParnorm =
+              utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
+                                params.alpha1, alphanorm, width, height, dxnorm, dynorm,
+                                dtnorm, dx2norm, dy2norm, dt2norm);
+
+  std::cout << "ictgvnormfac1=" << ictgv2NormParnorm << std::endl;
+  RType ictgv2NormNow =
+              utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
+                                params.alpha1, params.alpha, width, height, params.dx, params.dy,
+                                params.dt, params.dx2, params.dy2, params.dt2); 
+
+  std::cout << "ictgvnormfac2=" << ictgv2NormNow << std::endl;
+
+  if ((ictgv2NormNow!=0) && (ictgv2NormParnorm!=0))
+  {
+    RType normfac = 1.0;// ictgv2NormNow/ictgv2NormParnorm;
+    //params.lambda = params.lambda / normfac;
+    std::cout << "Adapted ld with ictgv2-normalization factor = " << normfac << " to " << params.lambda << std::endl;
+  }
+  else
+  {
+    RType normfac = 1.0;
+  }
+  //-----------------------------------------------------------------------------------------
+ 
+  RType denom = std::min(params.alpha, (RType)1.0 - params.alpha);
+ 
   unsigned loopCnt = 0;
   // loop
   Log("Starting iteration\n");
@@ -354,7 +401,6 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     agile::addScaledVector(z, params.sigma, zTemp, z);
 
     // Proximal mapping
-    RType denom = std::min(params.alpha, (RType)1.0 - params.alpha);
     RType scale = params.alpha1 * (params.alpha / denom);
     utils::ProximalMap3(y1, 1.0 / scale);
 
@@ -449,16 +495,17 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     }
 
     // compute PD Gap (export,verbose,stopping)
-    if ( (verbose && (loopCnt < 10 || (loopCnt % 50 == 0)) ) ||
-         ((debug) && (loopCnt % debugstep == 0)) || 
-         ((params.stopPDGap > 0) && (loopCnt % 20 == 0)) )
+    if  ( ( loopCnt < 10 || (loopCnt % 50 == 0) ) ||
+          ( verbose && (loopCnt % 10 == 0) ) ||
+          ( debug && (loopCnt % debugstep == 0) ) ||
+          ( (params.stopPDGap > 0) && (loopCnt % 20 == 0) ) )
     {
       RType pdGap =
           ComputePDGap(x1, x2, x3, x4, y1, y2, y3, y4, z, data_gpu, b1_gpu);
       pdGap=pdGap/N;
       pdGapExport.push_back( pdGap );
       Log("Normalized Primal-Dual Gap after %d iterations: %.4e\n", loopCnt, pdGap);     
- 
+
       RType ictgv2Norm =
               utils::ICTGV2Norm(x1, x2, x3, x4, div2Temp, y2Temp, params.alpha0,
                                 params.alpha1, params.alpha, width, height, params.dx, params.dy,
@@ -474,7 +521,7 @@ void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
         return;
     }
 
-     loopCnt++;
+    loopCnt++;
     if (loopCnt % 10 == 0)
       std::cout << "." << std::flush;
   }

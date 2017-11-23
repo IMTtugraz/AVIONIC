@@ -64,7 +64,7 @@ void validate(boost::any &v, const std::vector<std::string> &values,
 OptionsParser::OptionsParser()
   : desc("Allowed options"), conf("Configuration"), hidden("Hidden options")
 {
-    desc.add_options()("help,h", "show help message")("debugstep,g", po::value<int>(&debugstep)->default_value(10),"flag to export PDGap")(
+    desc.add_options()("help,h", "show help message")("debugstep,g", po::value<int>(&debugstep)->default_value(0),"flag to export PDGap")(
       "verbose,v", po::bool_switch(&verbose)->default_value(false),
       "verbose console output")("dims,d", po::value<Dimension>(),
                                 "Data dimensions conforming to "

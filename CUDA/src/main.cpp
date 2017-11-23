@@ -267,7 +267,7 @@ void PerformRawDataPreparation(Dimension &dims, OptionsParser &op,
   std::cout << "INFO: Loading RAW data from file/directory: "
             << op.kdataFilename << std::endl;
   std::string outputDir = utils::GetParentDirectory(op.outputFilename);
-  rdp.PrepareRawData(kdata, mask, w, dims, datanorm);
+  rdp.PrepareRawData(kdata, mask, w, dims, datanorm );
 
   // write buffer to file
   //if(std::FILE* f1 = std::fopen("datanorm.bin", "wb")) {
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
   RVector w(0);
 
   // data normalization factor
-  CType datanorm = 1;
+  CType datanorm = 1.0;
 
   // get data dimensions
   std::string extension = utils::GetFileExtension(op.kdataFilename);
@@ -601,7 +601,7 @@ int main(int argc, char *argv[])
     x.resize(N * dims.frames, 0.0);
     for (unsigned frame = 0; frame < dims.frames; frame++)
     {
-      utils::SetSubVector(u0, x, frame, N);
+      utils::SetSubVector(u0, x, frame, N); // initialize with given u0
     }
   }
  

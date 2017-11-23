@@ -93,7 +93,20 @@ class ICTGV2 : public PDRecon
   std::vector<CType> pdGapExport;
   std::vector<CType> dataFidelityExport;
   std::vector<CType> ictgvNormExport;
- 
+
+  RType tsw1parnorm;
+  RType tsw2parnorm;
+  RType alphanorm;
+  RType dxnorm;
+  RType dynorm;
+  RType dx2norm;
+  RType dy2norm;
+  RType dtnorm;
+  RType dt2norm;
+  RType ictgv2NormParnorm;
+  RType ictgv2NormNow;
+  RType normfac;
+  
   RType datafidelity;
 
   CVector imgTemp;

@@ -440,14 +440,14 @@ RType ICTGV2Norm(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
                  CVector &data3_gpu, std::vector<CVector> &data4_gpu,
                  RType alpha0, RType alpha1, RType alpha, unsigned width,
                  unsigned height, DType dx = 1.0, DType dy = 1.0, DType dt = 1.0,
-                 DType dx2 = 1.0, DType dy2 = 1.0, DType dt2 = 1.0);
+                 DType dx2 = 1.0, DType dy2 = 1.0, DType dt2 = 1.0, RType normfac = 1.0);
 
 RType ICTGV2Norm(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
                  CVector &data3_gpu, std::vector<CVector> &data4_gpu,
                  std::vector<CVector> &temp3, std::vector<CVector> &temp6,
                  RType alpha0, RType alpha1, RType alpha, unsigned width,
                  unsigned height, DType dx = 1.0, DType dy = 1.0, DType dt = 1.0,
-                 DType dx2 = 1.0, DType dy2 = 1.0, DType dt2 = 1.0);
+                 DType dx2 = 1.0, DType dy2 = 1.0, DType dt2 = 1.0, RType normfac = 1.0);
 
 /**
  * \brief Function to perform element-wise division for each vector in the
