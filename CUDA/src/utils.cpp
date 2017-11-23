@@ -176,8 +176,6 @@ CVector utils::GradientNorm2D(const std::vector<CVector> &gradient)
 
 void utils::GradientNorm1D(const std::vector<CVector> &gradient, CVector &norm)
 {
-  unsigned int N = gradient[0].size();
-
   // compute norm sqrt(abs(dt).^2)
   agile::multiplyConjElementwise(gradient[0], gradient[0], norm);
   agile::sqrt(norm, norm);
@@ -701,7 +699,7 @@ void utils::DivideVectorScaledElementwise(std::vector<CVector> &y, CVector &vec,
 void utils::ProximalMap1D(std::vector<CVector> &y, RType scale)
 {
   CVector norm_gpu = utils::GradientNorm1D(y);
-  DivideVectorScaledElementwise(y, norm_gpu, scale, 2);
+  DivideVectorScaledElementwise(y, norm_gpu, scale, 1);
 }
 
 void utils::ProximalMap2D(std::vector<CVector> &y, RType scale)
