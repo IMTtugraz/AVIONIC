@@ -129,6 +129,8 @@ for k = 1:maxiter
      if ~isempty(ref) && (rem(k,10)==0)
         fval(k) = sqrt(sum(abs((col(ref-x(:,:,:,1)-x(:,:,:,2))))))./(n*m*nframes);
         display(['iter: ',num2str(k),' | fval=',num2str(fval(k))]);
+     elseif (rem(k,10)==0)
+         display(['iter: ',num2str(k)]);
      end
     
     
