@@ -72,8 +72,7 @@ for i=1:10
     fprintf('.');
 end
 
-opnorm = max(abs(l1)); 
-
+opnorm = max(abs(l1));
 
 L2          = 8;
 sig         = 1/sqrt(L2+2*opnorm);
