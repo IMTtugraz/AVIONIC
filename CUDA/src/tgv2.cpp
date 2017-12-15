@@ -1,5 +1,4 @@
 #include "../include/tgv2.h"
-
 TGV2::TGV2(unsigned width, unsigned height, unsigned coils, unsigned frames,
            BaseOperator *mrOp)
   : PDRecon(width, height, 0, coils, frames, mrOp)
@@ -59,7 +58,6 @@ void TGV2::InitParams()
 void TGV2::InitTempVectors()
 {
   unsigned N = width * height * frames;
-
   imgTemp = CVector(N);
   zTemp = CVector(0);  //< resized at runtime
 
@@ -75,6 +73,7 @@ void TGV2::InitTempVectors()
     y2Temp.push_back(CVector(N));
   }
 }
+
 
 PDParams &TGV2::GetParams()
 {
@@ -176,23 +175,20 @@ RType TGV2::ComputePDGap(CVector &x1, std::vector<CVector> &x2,
   return PDGap;
 }
 
+
+
 void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
                                    CVector &b1_gpu)
 {
   unsigned N = width * height * frames;
- 
+  Log("Init width: %.3e, heigth: %.3e nframes: %.3e\n",  (RType) width, (RType) height,(RType)  frames);
+
+  Log("Setting dx old: %.3e, dy: %.3e, dt: %.3e tsw1: %.3e\n", params.dx, params.dy, params.dt, params.timeSpaceWeight);
+
   ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dt);
-  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dy, params.dt); 
-  Log("Setting dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt);
+  ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dy, params.dt);
+  Log("Setting dx: %.3e, dy: %.3e, dt: %.3e tsw1: %.3e\n", params.dx, params.dy, params.dt, params.timeSpaceWeight);
   Log("Setting Primal-Dual Gap of %.3e  as stopping criterion \n", params.stopPDGap);
-
-
-  std::vector<CVector> x2;
-  for (unsigned cnt = 0; cnt < 3; cnt++)
-  {
-    x2.push_back(CVector(N));
-    x2[cnt].assign(N, 0.0);
-  }
 
   // primal
   CVector ext1(N), x1_old(N);
@@ -202,6 +198,13 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     ext2.push_back(CVector(N));
     x2_old.push_back(CVector(N));
   }
+
+   std::vector<CVector> x2;
+   for (unsigned cnt = 0; cnt < 3; cnt++)
+   {
+     x2.push_back(CVector(N));
+     x2[cnt].assign(N, 0.0);
+   }
   agile::copy(x1, ext1);
 
   // dual
@@ -211,19 +214,22 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     y1.push_back(CVector(N));
     y1[cnt].assign(N, 0.0);
   }
+
   std::vector<CVector> y2;
   for (int cnt = 0; cnt < 6; cnt++)
   {
     y2.push_back(CVector(N));
-    y2[cnt].assign(N, 0);
+    y2[cnt].assign(N, 0.0);
   }
 
-  CVector z(N * coils);
+  CVector z(data_gpu.size());
   zTemp.resize(data_gpu.size(), 0.0);
-  z.assign(N * coils, 0.0);
+  z.assign(z.size(), 0.0);
+
+
 
   unsigned loopCnt = 0;
-  // loop
+  // loop ---------------------------------------------------------------------------------------
   Log("Starting iteration\n");
   while ( loopCnt < params.maxIt )
   {
@@ -231,6 +237,7 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     // p
     utils::Gradient(ext1, y1Temp, width, height, params.dx, params.dy,
                     params.dt);
+
     for (unsigned cnt = 0; cnt < 3; cnt++)
     {
       agile::subVector(y1Temp[cnt], ext2[cnt], y1Temp[cnt]);
@@ -242,24 +249,29 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
                              params.dt);
     for (unsigned cnt = 0; cnt < 6; cnt++)
     {
-      agile::addScaledVector(y2[cnt], params.sigma, y2Temp[cnt], y2[cnt]);
+       agile::addScaledVector(y2[cnt], params.sigma, y2Temp[cnt], y2[cnt]);
     }
-
     mrOp->BackwardOperation(ext1, zTemp, b1_gpu);
     agile::addScaledVector(z, params.sigma, zTemp, z);
 
-    // Proximal mapping
-    utils::ProximalMap3(y1, (DType)1.0 / params.alpha1);
-    utils::ProximalMap6(y2, (DType)1.0 / params.alpha0);
+
+    utils::ProximalMap3(y1, 1.0 /  params.alpha1);
+    utils::ProximalMap6(y2, 1.0 / params.alpha0);
 
     agile::subScaledVector(z, params.sigma, data_gpu, z);
+
+    //agile::scale((float)((RType)1.0 / ((RType)1.0 + params.sigma / params.lambda)), z, z);
     agile::scale((float)(1.0 / (1.0 + params.sigma / params.lambda)), z, z);
 
     // primal descent
     // ext1
     mrOp->ForwardOperation(z, imgTemp, b1_gpu);
+
+
     utils::Divergence(y1, div1Temp, width, height, frames, params.dx, params.dy,
                       params.dt);
+
+
     agile::subVector(imgTemp, div1Temp, div1Temp);
     agile::subScaledVector(x1, params.tau, div1Temp, ext1);
 
@@ -321,6 +333,7 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
     if (loopCnt % 10 == 0)
       std::cout << "." << std::flush;
   }
+  // loop ---------------------------------------------------------------------------------------
   std::cout << std::endl;
 }
 

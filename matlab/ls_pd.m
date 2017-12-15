@@ -48,34 +48,14 @@ end
 mri_obj = prepare_data_noncart(mri_obj, {'imgdims',mri_obj.imgdims(1:2);'J',[6,6]},1);
 
 datanorm = mri_obj.datanorm;
-% 
-% % test adjointness
-% xx = randn(n,m,nframes);
-% yy = randn(size(mri_obj.data));
-% 
-% Khy = Kh(yy);
-% Kx  = K(xx);
-% adjval = dot(yy(:),Kx(:)) - dot(Khy(:),xx(:));
-
+ 
+% test adjointness
+% adjval = test_adjointness(K,Kh,[n,m,nframes],size(mri_obj.data));
 
 % estimate operator norm using power iteration
-x1  = rand(n,m,nframes);
-y1  = Kh(K(x1));
-for i=1:10
-    if norm(y1(:))~=0
-        x1 = y1./norm(y1(:));
-    else
-        x1 = y1;
-    end
-    [y1] = Kh(K(x1));
-    l1 = y1(:)'*x1(:);
-    fprintf('.');
-end
+% opnorm = getopnorm(K,Kh,[n,m,nframes]);
 
-opnorm = max(abs(l1));
-
-L2          = 8;
-sig         = 1/sqrt(L2+2*opnorm);
+sig         = 1/3;%1/sqrt(8+2*opnorm);
 tau         = sig;
 
 % primal variables
@@ -85,11 +65,11 @@ x           = zeros(n,m,nframes,2); % L,S
 y           = zeros(n,m,nframes);
 z           = zeros(size(mri_obj.data));
 
-x(:,:,:,1)  = Kh(mri_obj.data);
+x(:,:,:,1)  = repmat(mri_obj.u0,[1 1 nframes]);%Kh(mri_obj.data);
 ext         = x;
 
 [U,S,V] = svd(reshape(ext(:,:,:,1), n*m, nframes), 'econ');
-test = fgrad_t(x(:,:,:,1));
+test = fgrad_t(Kh(mri_obj.data));
 lambda_l = lambda_l*max(abs(S(:)));
 lambda_s = lambda_s*max(abs(test(:)));%*sqrt((pi/2*n/size(mri_obj.data,2))/max(n*m,nframes));
 
@@ -111,6 +91,7 @@ for k = 1:maxiter
         % proximal maps
         [U,S,V] = svd(reshape(ext(:,:,:,1), n*m, nframes), 'econ');
         S = max(0, S - tau/(tau+1)*lambda_l);
+      %  S = max(0, S - tau*lambda_l);
         ext(:,:,:,1) = reshape(U*S*V', [n,m,nframes]);
     
     % extragradient update
@@ -138,4 +119,15 @@ end
 
 
 end
+
+% 
+% function pgap_ls = compute_pdgap(x)
+% 
+% 
+% 	x0 =  (1/ts)*fgrad_3_1( x(:,:,:,1),t1/ts );
+% 
+%     %Set norm
+%     tv = sum(sum(sum( norm_3( abs(x0(:,:,:,1:3)) ) ))) ;
+%     
+% end
 

@@ -286,14 +286,15 @@ void ICTGV2::InitDualVectors(unsigned N)
   {
     y2.push_back(CVector(N));
     y4.push_back(CVector(N));
-    y2[cnt].assign(N, 0);
-    y4[cnt].assign(N, 0);
+    y2[cnt].assign(N, 0.0);
+    y4[cnt].assign(N, 0.0);
   }
 }
 
 void ICTGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
                                      CVector &b1_gpu)
 {
+
   unsigned N = width * height * frames;
   Log("Initial dx: %.3e, dy: %.3e, dt: %.3e\n", params.dx, params.dy, params.dt); 
   ComputeTimeSpaceWeights(params.timeSpaceWeight, params.dx, params.dt);
