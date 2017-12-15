@@ -12,7 +12,7 @@ std::istream &operator>>(std::istream &in, Method &method)
   {
     method = TV;
   }
-  if (token == "TVTEMP")
+  else if (token == "TVTEMP")
   {
     method = TVtemp;
   }

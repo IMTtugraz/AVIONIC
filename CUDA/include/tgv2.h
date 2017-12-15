@@ -2,6 +2,7 @@
 
 #define INCLUDE_TGV2_H_
 
+
 #include "./pd_recon.h"
 
 /** \brief Parameter struct used in TGV reconstruction. */
@@ -11,6 +12,7 @@ typedef struct TGV2Params : public PDParams
   RType alpha0;
   /** \brief TGV-norm weight, trade-off between first and second derivative */
   RType alpha1;
+
 } TGV2Params;
 
 /** \brief TGV2 regularized iterative reconstruction
@@ -72,10 +74,9 @@ class TGV2 : public PDRecon
   TGV2Params params;
   void InitParams();
   void InitLambda(bool adaptLambda);
+  void InitTempVectors();
 
   std::vector<CType> pdGapExport;
-
-  void InitTempVectors();
 
   // Temp vectors
   CVector imgTemp;
@@ -85,6 +86,7 @@ class TGV2 : public PDRecon
   std::vector<CVector> div2Temp;
   std::vector<CVector> y1Temp;
   std::vector<CVector> y2Temp;
+
 };
 
 #endif  // INCLUDE_TGV2_H_

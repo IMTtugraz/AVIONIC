@@ -1,15 +1,11 @@
 function [sig,tau] = steps_ls_pd(x,sig,tau,K)
 
-	[n,m,nframes] = size(x);
-
-	Kx = zeros(n,m,nframes,4);    
-	
 	% Get Kx
-    Kx = abs(fgrad_t(x(:,:,:,2)));
-    Kx2 = abs(K(x(:,:,:,1)+x(:,:,:,2)));
+    Kx  = abs( fgrad_t(x(:,:,:,2)) );
+    Kx2 = abs( K(x(:,:,:,1)+x(:,:,:,2)) );
     
     % Get |Kx|
-    nKx = sqrt( sum(sum(sum( Kx.^2))) + sum(Kx2(:)) );
+    nKx = sqrt( sum( abs(Kx(:)).^2 ) + sum( abs(Kx2(:)).^2 ) );
     
     % Get |x|
     nx = sqrt(sum(sum(sum(	abs(x(:,:,:,1)).^2 + abs(x(:,:,:,2)).^2 )))); 

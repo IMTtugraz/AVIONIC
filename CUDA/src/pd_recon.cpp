@@ -92,8 +92,8 @@ void PDRecon::ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &ds, RType &d
   else
     throw std::invalid_argument("ComputeTimeSpaceWeights: Invalid ratio.");
 
-  ds = 1.0 / w1;
-  dt = 1.0 / w2;
+  ds = (RType) 1.0 / w1;
+  dt = (RType) 1.0 / w2;
 }
 
 void PDRecon::IterativeReconstruction(CVector &data_gpu, CVector &x,

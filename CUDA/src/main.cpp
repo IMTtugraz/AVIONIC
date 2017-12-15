@@ -72,7 +72,7 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
                            BaseOperator *mrOp)
 {
   Dimension dims = options.dims;
-  assert(dims.width == 0 || dims.height == 0 || dims.depth ==0 ||dims.coils == 0 ||
+  assert(dims.width == 0 || dims.height == 0 || dims.depth == 0 ||dims.coils == 0 ||
          dims.frames == 0);
 
   // adapt dims to correspond to image space dimensions
@@ -98,6 +98,8 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
     std::cout << "TGV2" << std::endl;
     *recon = new class TGV2(dims.width, dims.height, dims.coils, dims.frames,
                             options.tgv2Params, mrOp);
+
+    std::cout << "width:" << dims.width << "height" << dims.height << "frames" << dims.frames << std::endl;
     break;
   }
   case TGV2_3D:
