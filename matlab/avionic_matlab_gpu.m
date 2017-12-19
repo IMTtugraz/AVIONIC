@@ -1,26 +1,26 @@
 function [ g2, comp1, comp2, b1, u0, pdgap, datanorm, ictgvnorm, datafid ] = avionic_matlab_gpu( mri_obj, par_in)
 % simple export and import to gpu from matlab
 
-%Regularization parameters for coil construction
-method = 'ICTGV2';
-stop_par = 500;
-parfile = './CUDA/config/default.cfg';
+method      = 'ICTGV2';
+stop_par    = 500;
+parfile     = './CUDA/config/default.cfg';
 
-lambda = 5.804591;
-alpha0 = 1.41421356;
-alpha1 = 1;
-alpha = 0.5;
-timeSpaceWeight2 = 0.5;
-timeSpaceWeight = 4;
+lambda              = 5.804591;
+alpha0              = 1.41421356;
+alpha1              = 1;
+alpha               = 0.5;
+timeSpaceWeight     = 4;
+timeSpaceWeight2    = 0.5;
+
 dx = 1;
 dy = 1;
 dz = 1;
 dt = 1;
 
-scale = 0;
-isnoncart = 0;
-adapt_lambda = 0;
-debug = 0;
+scale           = 0;
+isnoncart       = 0;
+adapt_lambda    = 0;
+debug           = 0;
 
 %Read parameter-------------------------------------------------------------------------
 %Input: par_in--------------------------------------------------------------------------
@@ -242,7 +242,7 @@ end
 %------------------------------------------------------------------
 % Define Recon Command
 %------------------------------------------------------------------
-recon_cmd=['/home/mr_recon/Workspace/AVIONIC/CUDA/bin/avionic  -m ',method,scalestr,alstr,debugstr, ' -i ',num2str(stop_par),...
+recon_cmd=['avionic  -m ',method,scalestr,alstr,debugstr, ' -i ',num2str(stop_par),...
     methodstr,...
     voxelscalestr,' -e -p ',...
     parfile,' -d ', dimstr,...

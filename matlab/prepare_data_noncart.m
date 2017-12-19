@@ -55,9 +55,9 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in, gpu)
        wg      = 6; % kernel width: 5 7
        sw      = 8; % parallel sectors' width: 12 16
     
-   	 FT = gpuNUFFT(om',(mri_obj.dcf(:)),osf,wg,sw,imgdims,[]);
+   	   FT = gpuNUFFT(om',(mri_obj.dcf(:)),osf,wg,sw,imgdims,[]);
        for j = 1 : ncoils
-		 crec(:,:,j) = FT'*( col( mri_obj.data(:,:,j,:) ) )./nframes;
+		  crec(:,:,j) = FT'*( col( mri_obj.data(:,:,j,:) ) )./nframes;
        end
 
 

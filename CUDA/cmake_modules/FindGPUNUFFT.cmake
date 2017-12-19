@@ -1,6 +1,6 @@
 INCLUDE(FindPackageHandleStandardArgs)
 
-SET(GPUNUFFT_ROOT_DIR "/home/mr_recon/Workspace/gpuNUFFT" CACHE STRING "GpuNUFFT source dir")
+SET(GPUNUFFT_ROOT_DIR "/media/storage/Workspace/gpuNUFFT" CACHE STRING "GpuNUFFT source dir")
 
 IF (NOT DEFINED GPUNUFFT_ROOT_DIR)
   MESSAGE(FATAL_ERROR "GPUNUFFT_ROOT_DIR not defined!")
