@@ -71,7 +71,7 @@ ext         = x;
 [U,S,V] = svd(reshape(ext(:,:,:,1), n*m, nframes), 'econ');
 test = fgrad_t(Kh(mri_obj.data));
 lambda_l = lambda_l*max(abs(S(:)));
-lambda_s = lambda_s*max(abs(test(:)));%*sqrt((pi/2*n/size(mri_obj.data,2))/max(n*m,nframes));
+lambda_s = lambda_s*255;%max(abs(test(:)));%*sqrt((pi/2*n/size(mri_obj.data,2))/max(n*m,nframes));
 
 for k = 1:maxiter
 
