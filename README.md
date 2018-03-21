@@ -11,8 +11,8 @@ Accelerated Variational Dynamic MRI Reconstruction
 This software is published under GNU GPLv3. In particular, all source code is provided "as is" without warranty of any kind, either expressed or implied. For details, see the attached LICENSE.
 
 ## General Information
-AVIONIC (Accelerated Variational Dynamic MRI Reconstruction) is an open source software for GPU accelerated reconstruction of hightly undersampled
-dynamic Magnetic Resonance data, such as functional cardiac imaging oder dynamic contrast enhanced (DCE) MRI applications. It also includes a variational
+AVIONIC (Accelerated Variational Dynamic MRI Reconstruction) is an open source software for GPU accelerated reconstruction of highly undersampled
+dynamic MRI applications, such as functional cardiac MRI or dynamic contrast enhanced (DCE) MRI. It also includes a variational
 approach for the estimation of receiver-coil sensitivity profiles from the undersampled data. The current version is able to handle Cartesian and Non-Cartesian
 data if the trajectory information is provided.
 
