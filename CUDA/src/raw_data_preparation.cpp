@@ -410,7 +410,7 @@ void RawDataPreparation::NormalizeData3D(CVector &data, RVector &mask,
   else
   {
     CartesianOperator3D *CartOp3D =  new CartesianOperator3D(dims.width, dims.height, dims.depth,
-                                     dims.coils, mask, false);
+                                     dims.coils, mask, false, NORMAL);
 
     CVector imgTemp =  CartOp3D->ForwardOperation(data, tmp_b1);
     std::vector<RType> uTemp(N);

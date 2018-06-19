@@ -25,6 +25,11 @@
 #include "../include/noncartesian_operator3d.h"
 #include "../include/options_parser.h"
 #include "../include/utils.h"
+#include "../include/h1_recon.h"
+
+
+typedef agile::GPUCommunicator<unsigned, CType, CType> communicator_type;
+
 template <typename TType>
 
 bool LoadGPUVectorFromFile(std::string &filename, TType &data)
@@ -103,6 +108,13 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
     break;
   }
   case TGV2_3D:
+  {
+    std::cout << "TGV2_3D" << std::endl;
+    *recon = new class TGV2_3D(dims.width, dims.height, dims.depth, dims.coils,
+                            options.tgv2_3DParams, mrOp);
+    break;
+  }
+  case BS_RECON:
   {
     std::cout << "TGV2_3D" << std::endl;
     *recon = new class TGV2_3D(dims.width, dims.height, dims.depth, dims.coils,
@@ -329,10 +341,10 @@ int main(int argc, char *argv[])
   std::cout << std::endl;
 
   // kdata
-  CVector kdata;
+  CVector kdata, kdataPos, kdataNeg;
 
   // kspace mask/trajectory
-  RVector mask;
+  RVector mask, maskPos, maskNeg;
 
   // density compensation in case of nonuniform data
   RVector w(0);
@@ -345,11 +357,13 @@ int main(int argc, char *argv[])
   std::cout << "Extension:" << extension << std::endl;
   
   Dimension dims; // = op.dims;
-  if (extension.compare(".bin") == 0)
-    dims = op.dims;
-  else if (extension.compare(".cfl") == 0)
+  if (op.method != BS_RECON)
   {
-    //TODO: finish implementation
+    if (extension.compare(".bin") == 0)
+      dims = op.dims;
+    else if (extension.compare(".cfl") == 0)
+    {
+      //TODO: finish implementation
       long dimensions[4];
       utils::ReadCflHeader(op.kdataFilename, dimensions);
       dims.width=dimensions[0];
@@ -364,14 +378,32 @@ int main(int argc, char *argv[])
       dims.frames=dimensions[3];
       std::cout << "DIMS main; nx: " << dims.width << " / ny:" << dims.height << " / nz:" << dims.depth << " / nc:" << dims.coils << std::endl;
       std::cout << "DIMS main; nRO: " << dims.readouts << " / nENC1:" << dims.encodings << " / nENC2:" << dims.encodings2 << " / nframes:" << dims.frames << std::endl;
+    }
   }
+  else
+  {
+	dims = op.dims;
+  }
+  
+   // define image space dimension N
+  unsigned N;
+  if (op.method==TGV2_3D || op.method==BS_RECON)
+    N = dims.width * dims.height * dims.depth;
+  else 
+    N = dims.width * dims.height;
 
   // ==================================================================================================================
   // perform rawdata preparation
   // ==================================================================================================================
   if (op.rawdata) // ismrmrd input
   {
-    PerformRawDataPreparation(dims, op, kdata, mask, w, datanorm);
+	if (op.method != BS_RECON)  
+		PerformRawDataPreparation(dims, op, kdata, mask, w, datanorm);
+	else
+	{
+		std::cerr<<"Not implemented for BS_RECON"<<std::endl;
+		return -1;
+	}	
   }
   else // binary input
   {
@@ -386,25 +418,47 @@ int main(int argc, char *argv[])
     else
       std::cout << "Mask File " << op.maskFilename  << " successfully loaded." << std::endl;
   
+	if (op.method == BS_RECON)
+	{
+	  if (!LoadGPUVectorFromFile(op.kdataFilenameH1, kdataNeg))
+        return -1;
+      else
+        std::cout << "Data File " << op.kdataFilenameH1 << " successfully loaded." << std::endl;
+	
+	  if (!LoadGPUVectorFromFile(op.maskFilenameH1, maskNeg))
+        return -1;
+      else
+        std::cout << "Mask File " << op.maskFilenameH1  << " successfully loaded." << std::endl;
+	}
 
     if (!op.nonuniform) // is cartesian data
     { 
       // set values in data-array to zero according to mask
-      if (op.method==TGV2_3D)
+      if (op.method==TGV2_3D || op.method==BS_RECON)
       {
         for (unsigned coil = 0; coil < dims.coils; coil++)
         {
-          unsigned offset = dims.width * dims.height * dims.depth * coil;
+          unsigned offset = N * coil;
            agile::lowlevel::multiplyElementwise(
-              kdata.data() + offset, mask.data(),
-              kdata.data() + offset, dims.width * dims.height * dims.depth);
+					kdata.data() + offset, mask.data(),
+					kdata.data() + offset, dims.width * dims.height * dims.depth);
         }
+		if (op.method == BS_RECON)
+		{
+		  for (unsigned coil = 0; coil < dims.coils; coil++)
+		  {
+		    unsigned offset = N * coil;
+		    agile::lowlevel::multiplyElementwise(
+					kdataNeg.data() + offset, maskNeg.data(),
+					kdataNeg.data() + offset, N);
+		  }
+		}
       }
       else
       {
         for (unsigned frame = 0; frame < dims.frames; frame++)
         {
-          unsigned offset = dims.width * dims.height * dims.coils * frame;
+          unsigned offset = N * dims.coils * frame;
           for (unsigned coil = 0; coil < dims.coils; coil++)
             {
             unsigned int x_offset = offset + coil * dims.width * dims.height;
@@ -424,6 +478,7 @@ int main(int argc, char *argv[])
         unsigned spokesPerFrame = dims.encodings;
         unsigned int nTraj = dims.frames * spokesPerFrame * nFE;
         w = RVector(nTraj);
+
         if (!LoadGPUVectorFromFile(op.densityFilename, w))
         {
           std::cerr << "Density compensation data could not be loaded!"
@@ -461,8 +516,12 @@ int main(int argc, char *argv[])
     } // end is non-cartesian data
 
     // rawdata normalization
+
     if (op.normalize)
-      PerformRawdataNormalization(dims, op, kdata, mask, w, datanorm);
+    {
+    	std::cout<<"!!!!!!!!!!!!!!!!!!!Normalization: "<<op.normalize<<std::endl;
+    	PerformRawdataNormalization(dims, op, kdata, mask, w, datanorm);
+    }
 
   } // end binary input
 
@@ -472,12 +531,7 @@ int main(int argc, char *argv[])
 
   BaseOperator *baseOp = NULL;
 
-  // define image space dimension N
-  unsigned N;
-  if (op.method==TGV2_3D)
-    N = dims.width * dims.height * dims.depth;
-  else 
-    N = dims.width * dims.height;
+ 
 
   // ==================================================================================================================
   // init b1 and u0
@@ -507,7 +561,7 @@ int main(int argc, char *argv[])
   }
   else // b1 and u0 not provided
   {
-    if (op.method==TGV2_3D)
+    if (op.method==TGV2_3D || op.method==BS_RECON)
     {
        std::cerr << "Coil Construction for 3D reconstruction not implemented! Provide b1 seperately!"
                  << std::endl;
@@ -527,19 +581,20 @@ int main(int argc, char *argv[])
     }
     utils::GetSubVector(u, u0, dims.coils - 1, N);
 
-  }
+    if (op.nonuniform)
+    {
+      agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);
+      std::cout << "scaling u0" << std::endl;
+    }
 
-  if (op.nonuniform)
-  {
-   agile::scale((CType) 1.0 / (CType) dims.frames, u0, u0);  
-   std::cout << "scaling u0" << std::endl; 
-  }
+    ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+                                         "u0_reconstructed.bin", u0);
+    ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
+                                         "b1_reconstructed.bin", b1);
 
-  ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-                                     "u0_reconstructed.bin", u0);
-  ExportAdditionalResultsToMatlabBin(outputDir.c_str(),
-                                     "b1_reconstructed.bin", b1);
+  }
   
+
   // end initilize b1, u0
   // ==================================================================================================================
 
@@ -585,7 +640,13 @@ int main(int argc, char *argv[])
     if (op.method==TGV2_3D) // Create 3d MR Operator
     {
        baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
-                                     dims.coils, mask, false);
+                                     dims.coils, mask, false, NORMAL);
+    }
+    else if (op.method==BS_RECON) // Create 3d MR Operator
+    {
+    	std::cout<<"BS_RECON"<<std::endl;
+       baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
+                                     dims.coils, mask, false, FOR_BS);
     }
     else // Create 2d-t Cartesian MR Operator
     {
@@ -601,7 +662,7 @@ int main(int argc, char *argv[])
   GenerateReconOperator(&recon, op, baseOp);
 
   CVector x(0); // resize at runtime
-  if (op.method==TGV2_3D)
+  if (op.method==TGV2_3D || op.method==BS_RECON)
   {
     x.resize(N, 0.0);
     agile::copy(u0, x);
@@ -624,10 +685,12 @@ int main(int argc, char *argv[])
   // run reconstruction
   recon->IterativeReconstruction(kdata, x, b1);
 
+
   // rescale
   std::vector<CType> datanorm_v;
   datanorm_v.push_back(datanorm);
-  ExportAdditionalResultsToMatlabBin2(outputDir.c_str(),"datanorm_factor.bin",datanorm_v);
+  if (op.normalize)
+	  ExportAdditionalResultsToMatlabBin2(outputDir.c_str(),"datanorm_factor.bin",datanorm_v);
   std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
 
   // ==================================================================================================================
@@ -708,6 +771,52 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // END: Define output 
   // ================================================================================================================== 
+  
+  
+  // ==================================================================================================================
+  // BEGIN: H1 Reconstruction
+  // ==================================================================================================================
+  
+  if (op.method == BS_RECON)
+  {
+      CartesianOperator3D *baseOpH1 = new CartesianOperator3D(dims.width, dims.height, dims.depth,
+                                       dims.coils, maskNeg, false, FOR_BS);
+	  H1Params h1par = op.h1Params;
+	  h1par.dx = op.tgv2_3DParams.dx;
+	  h1par.dy = op.tgv2_3DParams.dy;
+	  h1par.dz = op.tgv2_3DParams.dz;
+
+	  H1Recon *reconH1 = new H1Recon(dims.width, dims.height, dims.depth, dims.coils,
+									 h1par, baseOpH1, com);
+
+	  CVector b1uhat = CVector(N * dims.coils);
+	  b1uhat.assign(N * dims.coils, 1.0);
+
+	  for (unsigned coil = 0; coil < dims.coils; coil++)
+	  {
+		  unsigned offset = N * coil;
+		  agile::lowlevel::multiplyElementwise(
+					  b1.data() + offset, x.data(),
+					  b1uhat.data() + offset, N);
+	  }
+
+	  CVector bsshift = CVector(N);
+	  bsshift.assign(N, 0.0);
+
+	  reconH1->IterativeReconstruction(kdataNeg, bsshift, b1uhat);
+
+
+	  std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
+
+	  std::vector<CType> bsshiftHost;
+	  bsshift.copyToHost(bsshiftHost);
+	  std::cout << "writing output file to: " << op.outputFilenameFinal << std::endl;
+	  agile::writeVectorFile(op.outputFilenameFinal.c_str(), bsshiftHost);
+	    
+		
+	  delete reconH1;
+	  delete baseOpH1;
+  }
 
   delete recon;
   delete baseOp;

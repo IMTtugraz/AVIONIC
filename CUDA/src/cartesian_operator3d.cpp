@@ -1,16 +1,16 @@
 #include "../include/cartesian_operator3d.h"
 CartesianOperator3D::CartesianOperator3D(unsigned width, unsigned height,
                                      unsigned depth, unsigned coils, 
-                                     RVector &mask, bool centered)
-  : BaseOperator(width, height, depth, coils, 0), centered(centered), mask(mask)
+                                     RVector &mask, bool centered, int cufft_mode)
+  : BaseOperator(width, height, depth, coils, 0), centered(centered), mask(mask), cufft_mode(cufft_mode)
 {
   Init();
 }
 
 CartesianOperator3D::CartesianOperator3D(unsigned width, unsigned height,
                                      unsigned depth, unsigned coils,
-                                     RVector &mask)
-  : BaseOperator(width, height, depth, coils, 0), centered(true), mask(mask)
+                                     RVector &mask, int cufft_mode)
+  : BaseOperator(width, height, depth, coils, 0), centered(true), mask(mask), cufft_mode(cufft_mode)
 {
   Init();
 }
@@ -19,14 +19,14 @@ RVector ZeroMask3d(0);
 
 CartesianOperator3D::CartesianOperator3D(unsigned width, unsigned height,
                                      unsigned depth, unsigned coils,
-                                     bool centered)
-    : BaseOperator(width, height, depth, coils, 0), centered(centered), mask(ZeroMask3d)
+                                     bool centered, int cufft_mode)
+    : BaseOperator(width, height, depth, coils, 0), centered(centered), mask(ZeroMask3d), cufft_mode(cufft_mode)
 {
   Init();
 }
 CartesianOperator3D::CartesianOperator3D(unsigned width, unsigned height,
-                                     unsigned depth, unsigned coils)
-    : BaseOperator(width, height, depth, coils, 0), centered(true), mask(ZeroMask3d)
+                                     unsigned depth, unsigned coils, int cufft_mode)
+    : BaseOperator(width, height, depth, coils, 0), centered(true), mask(ZeroMask3d), cufft_mode(cufft_mode)
 {
   Init();
 }
@@ -39,9 +39,9 @@ CartesianOperator3D::~CartesianOperator3D()
 
 void CartesianOperator3D::Init()
 {
-//  cufftResult cres;
-//  cufftHandle fftplan3d;
-//  cres = cufftPlan3d(&fftplan3d, width, height, depth, CUFFT_C2C);
+  //cufftResult cres;
+  //cufftHandle fftplan3d;
+  //cres = cufftPlan3d(&fftplan3d, width, height, depth, CUFFT_C2C);
 }
 
 RType CartesianOperator3D::AdaptLambda(RType k, RType d)
@@ -91,7 +91,12 @@ void CartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
       //fftOp->CenteredForward(x_gpu, z_gpu, x_offset, 0);
       const CType* in_data = x_gpu.data()+offset;
       CType* out_data = z_gpu.data();   
-      cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_FORWARD);
+
+      if (cufft_mode == NORMAL)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_FORWARD);
+      else if (cufft_mode == FOR_BS)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_INVERSE);
+
       AGILE_ASSERT(cres == CUFFT_SUCCESS,
                        StandardException::ExceptionMessage(
                          "Error during FFT procedure"));
@@ -101,7 +106,12 @@ void CartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
       //fftOp->Forward(x_gpu, z_gpu, x_offset, 0);
       const CType*  in_data = x_gpu.data()+offset;
       CType* out_data = z_gpu.data();
-      cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_FORWARD);
+
+      if (cufft_mode == NORMAL)
+    	  cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_FORWARD);
+      else if (cufft_mode == FOR_BS)
+    	  cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_INVERSE);
+
       AGILE_ASSERT(cres == CUFFT_SUCCESS,
                         StandardException::ExceptionMessage(
                           "Error during FFT procedure"));
@@ -121,6 +131,78 @@ void CartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
   }
 cufftDestroy(fftplan3d);
 }
+
+void CartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
+                                         CVector &b1_gpu, CVector &z_gpu)
+{
+  unsigned N = width * height * depth;
+  //CVector z_gpu(N);
+
+  cufftResult cres;
+  cufftHandle fftplan3d;
+  cres = cufftPlan3d(&fftplan3d, depth, height, width, CUFFT_C2C);
+
+  // Set sum vector to zero
+  sum.assign(N, 0.0);
+
+  // perform forward operation
+  for (unsigned coil = 0; coil < coils; coil++)
+  {
+    unsigned int offset = coil * N;
+
+    if (!mask.empty())
+    {
+      agile::lowlevel::multiplyElementwise(
+      x_gpu.data() + offset, mask.data(),
+      x_gpu.data() + offset, N);
+    }
+
+    if (centered)
+    {
+      //fftOp->CenteredForward(x_gpu, z_gpu, x_offset, 0);
+      const CType* in_data = x_gpu.data()+offset;
+      CType* out_data = z_gpu.data();
+
+      if (cufft_mode == NORMAL)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_FORWARD);
+      else if (cufft_mode == FOR_BS)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_INVERSE);
+
+      AGILE_ASSERT(cres == CUFFT_SUCCESS,
+                       StandardException::ExceptionMessage(
+                         "Error during FFT procedure"));
+    }
+    else
+    {
+      //fftOp->Forward(x_gpu, z_gpu, x_offset, 0);
+      const CType*  in_data = x_gpu.data()+offset;
+      CType* out_data = z_gpu.data();
+
+      if (cufft_mode == NORMAL)
+    	  cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_FORWARD);
+      else if (cufft_mode == FOR_BS)
+    	  cufftExecC2C(fftplan3d,(cufftComplex*)in_data,(cufftComplex*)out_data, CUFFT_INVERSE);
+
+      AGILE_ASSERT(cres == CUFFT_SUCCESS,
+                        StandardException::ExceptionMessage(
+                          "Error during FFT procedure"));
+
+   }
+
+    agile::scale((CType)(1.0 / std::sqrt(N)), z_gpu, z_gpu);
+
+
+    // apply adjoint b1 map
+    agile::lowlevel::multiplyConjElementwise(
+        b1_gpu.data() + coil * N, z_gpu.data(), z_gpu.data(), N);
+
+    agile::lowlevel::addVector(
+        z_gpu.data(), sum.data() ,
+        sum.data() , N);
+  }
+cufftDestroy(fftplan3d);
+}
+
 
 CVector CartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &b1_gpu)
 {
@@ -159,7 +241,12 @@ void CartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
       //fftOp->CenteredInverse(x_hat_gpu, z_gpu, 0, z_offset);
 
       CType* out_data = z_gpu.data() + offset;
-      cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+
+      if (cufft_mode == NORMAL)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+      else if (cufft_mode == FOR_BS)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_FORWARD);
+
       AGILE_ASSERT(cres == CUFFT_SUCCESS,
                        StandardException::ExceptionMessage(
                          "Error during FFT procedure"));
@@ -168,7 +255,12 @@ void CartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
     {
      //fftOp->Inverse(x_hat_gpu, z_gpu, 0, z_offset);
       CType* out_data = z_gpu.data() + offset;
-      cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+
+      if (cufft_mode == NORMAL)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+      else if (cufft_mode == FOR_BS)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_FORWARD);
+
       AGILE_ASSERT(cres == CUFFT_SUCCESS,
                        StandardException::ExceptionMessage(
                          "Error during FFT procedure"));
@@ -184,6 +276,73 @@ void CartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
   }
  agile::scale((CType)(1.0 / std::sqrt(N)), z_gpu, z_gpu);
     
+cufftDestroy(fftplan3d);
+}
+
+void CartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
+                                          CVector &b1_gpu, CVector &x_hat_gpu)
+{
+
+  unsigned N = width * height * depth;
+  //CVector x_hat_gpu(N);
+  x_hat_gpu.assign(N, 0.0);
+  const CType* in_data = x_hat_gpu.data();
+
+  //TODO: put in init
+  cufftResult cres;
+  cufftHandle fftplan3d;
+  cres = cufftPlan3d(&fftplan3d, depth, height, width, CUFFT_C2C);
+
+  // perform backward operation
+  for (unsigned coil = 0; coil < coils; coil++)
+  {
+    unsigned offset = coil * N;
+    // apply b1 map
+    agile::lowlevel::multiplyElementwise(
+        x_gpu.data() , b1_gpu.data() + offset,
+        x_hat_gpu.data(), N);
+
+
+    if (centered)
+    {
+      //fftOp->CenteredInverse(x_hat_gpu, z_gpu, 0, z_offset);
+
+      CType* out_data = z_gpu.data() + offset;
+
+      if (cufft_mode == NORMAL)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+      else if (cufft_mode == FOR_BS)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_FORWARD);
+
+      AGILE_ASSERT(cres == CUFFT_SUCCESS,
+                       StandardException::ExceptionMessage(
+                         "Error during FFT procedure"));
+    }
+    else
+    {
+     //fftOp->Inverse(x_hat_gpu, z_gpu, 0, z_offset);
+      CType* out_data = z_gpu.data() + offset;
+
+      if (cufft_mode == NORMAL)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_INVERSE);
+      else if (cufft_mode == FOR_BS)
+    	  cres = cufftExecC2C(fftplan3d,(cufftComplex*)in_data ,(cufftComplex*)out_data, CUFFT_FORWARD);
+
+      AGILE_ASSERT(cres == CUFFT_SUCCESS,
+                       StandardException::ExceptionMessage(
+                         "Error during FFT procedure"));
+   }
+
+    if (!mask.empty())
+    {
+      agile::lowlevel::multiplyElementwise(
+      z_gpu.data() + offset, mask.data() ,
+      z_gpu.data() + offset, N);
+    }
+
+  }
+ agile::scale((CType)(1.0 / std::sqrt(N)), z_gpu, z_gpu);
+
 cufftDestroy(fftplan3d);
 }
 

@@ -145,6 +145,22 @@ void utils::GradientNorm(const std::vector<CVector> &gradient, CVector &norm)
   agile::sqrt(norm, norm);
 }
 
+
+void utils::GradientNorm(const std::vector<CVector> &gradient, CVector &norm, CVector &temp)
+{
+  //unsigned int N = gradient[0].size();
+  //CVector temp(N);
+
+  // compute norm sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2)
+  agile::multiplyConjElementwise(gradient[0], gradient[0], norm);
+  agile::multiplyConjElementwise(gradient[1], gradient[1], temp);
+  agile::addVector(temp, norm, norm);
+  agile::multiplyConjElementwise(gradient[2], gradient[2], temp);
+  agile::addVector(temp, norm, norm);
+
+  agile::sqrt(norm, norm);
+}
+
 CVector utils::GradientNorm(const std::vector<CVector> &gradient)
 {
   unsigned int N = gradient[0].size();
@@ -205,12 +221,14 @@ void utils::SymmetricGradient(const std::vector<CVector> &data_gpu,
   // dyy
   agile::lowlevel::bdiff3(2, width, height, data_gpu[1].data(),
                           gradient[1].data(), N, false);
+
   if (dy != 1.0)
     agile::scale((DType)1.0 / dy, gradient[1], gradient[1]);
 
   // dzz
   agile::lowlevel::bdiff3(3, width, height, data_gpu[2].data(),
                           gradient[2].data(), N, false);
+
   if (dz != 1.0)
     agile::scale((DType)1.0 / dz, gradient[2], gradient[2]);
 
@@ -247,6 +265,60 @@ void utils::SymmetricGradient(const std::vector<CVector> &data_gpu,
 
   agile::addVector(gradient[5], temp, gradient[5]);
  }
+
+void utils::SymmetricGradient(const std::vector<CVector> &data_gpu,
+                              std::vector<CVector> &gradient, CVector &temp, unsigned width,
+                              unsigned height, DType dx, DType dy, DType dz)
+{
+  unsigned int N = data_gpu[0].size();
+  //CVector temp(N);
+
+  // dxx
+  agile::lowlevel::bdiff3(1, width, height, data_gpu[0].data(),
+                          gradient[0].data(), N, false);
+  if (dx != 1.0)
+    agile::scale((DType)1.0 / dx, gradient[0], gradient[0]);
+
+  // dyy
+  agile::lowlevel::bdiff3(2, width, height, data_gpu[1].data(),
+                          gradient[1].data(), N, false);
+
+  if (dy != 1.0)
+    agile::scale((DType)1.0 / dy, gradient[1], gradient[1]);
+
+  // dzz
+  agile::lowlevel::bdiff3(3, width, height, data_gpu[2].data(),
+                          gradient[2].data(), N, false);
+
+  if (dz != 1.0)
+    agile::scale((DType)1.0 / dz, gradient[2], gradient[2]);
+
+  // dxy
+  agile::lowlevel::bdiff3(2, width, height, data_gpu[0].data(),
+                          gradient[3].data(), N, false);
+  agile::lowlevel::bdiff3(1, width, height, data_gpu[1].data(), temp.data(), N,
+                          false);
+  agile::addVector(gradient[3], temp, gradient[3]);
+  agile::scale((DType)(1.0 / (2.0 * dx)), gradient[3], gradient[3]);
+
+  // dxz
+  agile::lowlevel::bdiff3(3, width, height, data_gpu[0].data(),
+                          gradient[4].data(), N, false);
+  agile::scale((DType)1.0 / (dz), gradient[4], gradient[4]);
+  agile::lowlevel::bdiff3(1, width, height, data_gpu[2].data(), temp.data(), N,
+                          false);
+  agile::addScaledVector(gradient[4], (DType)1.0 / dx, temp, gradient[4]);
+  agile::scale(0.5f, gradient[4], gradient[4]);
+
+  // dyz
+  agile::lowlevel::bdiff3(3, width, height, data_gpu[1].data(),
+                          gradient[5].data(), N, false);
+  agile::scale((DType)1.0 / (dz), gradient[5], gradient[5]);
+  agile::lowlevel::bdiff3(2, width, height, data_gpu[2].data(), temp.data(), N,
+                          false);
+  agile::addScaledVector(gradient[5], (DType)1.0 / dx, temp, gradient[5]);
+  agile::scale(0.5f, gradient[5], gradient[5]);
+}
 
 std::vector<CVector>
 utils::SymmetricGradient(const std::vector<CVector> &data_gpu, unsigned width,
@@ -311,6 +383,29 @@ void utils::SymmetricGradientNorm(const std::vector<CVector> &gradient,
 {
   unsigned int N = gradient[0].size();
   CVector temp(N);
+
+  // compute norm sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2 + 2.0*abs(dxy).^2 +
+  // 2.0*abs(dxz).^2 + 2.0*abs(dyz).^2)
+  // TODO bad style
+  agile::multiplyConjElementwise(gradient[0], gradient[0], norm);
+  agile::multiplyConjElementwise(gradient[1], gradient[1], temp);
+  agile::addVector(temp, norm, norm);
+  agile::multiplyConjElementwise(gradient[2], gradient[2], temp);
+  agile::addVector(temp, norm, norm);
+  agile::multiplyConjElementwise(gradient[3], gradient[3], temp);
+  agile::addScaledVector(norm, 2.0f, temp, norm);
+  agile::multiplyConjElementwise(gradient[4], gradient[4], temp);
+  agile::addScaledVector(norm, 2.0f, temp, norm);
+  agile::multiplyConjElementwise(gradient[5], gradient[5], temp);
+  agile::addScaledVector(norm, 2.0f, temp, norm);
+  agile::sqrt(norm, norm);
+}
+
+void utils::SymmetricGradientNorm(const std::vector<CVector> &gradient,
+                                  CVector &norm, CVector &temp)
+{
+  //unsigned int N = gradient[0].size();
+  //CVector temp(N);
 
   // compute norm sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2 + 2.0*abs(dxy).^2 +
   // 2.0*abs(dxz).^2 + 2.0*abs(dyz).^2)
@@ -395,6 +490,32 @@ CVector utils::Divergence(std::vector<CVector> &gradient, unsigned width,
   CVector divergence(N);
   Divergence(gradient, divergence, width, height, frames, dx, dy, dz);
   return divergence;
+}
+
+void utils::Divergence(std::vector<CVector> &gradient, CVector &divergence, CVector &temp_gpu,
+                       unsigned width, unsigned height, unsigned frames,
+                       DType dx, DType dy, DType dz)
+{
+  unsigned int N = width * height * frames;
+  //CVector temp_gpu(N);
+  agile::lowlevel::diff3trans(1, width, height, gradient[0].data(),
+                              divergence.data(), N, false);
+  if (dx != 1.0)
+    agile::scale((DType)1.0 / dx, divergence, divergence);
+
+  agile::lowlevel::diff3trans(2, width, height, gradient[1].data(),
+                              temp_gpu.data(), N, false);
+  if (dy != 1.0)
+    agile::scale((DType)1.0 / dy, temp_gpu, temp_gpu);
+
+  agile::addVector(temp_gpu, divergence, divergence);
+  agile::lowlevel::diff3trans(3, width, height, gradient[2].data(),
+                              temp_gpu.data(), N, false);
+  if (dz != 1.0)
+    agile::scale((DType)1.0 / dz, temp_gpu, temp_gpu);
+
+  agile::addVector(temp_gpu, divergence, divergence);
+  agile::scale(-1.0f, divergence, divergence);
 }
 
 void utils::Divergence_temp(std::vector<CVector> &gradient, CVector &divergence,
@@ -499,6 +620,55 @@ void utils::SymmetricDivergence(std::vector<CVector> &gradient,
                          divergence[2]);
   agile::scale(-1.0f, divergence[2], divergence[2]);
 }
+
+
+void utils::SymmetricDivergence(std::vector<CVector> &gradient,
+                                std::vector<CVector> &divergence, CVector &temp_gpu,
+                                unsigned width, unsigned height,
+                                unsigned frames, DType dx, DType dy, DType dz)
+{
+  unsigned N = width * height * frames;
+  //CVector temp_gpu(N);
+  // first component
+  agile::lowlevel::bdiff3trans(1, width, height, gradient[0].data(),
+                               divergence[0].data(), N, false);
+  agile::lowlevel::bdiff3trans(2, width, height, gradient[3].data(),
+                               temp_gpu.data(), N, false);
+  agile::addVector(divergence[0], temp_gpu, divergence[0]);
+  agile::scale((DType)1.0 / dx, divergence[0], divergence[0]);
+  agile::lowlevel::bdiff3trans(3, width, height, gradient[4].data(),
+                               temp_gpu.data(), N, false);
+  agile::addScaledVector(divergence[0], (DType)1.0 / dz, temp_gpu,
+                         divergence[0]);
+  agile::scale(-1.0f, divergence[0], divergence[0]);
+
+  // second component
+  agile::lowlevel::bdiff3trans(1, width, height, gradient[3].data(),
+                               divergence[1].data(), N, false);
+  agile::lowlevel::bdiff3trans(2, width, height, gradient[1].data(),
+                               temp_gpu.data(), N, false);
+  agile::addVector(divergence[1], temp_gpu, divergence[1]);
+  agile::scale((DType)1.0 / dx, divergence[1], divergence[1]);
+  agile::lowlevel::bdiff3trans(3, width, height, gradient[5].data(),
+                               temp_gpu.data(), N, false);
+  agile::addScaledVector(divergence[1], (DType)1.0 / dz, temp_gpu,
+                         divergence[1]);
+  agile::scale(-1.0f, divergence[1], divergence[1]);
+
+  // third component
+  agile::lowlevel::bdiff3trans(1, width, height, gradient[4].data(),
+                               divergence[2].data(), N, false);
+  agile::lowlevel::bdiff3trans(2, width, height, gradient[5].data(),
+                               temp_gpu.data(), N, false);
+  agile::addVector(divergence[2], temp_gpu, divergence[2]);
+  agile::scale((DType)1.0 / dx, divergence[2], divergence[2]);
+  agile::lowlevel::bdiff3trans(3, width, height, gradient[2].data(),
+                               temp_gpu.data(), N, false);
+  agile::addScaledVector(divergence[2], (DType)1.0 / dz, temp_gpu,
+                         divergence[2]);
+  agile::scale(-1.0f, divergence[2], divergence[2]);
+}
+
 
 std::vector<CVector> utils::SymmetricDivergence(std::vector<CVector> &gradient,
                                                 unsigned width, unsigned height,
@@ -726,6 +896,19 @@ void utils::ProximalMap6(std::vector<CVector> &y, RType scale)
   DivideVectorScaledElementwise(y, norm_gpu, scale, 6);
 }
 
+void utils::ProximalMap3(std::vector<CVector> &y, CVector &norm_gpu, CVector &tempVec, RType scale)
+{
+  utils::GradientNorm(y, norm_gpu, tempVec);
+  DivideVectorScaledElementwise(y, norm_gpu, scale, 3);
+}
+
+void utils::ProximalMap6(std::vector<CVector> &y, CVector &norm_gpu, CVector &tempVec, RType scale)
+{
+  utils::SymmetricGradientNorm(y, norm_gpu, tempVec);
+  DivideVectorScaledElementwise(y, norm_gpu, scale, 6);
+}
+
+
 void utils::SumOfSquares3(std::vector<CVector> &x, CVector &sum)
 {
   CVector temp(sum.size());
@@ -739,6 +922,28 @@ void utils::SumOfSquares3(std::vector<CVector> &x, CVector &sum)
 void utils::SumOfSquares6(std::vector<CVector> &x, CVector &sum)
 {
   CVector temp(sum.size());
+  for (unsigned cnt = 0; cnt < 3; cnt++)
+  {
+    agile::multiplyConjElementwise(x[cnt], x[cnt], temp);
+    agile::addVector(sum, temp, sum);
+    agile::multiplyConjElementwise(x[cnt + 3], x[cnt + 3], temp);
+    agile::addScaledVector(sum, (DType)2.0, temp, sum);
+  }
+}
+
+void utils::SumOfSquares3(std::vector<CVector> &x, CVector &sum, CVector &temp)
+{
+  //CVector temp(sum.size());
+  for (unsigned cnt = 0; cnt < 3; cnt++)
+  {
+    agile::multiplyConjElementwise(x[cnt], x[cnt], temp);
+    agile::addVector(sum, temp, sum);
+  }
+}
+
+void utils::SumOfSquares6(std::vector<CVector> &x, CVector &sum, CVector &temp)
+{
+  //CVector temp(sum.size());
   for (unsigned cnt = 0; cnt < 3; cnt++)
   {
     agile::multiplyConjElementwise(x[cnt], x[cnt], temp);

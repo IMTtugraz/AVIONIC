@@ -11,6 +11,7 @@
 #include "../include/ictv.h"
 #include "../include/tgv2.h"
 #include "../include/tgv2_3d.h"
+#include "../include/h1_recon.h"
 #include "../include/tv.h"
 #include "../include/tv_temp.h"
 #include "../include/coil_construction.h"
@@ -30,7 +31,8 @@ typedef enum Method
   TGV2,
   TGV2_3D,
   ICTV,
-  ICTGV2
+  ICTGV2,
+  BS_RECON
 } Method;
 
 /**
@@ -71,10 +73,15 @@ class OptionsParser
   ICTGV2Params ictgv2Params;
   TGV2_3DParams tgv2_3DParams;
   CoilConstructionParams coilParams;
+  H1Params h1Params;
+
 
   std::string kdataFilename;
   std::string maskFilename;
+  std::string kdataFilenameH1;
+  std::string maskFilenameH1;
   std::string outputFilename;
+  std::string outputFilenameFinal;
 
   Method method;
   Dimension dims;
@@ -122,6 +129,8 @@ class OptionsParser
   void AddICTGV2ConfigurationParameters();
 
   void AddGPUNUFFTConfigurationParameters();
+
+  void AddH1ConfigurationParameters();
 
   void AddAdaptLambdaConfigurationParameters();
 

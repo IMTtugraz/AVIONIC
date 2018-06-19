@@ -105,11 +105,11 @@ unsigned IsmrmrdReader::GetNumberOfAcquisitions() const
 
 bool IsmrmrdReader::IsNonUniformData() const
 {
-  // return op.nonuniform;
+   return op.nonuniform;
   // std::cout << "InNonUniform? " <<
   // (std::string("radial").compare(hdr->encoding[0].trajectory) == 0) <<
   // std::endl;
-  return std::string("radial").compare(hdr->encoding[0].trajectory) == 0;
+  //return std::string("radial").compare(hdr->encoding[0].trajectory) == 0;
 }
 
 bool IsmrmrdReader::IsOversampledData() const

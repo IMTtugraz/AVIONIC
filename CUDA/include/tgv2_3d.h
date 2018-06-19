@@ -43,7 +43,7 @@ class TGV2_3D : public PDRecon
    * based on nKx and nx.
    */
   void AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
-                     CVector &b1);
+                     CVector &b1, std::vector<CVector> &gradient1, std::vector<CVector> &gradient2, CVector &temp);
 
   /** \brief G* Computation, needed in ComputePDGap function. */
   RType ComputeGStar(CVector &x, std::vector<CVector> &y1,
@@ -73,6 +73,8 @@ class TGV2_3D : public PDRecon
   void InitLambda(bool adaptLambda);
 
   std::vector<CType> pdGapExport;
+  std::vector<CVector> divTemp2;
+  CVector temp, temp2, zTemp1, g, imgTemp1;
 
 };
 

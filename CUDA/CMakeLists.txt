@@ -1,6 +1,7 @@
 project (ICTGV CXX)
 
 cmake_minimum_required (VERSION 2.8)
+set(CMAKE_CXX_STANDARD 11)
 
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 message (STATUS "Library destination directory: ${CMAKE_SOURCE_DIR}/lib")

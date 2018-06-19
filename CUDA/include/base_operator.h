@@ -45,6 +45,18 @@ class BaseOperator
    *
    * \param x_gpu k-space data (multiple coils), dims: depending on k-space
    *trajectory
+   * \param sum coil summation image, dims: width * height * frames
+   * \param b1_gpu coil sensitivities, dims: width * height * frames
+   * */
+  virtual void ForwardOperation(CVector &x_gpu, CVector &sum,
+                                CVector &b1_gpu, CVector &z_gpu) = 0;
+
+
+  /** \brief Forward operation: computation of coil-summation image based on
+   *k-space data
+   *
+   * \param x_gpu k-space data (multiple coils), dims: depending on k-space
+   *trajectory
    * \param b1_gpu coil sensitivities, dims: width * height * frames
    * \return coil summation image, dims: width * height * frames
    * */
@@ -59,6 +71,16 @@ class BaseOperator
    * */
   virtual void BackwardOperation(CVector &x_gpu, CVector &z_gpu,
                                  CVector &b1_gpu) = 0;
+
+  /** \brief Backward operation: computation of coil-wise k-space based on image
+   *data
+   *
+   * \param x_gpu image data, dims: width * height * frames
+   * \param z_gpu k-space data (multiple coils)
+   * \param b1_gpu coil sensitivities, dims: width * height * frames
+   * */
+  virtual void BackwardOperation(CVector &x_gpu, CVector &z_gpu,
+                                 CVector &b1_gpu, CVector &x_hat_gpu) = 0;
 
   /** \brief Backward operation: computation of coil-wise k-space based on image
    *data

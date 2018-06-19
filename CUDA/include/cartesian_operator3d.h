@@ -2,6 +2,10 @@
 
 #define INCLUDE_CARTESIAN_OPERATOR3D_H_
 
+//CUFFT direction in forward/backward operator
+#define NORMAL -1 // normal operation
+#define FOR_BS  1 // Operation for BlochSiegert recon
+
 #include "./base_operator.h"
 #include "agile/calc/fft.hpp"
 #include "cufft.h"
@@ -19,13 +23,13 @@ class CartesianOperator3D : public BaseOperator
   // 3D Operators
   //-----------------------------------------------------------------------------------
   CartesianOperator3D(unsigned width, unsigned height, unsigned depth, 
-                    unsigned coils);
+                    unsigned coils, int cufft_mode);
   CartesianOperator3D(unsigned width, unsigned height, unsigned depth,
-                    unsigned coils, RVector &mask, bool centered);
+                    unsigned coils, RVector &mask, bool centered, int cufft_mode);
   CartesianOperator3D(unsigned width, unsigned height, unsigned depth,
-                    unsigned coils, RVector &mask);
+                    unsigned coils, RVector &mask, int cufft_mode);
   CartesianOperator3D(unsigned width, unsigned height, unsigned depth, 
-                    unsigned coils, bool centered);
+                    unsigned coils, bool centered, int cufft_mode);
   //-----------------------------------------------------------------------------------
   
   virtual ~CartesianOperator3D();
@@ -39,6 +43,17 @@ class CartesianOperator3D : public BaseOperator
    * \param b1_gpu coil sensitivities, dims: width * height * depth
    * */
   void ForwardOperation(CVector &x_gpu, CVector &sum, CVector &b1_gpu);
+
+  /** \brief Cartesian forward operation of 3D data: computation of coil-summation
+   *image based on
+   *k-space data
+   *
+   * \param x_gpu k-space data (multiple coils), dims: width * height * depth * coils
+   * \param sum coil summation image, dims: width * height * depth
+   * \param b1_gpu coil sensitivities, dims: width * height * depth
+   * */
+  void ForwardOperation(CVector &x_gpu, CVector &sum, CVector &b1_gpu, CVector &z_gpu);
+
 
   /** \brief Cartesian Forward operation of 3D data: computation of coil-summation image
    *based on
@@ -56,6 +71,16 @@ class CartesianOperator3D : public BaseOperator
    *
    * \param x_gpu image data, dims: width * height * depth
    * \param z_gpu k-space data (multiple coils), dims: width * height depth * coils 
+   * \param b1_gpu coil sensitivities, dims: width * height * depth
+   * */
+  void BackwardOperation(CVector &x_gpu, CVector &z_gpu, CVector &b1_gpu, CVector &x_hat_gpu);
+
+  /** \brief Cartesian Backward operation of 3D data: computation of coil-wise k-space
+   *based on image
+   *data
+   *
+   * \param x_gpu image data, dims: width * height * depth
+   * \param z_gpu k-space data (multiple coils), dims: width * height depth * coils
    * \param b1_gpu coil sensitivities, dims: width * height * depth
    * */
   void BackwardOperation(CVector &x_gpu, CVector &z_gpu, CVector &b1_gpu);
@@ -100,6 +125,8 @@ class CartesianOperator3D : public BaseOperator
  private:
   /** \brief Initialize 3D-FFT operator */
   void Init();
+
+  const int cufft_mode;
 };
 
 #endif  // INCLUDE_CARTESIAN_OPERATOR_H_

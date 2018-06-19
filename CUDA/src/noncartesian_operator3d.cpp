@@ -134,6 +134,11 @@ void NoncartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
   }
   */
 }
+void NoncartesianOperator3D::BackwardOperation(CVector &x_gpu, CVector &z_gpu,
+                                 CVector &b1_gpu, CVector &x_hat_gpu)
+{
+  this->BackwardOperation(x_gpu, z_gpu, b1_gpu);
+}
 
 
 
@@ -182,6 +187,13 @@ void NoncartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
       (float2 *)(x_gpu.data() );
   gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imgArray);
 
+}
+
+void NoncartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &sum,
+                              CVector &b1_gpu, CVector &z_gpu)
+{
+
+  ForwardOperation(x_gpu, sum, b1_gpu);
 }
 
 CVector NoncartesianOperator3D::ForwardOperation(CVector &x_gpu, CVector &b1_gpu)

@@ -104,6 +104,10 @@ void GradientNorm(const std::vector<CVector> &gradient, CVector &norm);
 
 /** \brief Computation of norm, i.e. sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2)
  * */
+void GradientNorm(const std::vector<CVector> &gradient, CVector &norm, CVector &temp);
+
+/** \brief Computation of norm, i.e. sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2)
+ * */
 CVector GradientNorm(const std::vector<CVector> &gradient);
 
 /** \brief Computation of norm, i.e. sqrt(abs(dx).^2 + abs(dy).^2)
@@ -138,6 +142,24 @@ CVector GradientNorm1D(const std::vector<CVector> &gradient);
  * */
 void SymmetricGradient(const std::vector<CVector> &data_gpu,
                        std::vector<CVector> &gradient, unsigned width,
+                       unsigned height, DType dx = 1.0, DType dy = 1.0,
+                       DType dz = 1.0);
+
+/** \brief Compute 3-d second symmetric gradient for given image gradient
+ *vector.
+ *
+ * \param[in] data_gpu vector of 3-d data gradient (dx,dy,dz)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim
+ * \param[out] gradient symmetric gradient components stored component-wise in
+ *vector as
+ *(dxx,dyy,dzz,dxy,dxz,dyz)
+ * */
+void SymmetricGradient(const std::vector<CVector> &data_gpu,
+                       std::vector<CVector> &gradient, CVector &temp, unsigned width,
                        unsigned height, DType dx = 1.0, DType dy = 1.0,
                        DType dz = 1.0);
 
@@ -201,6 +223,12 @@ void SymmetricGradientNorm(const std::vector<CVector> &gradient, CVector &norm);
  abs(dy).^2 + abs(dz).^2 + 2.0*abs(dxy).^2 +
    2.0*abs(dxz).^2 + 2.0*abs(dyz).^2)
  * */
+void SymmetricGradientNorm(const std::vector<CVector> &gradient, CVector &norm, CVector &temp);
+
+/** \brief Computation of symmetric gradient norm, i.e. sqrt(abs(dx).^2 +
+ abs(dy).^2 + abs(dz).^2 + 2.0*abs(dxy).^2 +
+   2.0*abs(dxz).^2 + 2.0*abs(dyz).^2)
+ * */
 CVector SymmetricGradientNorm(const std::vector<CVector> &gradient);
 
 /** \brief Computation of symmetric gradient norm, i.e. sqrt(abs(dx).^2 +
@@ -255,6 +283,27 @@ void Divergence(std::vector<CVector> &gradient, CVector &divergence,
 CVector Divergence(std::vector<CVector> &gradient, unsigned width,
                    unsigned height, unsigned frames, DType dx = 1.0,
                    DType dy = 1.0, DType dz = 1.0);
+
+/** \brief Compute 3-d divergence with backward differences for given 3-d
+ *component vector (i.e. gradient).
+ *
+ * Since, \f$grad^* = -div\f$
+ * the divergence
+ * \f$div = -\nabla \cdot p \f$
+ * is computed as dual operator of the gradient (minus div).
+ *
+ * \param[in] gradient vector of 3-d gradient (dx,dy,dz)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] frames
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim
+ * \param[out] divergence computed divergence
+ * */
+void Divergence(std::vector<CVector> &gradient, CVector &divergence, CVector &temp_gpu,
+                unsigned width, unsigned height, unsigned frames,
+                DType dx = 1.0, DType dy = 1.0, DType dz = 1.0);
 
 /** \brief Compute temporal divergence with backward differences for given 2d-time
  * one component vector (i.e. gradient).
@@ -354,6 +403,31 @@ void SymmetricDivergence(std::vector<CVector> &gradient,
                          std::vector<CVector> &divergence, unsigned width,
                          unsigned height, unsigned frames, DType dx = 1.0,
                          DType dy = 1.0, DType dz = 1.0);
+
+
+/** \brief Compute 3-d symmetric divergence with backward differences for given
+ *3-d symmetric component vector (i.e. symmetric gradient).
+ *
+ * Since, \f$grad^* = -div\f$
+ * the divergence
+ * \f$div = -\nabla \cdot p \f$
+ * is computed as dual operator of the gradient (minus div).
+ *
+ * \param[in] gradient symmetric vector of 3-d gradient (dx,dy,dz, dxy, dxz,
+ *dyz)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] frames
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim
+ * \param[out] divergence computed symmetric divergence
+ * */
+void SymmetricDivergence(std::vector<CVector> &gradient,
+                         std::vector<CVector> &divergence, CVector &temp_gpu, unsigned width,
+                         unsigned height, unsigned frames, DType dx = 1.0,
+                         DType dy = 1.0, DType dz = 1.0);
+
 
 /** \brief Compute 3-d symmetric divergence with backward differences for given
  *3-d symmetric component vector (i.e. symmetric gradient).
@@ -616,6 +690,29 @@ void ProximalMap3(std::vector<CVector> &y, RType scale);
  * \param[in] scale factor
  */
 void ProximalMap6(std::vector<CVector> &y, RType scale);
+/**
+ * \brief Perform proximal mapping for each 3-d gradient vector component y by
+ *scaled gradient norm
+ *
+ * \f$ y[i] \leftarrow \frac{y[i]}{max(scale \cdot norm(y),1.0)} element-wise
+ *\f$
+ *
+ * \param[in,out] y gradient vecotr
+ * \param[in] scale factor
+ */
+void ProximalMap3(std::vector<CVector> &y, CVector &norm_gpu, CVector &tempVec, RType scale);
+
+/**
+ * \brief Perform proximal mapping for each 3-d gradient vector component y by
+ *scaled gradient norm
+ *
+ * \f$ y[i] \leftarrow \frac{y[i]}{max(scale \cdot norm(y),1.0)} element-wise
+ *\f$
+ *
+ * \param[in,out] y gradient vecotr
+ * \param[in] scale factor
+ */
+void ProximalMap6(std::vector<CVector> &y, CVector &norm_gpu, CVector &tempVec, RType scale);
 
 /**
  * \brief Compute sum of squares for three-component vector x
@@ -625,6 +722,16 @@ void SumOfSquares3(std::vector<CVector> &x, CVector &sum);
  * \brief Compute sum of squares for six-component vector x
  */
 void SumOfSquares6(std::vector<CVector> &x, CVector &sum);
+
+
+/**
+ * \brief Compute sum of squares for three-component vector x
+ */
+void SumOfSquares3(std::vector<CVector> &x, CVector &sum, CVector &temp);
+/**
+ * \brief Compute sum of squares for six-component vector x
+ */
+void SumOfSquares6(std::vector<CVector> &x, CVector &sum, CVector &temp);
 
 /**
  * \brief Extract sub vector out of full vector

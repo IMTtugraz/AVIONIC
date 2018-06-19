@@ -32,6 +32,10 @@ std::istream &operator>>(std::istream &in, Method &method)
   {
     method = ICTGV2;
   }
+  else if (token == "BS_RECON")
+  {
+	method = BS_RECON;
+  }
   else
   {
     throw std::runtime_error("invalid method selected");
@@ -100,10 +104,13 @@ OptionsParser::OptionsParser()
       "tpat,t", po::value<int>(&tpat)->default_value(1),
       "artifical TPAT interleave")(
       "slice,z", po::value<unsigned int>(&slice)->default_value(0),
-      "slice to reconstruct")("gpudevice,b", po::value<int>(&gpu_device_nr)->default_value(-1),"GPU Device Nr");
+      "slice to reconstruct")("gpudevice,b", po::value<int>(&gpu_device_nr)->default_value(-1),"GPU Device Nr")
+      ("dataBS,q", po::value<std::string>(&kdataFilenameH1), "file name data for BS reconstruction")
+      ("maskBS,x", po::value<std::string>(&maskFilenameH1),  "file name mask for BS reconstruction")
+      ("finalOutBS,y", po::value<std::string>(&outputFilenameFinal), "output file name for BS map");
 
   conf.add_options()("method,m", po::value<Method>()->default_value(ICTGV2),
-                     "reconstruction method (TV, TGV, TGV_3D, ICTGV2)")(
+                     "reconstruction method (TV, TVTEMP, TGV2, TGV2_3D, ICTV, ICTGV2, BS_RECON)")(
       "maxIt,i", po::value<int>()->default_value(500),
       "Maximum number of iterations")(
           "stopPDGap,j", po::value<float>()->default_value(0),
@@ -117,6 +124,7 @@ OptionsParser::OptionsParser()
   AddICTVConfigurationParameters(); 
   AddICTGV2ConfigurationParameters();
   AddGPUNUFFTConfigurationParameters();
+  AddH1ConfigurationParameters();
   AddAdaptLambdaConfigurationParameters();
 
   hidden.add_options()("kdata", po::value<std::string>(), "k-space data file")(
@@ -272,6 +280,16 @@ void OptionsParser::AddGPUNUFFTConfigurationParameters()
       "gpunufft.osf",
       po::value<DType>(&gpuNUFFTParams.osf)->default_value(2.0));
 }
+
+void OptionsParser::AddH1ConfigurationParameters()
+{
+  conf.add_options()("h1.mu", po::value<RType>(&h1Params.mu))(
+      "h1.relTol", po::value<RType>(&h1Params.relTol))(
+      "h1.absTol", po::value<RType>(&h1Params.absTol))(
+      "h1.maxIt", po::value<unsigned>(&h1Params.maxIt));
+}
+
+
 
 void OptionsParser::AddAdaptLambdaConfigurationParameters()
 {
