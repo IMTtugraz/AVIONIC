@@ -202,7 +202,7 @@ else % cartesian data
         
         dimstr=[' ',num2str(m),':',num2str(n),':',num2str(l),':',...
             num2str(m),':',num2str(n),':',num2str(l),':',...
-            num2str(ncoils),':0 '];
+            num2str(ncoils),':1 '];
     else % 2d-time
         
         [n,m,ncoils,nframes] = size(mri_obj.data);
@@ -218,8 +218,8 @@ else % cartesian data
         
         b1u0str = exportb1u0(mri_obj,id,[2 1 3],[2 1]);
         
-        dimstr=[' ',num2str(m),':',num2str(n),':0:',...
-            num2str(m),':',num2str(n),':0:',...
+        dimstr=[' ',num2str(m),':',num2str(n),':1:',...
+            num2str(m),':',num2str(n),':1:',...
             num2str(ncoils),':',num2str(nframes),' '];
     end
     trajstr = '';
