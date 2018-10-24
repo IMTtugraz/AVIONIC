@@ -14,7 +14,9 @@ if ndims(kdata)==4
     for frame=1:nframes
         densu(:,:,frame) = goldcmp(traju(:,:,frame),'ramlak');
     end
-elseif ndims(kdata)==3
+    
+elseif ndims(kdata)<4
+    
     % number of frames
     nframes = floor(nspokes/nspokesperframe);
     
@@ -33,6 +35,7 @@ elseif ndims(kdata)==3
         traju(:,:,frame)    = traj(:,(frame-1)*nspokesperframe+1:frame*nspokesperframe);
         densu(:,:,frame)    = goldcmp(traju(:,:,frame),'ramlak');
     end
+    
     
 end
 shift   = [0,0];

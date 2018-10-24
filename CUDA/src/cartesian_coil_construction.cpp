@@ -57,9 +57,15 @@ void CartesianCoilConstruction::TimeAveragedReconstruction(CVector &kdata,
 
     temp.assign(temp.size(), 0);
     if (mrOp->centered)
-      mrOp->fftOp->CenteredForward(dataTemp, temp, cOff, 0);
+    {
+      //mrOp->fftOp->CenteredForward(dataTemp, temp, cOff, 0);
+      mrOp->fftOp->CenteredInverse(dataTemp, temp, cOff, 0); 
+    }
     else
-      mrOp->fftOp->Forward(dataTemp, temp, cOff, 0);
+    {
+     //mrOp->fftOp->Forward(dataTemp, temp, cOff, 0);
+     mrOp->fftOp->Inverse(dataTemp, temp, cOff, 0);
+    }
 
     utils::SetSubVector(temp, crec, cnt, width * height);
 

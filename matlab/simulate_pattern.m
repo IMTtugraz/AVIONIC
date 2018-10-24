@@ -58,7 +58,7 @@ param.t     = nframes; % Number of frames
 param.R     = acc;  % Net acceleration rate
 param.alph  = 0.28;      % 0<alph<1 controls sampling density; 0: uniform density, 1: maximally non-uniform density
 param.sig   = param.p/5; % Std of the Gaussian envelope for sampling density
-param.sd    = 10; % Seed to generate random numbers; a fixed seed should reproduce VISTA
+param.sd    = 'shuffle';%10; % Seed to generate random numbers; a fixed seed should reproduce VISTA
 
 
 %% Probably you don't need to mess with these paramters ===================

@@ -51,7 +51,7 @@ include_directories(${GPUNUFFT_INCLUDE_DIRS})
 link_libraries (${GPUNUFFT_LIBRARIES})
 
 # Boost
-find_package(Boost 1.49.0 REQUIRED system program_options regex filesystem)
+find_package(Boost 1.58.0 REQUIRED system program_options regex filesystem)
 include_directories(${Boost_INCLUDE_DIR})
 
 # ISMRMRD

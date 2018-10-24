@@ -19,9 +19,9 @@ n_shift = Nd/2;
 
 if gpu
     Nd      = [n,m];
-    osf     = 1.5; % oversampling: 1.5 1.25
-    wg      = 6; % kernel width: 5 7
-    sw      = 8; % parallel sectors' width: 12 16
+    osf     = 1.5;  %   oversampling: 1.5 1.25
+    wg      = 6;    %   kernel width: 5 7
+    sw      = 8;    %   parallel sectors' width: 12 16
     
     for frame=1:nframes
         FT{frame} = gpuNUFFT([  real(col(mri_obj.traj(:,:,frame))), ...
@@ -65,13 +65,13 @@ x           = zeros(n,m,nframes,2); % L,S
 y           = zeros(n,m,nframes);
 z           = zeros(size(mri_obj.data));
 
-x(:,:,:,1)  = repmat(mri_obj.u0,[1 1 nframes]);%Kh(mri_obj.data);
+x(:,:,:,1)  = repmat(mri_obj.u0,[1 1 nframes]);
 ext         = x;
 
-[U,S,V] = svd(reshape(ext(:,:,:,1), n*m, nframes), 'econ');
-test = fgrad_t(Kh(mri_obj.data));
+[~,S,~] = svd(reshape(ext(:,:,:,1), n*m, nframes), 'econ');
+
 lambda_l = lambda_l*max(abs(S(:)));
-lambda_s = lambda_s*255;%max(abs(test(:)));%*sqrt((pi/2*n/size(mri_obj.data,2))/max(n*m,nframes));
+lambda_s = lambda_s*255;
 
 for k = 1:maxiter
 

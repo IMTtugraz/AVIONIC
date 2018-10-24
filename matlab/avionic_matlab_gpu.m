@@ -21,6 +21,8 @@ scale           = 0;
 isnoncart       = 0;
 adapt_lambda    = 0;
 debug           = 0;
+debugstep       = 0;
+data_centered   = 1;
 
 %Read parameter-------------------------------------------------------------------------
 %Input: par_in--------------------------------------------------------------------------
@@ -44,18 +46,15 @@ end
 id = num2str(round(now*1e5));
 
 % set zero output
-comp1 = 0; comp2 = 0; pdgap = 0; u0 = 0;
-prescale = 0; ictgvnorm = 0; datafid = 0; b1=0;
+comp1 = 0; comp2 = 0; pdgap = 0; u0 = 0; datanorm=1; ictgvnorm = 0; datafid = 0; b1=0;
 
 eval(['mkdir ',id]);
-
 
 if scale
     scalestr = ' -o ';
 else
     scalestr = ' ';
 end
-
 
 if adapt_lambda
     alstr = ' -a ';
@@ -67,6 +66,12 @@ if debug
     debugstr = ' -v ';
 else
     debugstr = ' ';
+end
+
+if debugstep>0
+    debugstepstr = [' -g ',num2str(debugstep),' '];
+else
+    debugstepstr = ' ';
 end
 %--------------------------------------------------------------------
 % define method
@@ -83,6 +88,17 @@ switch method
             ' --ictgv2.alpha=',num2str(alpha),...
             ' --ictgv2.alpha0=',num2str(alpha0),...
             ' --ictgv2.alpha1=',num2str(alpha1),' '];
+        
+    case 'ICTV'
+        voxelscalestr = [...
+            ' --ictv.dx=',num2str(dx),' --ictv.dy=',num2str(dy),...
+            ' --ictv.dt=',num2str(dt)];
+        methodstr = [...
+            ' --ictv.lambda=',num2str(lambda),...
+            ' --ictv.timeSpaceWeight=',num2str(timeSpaceWeight),...
+            ' --ictv.timeSpaceWeight2=',num2str(timeSpaceWeight2),...
+            ' --ictv.alpha=',num2str(alpha)];
+        
     case 'TGV2'
         voxelscalestr = [...
             ' --tgv2.dx=',num2str(dx),' --tgv2.dy=',num2str(dy),...
@@ -92,6 +108,7 @@ switch method
             ' --tgv2.timeSpaceWeight=',num2str(timeSpaceWeight)...
             ' --tgv2.alpha0=',num2str(alpha0),...
             ' --tgv2.alpha1=',num2str(alpha1),' '];
+        
     case 'TV'
         voxelscalestr = [...
             ' --tv.dx=',num2str(dx),' --tv.dy=',num2str(dy),...
@@ -99,6 +116,7 @@ switch method
         methodstr = [...
             ' --tv.lambda=',num2str(lambda),...
             ' --tv.timeSpaceWeight=',num2str(timeSpaceWeight)];
+        
     case 'TGV2_3D'
         voxelscalestr = [...
             ' --tgv2_3D.dx=',num2str(dx),...
@@ -108,6 +126,7 @@ switch method
             ' --tgv2_3D.lambda=',num2str(lambda)...
             ' --tgv2_3D.alpha0=',num2str(alpha0),...
             ' --tgv2_3D.alpha1=',num2str(alpha1),' '];
+        
     case 'TVTEMP'
         voxelscalestr = [...
             ' --tvtemp.dt=',num2str(dx),' '];
@@ -208,7 +227,9 @@ else % cartesian data
         [n,m,ncoils,nframes] = size(mri_obj.data);
         
         % setup data
-        mri_obj = setup_data(mri_obj);
+        if data_centered
+            mri_obj = setup_data(mri_obj);
+        end
         
         writebin_vector(permute(mri_obj.data,[2 1 3 4]),...
             ['./',id,'/data.bin']);
@@ -242,7 +263,7 @@ end
 %------------------------------------------------------------------
 % Define Recon Command
 %------------------------------------------------------------------
-recon_cmd=['avionic  -m ',method,scalestr,alstr,debugstr, ' -i ',num2str(stop_par),...
+recon_cmd=['avionic  -m ',method,scalestr,alstr,debugstr,debugstepstr, ' -i ',num2str(stop_par),...
     methodstr,...
     voxelscalestr,' -e -p ',...
     parfile,' -d ', dimstr,...

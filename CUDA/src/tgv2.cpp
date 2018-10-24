@@ -340,7 +340,9 @@ void TGV2::IterativeReconstruction(CVector &data_gpu, CVector &x1,
 void TGV2::ExportAdditionalResults(const char *outputDir,
                                    ResultExportCallback callback)
 {
-  
+    //(*callback)(outputDir, "x3_component", x2);
+
+
     if (debug)
     {
         CVector pdGapExportGPU( pdGapExport.size() );

@@ -6,25 +6,28 @@ unix(['export PATH=',pwd,'/CUDA/bin/:${PATH}']);
 %% 1) dynamic Cartesian MRI reconstruction 2d-time with ICTGV, spatio-temp. TGV or spatio-temp. TV
 
 % simulation parameter
-acc     = 12;
-pattern = 'VRS';   % 'VRS', 'UIS'
+acc     = 8;
+pattern = 'VISTA';   % 'VRS', 'UIS'
 method  = 'ICTGV2'; % 'TGV2', 'TV'
 use_gpu = 1;
 
 % get rawdata
 unix(['wget https://zenodo.org/record/815385/files/testdata_cart_cine_avionic.mat --no-check-certificate']);
 load testdata_cart_cine_avionic
+
+
 [nslices,m,ncoils,nframes]  = size(data);
 
 % simulate undersampling
 % (requires VISTA: https://github.com/osu-cmr/vista) in matlab path
 mri_obj.mask = simulate_pattern(nslices,m,nframes,acc,pattern);
-mri_obj.data = data.*permute(repmat(mask,[1 1 1 ncoils]),[1 2 4 3]);
-clear data
+mri_obj.data = data.*permute(repmat(mri_obj.mask,[1 1 1 ncoils]),[1 2 4 3]);
+
 % reconstruction
 if use_gpu
     [ recon_avionic, comp1, comp2, b1, u0, pdgap, datanorm, ictgvnorm, datafid] = ...
         avionic_matlab_gpu( mri_obj, {'method',method;'scale',1});
+    
 else
     
     switch method
