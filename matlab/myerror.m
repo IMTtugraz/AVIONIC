@@ -12,8 +12,8 @@ function [errorv, errorvroi] = myerror(x,y,method,roi,subtract_mean)
 % errorvroi:
 %--------------------------------------------------------------------------
 
- x = abs(x);
- y = abs(y);
+% x = abs(x);
+% y = abs(y);
 
 [n,m,nframes] = size(x);
 
@@ -63,11 +63,11 @@ switch method
         errorv = sqrt( sum( (x-y).^2 ) );
         errorvroi = sqrt( sum( (xroi - yroi).^2 ) );
     case 'nmse' % normalized-root-mean-squared-error
-        errorv = ( sum( (x-y).^2 ) )./ sum(y.^2);
-        errorvroi = ( sum( (xroi - yroi).^2 ) ) ./ sum(y.^2);
+        errorv = ( (x-y)' * (x - y)  )./ (y'*y);
+        errorvroi = ( (xroi-yroi)' * (xroi - yroi) )./ (yroi'*yroi);
     case 'nrmse'% normalized-root-mean-squared-error
-        errorv = sqrt( sum( (x-y).^2 ) )./ sqrt(sum(y.^2));
-        errorvroi = sqrt( sum( (xroi - yroi).^2 ) ) ./ sqrt(sum(y.^2));
+        errorv = sqrt( (x-y)' * (x - y) )./ sqrt((y'*y));
+        errorvroi = sqrt( (xroi-yroi)' * (xroi - yroi) ) ./ sqrt(yroi'*yroi);
     case 'ser' % signal-to-error-ratio (dB)
         errorv = -10*log10( (sum((x-y).^2))./(sum(y.^2)) );
         errorvroi = -10*log10( (sum((xroi - yroi).^2))./(sum(yroi.^2)) );
@@ -83,6 +83,9 @@ switch method
     case 'psnr'
         errorv    = psnr(x,y,max(abs(y(:))));
         errorvroi = psnr(xroi,yroi,max(abs(y(:))));
+    case 'ssim'
+        [errorv,ssimmap]    = ssim(x,y);
+        errorvroi           = mean(ssimmap(roi));
     otherwise
         error('no valid metric')
         
