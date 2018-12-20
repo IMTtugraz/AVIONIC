@@ -5,11 +5,11 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in, gpu)
 
 
     %Regularization parameters for coil construction
-    u_reg = 1e-4;
-    b1_reg = 2;
-    b1_final_reg = 0.1;
-    b1_final_nr_it = 1000;
-    uH1mu = 1e-5;
+    u_reg           = 1e-4;
+    b1_reg          = 2;
+    b1_final_reg    = 0.1;
+    b1_final_nr_it  = 1000;
+    uH1mu           = 1e-5;
     
     
     % non-uniform fft parameters
@@ -36,10 +36,10 @@ function mri_obj = prepare_data_noncart(mri_obj, par_in, gpu)
     %---------------------------------------------------------------------------
     
     if nargin <3
-	gpu = 0;
+        gpu = 0;
     end
+    
     [nsamplesonspoke,spokesperframe,ncoils,nframes] = size(mri_obj.data);
-      
     mri_obj.data = mri_obj.data.*permute(repmat(sqrt(mri_obj.dcf),[1 1 1 ncoils]),[1 2 4 3]);
 
     N = imgdims;
