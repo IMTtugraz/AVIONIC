@@ -45,6 +45,12 @@ class TGV2_3D : public PDRecon
   void AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
                      CVector &b1, std::vector<CVector> &gradient1, std::vector<CVector> &gradient2, CVector &temp);
 
+   /** \brief Adapt stepsizes (sigma, tau) by checking the convergence condition
+   * based on nKx and nx. without additioanl vectors /insert Spann
+   */
+  void AdaptStepSize(CVector &extDiff1, std::vector<CVector> &extDiff2,
+                     CVector &b1);
+
   /** \brief G* Computation, needed in ComputePDGap function. */
   RType ComputeGStar(CVector &x, std::vector<CVector> &y1,
                      std::vector<CVector> &y2, CVector &z, CVector &data_gpu,

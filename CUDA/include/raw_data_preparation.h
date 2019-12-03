@@ -13,6 +13,7 @@
 #include "../include/raw_data_reader.h"
 #include "../include/noncartesian_operator3d.h"
 #include "../include/cartesian_operator3d.h"
+#include "../include/cartesian_operator4d.h"
 
 /**
  * \brief
@@ -70,8 +71,8 @@ class RawDataPreparation
 
   void NormalizeData(CVector &data, RVector &mask, RVector &w, Dimension &dims, CType &datanorm);
 
-  void NormalizeData3D(CVector &data,  RVector &mask, RVector &w, Dimension &dims, CType &datanorm);
-
+  void NormalizeData3D(CVector &data, RVector &mask, RVector &w, Dimension &dims, CType &datanorm);
+  
   RType FindNormalizationFactor(std::vector<RType> &data);
 
  private:

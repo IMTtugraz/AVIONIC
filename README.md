@@ -22,7 +22,6 @@ If you use this software please cite:
   _Magnetic Resonance in Medicine_, 2017; 78(1):142-155<br>
   doi: [10.1002/mrm.26352](http://onlinelibrary.wiley.com/doi/10.1002/mrm.26352/full) <br>
   OA: [EuroPubMed](http://europepmc.org/articles/PMC5553112)
-
 ```
 @article {MRM:MRM26352,
 author = {Schloegl, Matthias and Holler, Martin and Schwarzl, Andreas and Bredies, Kristian and Stollberger, Rudolf},
@@ -41,11 +40,23 @@ year = {2017},
 
 * Matthias Schloegl, Martin Holler, Kristian Bredies, and Rudolf Stollberger.<br>
   __A Variational Approach for Coil-Sensitivity Estimation for Undersampled Phase-Sensitive Dynamic MRI Reconstruction.__ <br>
-  _Proc. Intl. Soc. Mag. Reson. Med. 23_, Toronto, Canada 
+  _Proc. Intl. Soc. Mag. Reson. Med. 23_, Toronto, Canada   
+  
+If you use ASL-TGV reconstruction please cite additionally:
+* Spann, Stefan M. and Shao, Xingfeng and Wang, Danny JJ and Aigner, Christop S. and Schloegl, Matthias and Bredies, Kristian and Stollberger, Rudolf. <br>
+  __Robust single-shot acquisition of high resolution whole brain ASL images by combining time-dependent 2D CAPIRINHA sampling with spatio-temporal TGV reconstruction.__<br>
+  _NeuroImage_, 2019; in press
+  doi: [10.1016/j.neuroimage.2019.116337] https://doi.org/10.1016/j.neuroimage.2019.116337 <br>
+  OA: [EuroPubMed](http://europepmc.org/articles/PMC5553112)
+  
+If you use the Bloch-Siegert reconstrutction BS_RECON please cite additionally:
+* Andreas Lesch, Matthias Schloegl, Martin Holler, et al. Ultrafast 3D Bloch– Siegert B+1-mapping using variational modeling. <br>
+Magn Reson Med. 2019;81:881–892. https://doi. org/10.1002/mrm.27434
+
 
 ## Acknowledgement
 This work is funded and supported by the [Austrian Science Fund (FWF)](http://fwf.ac.at) in the context of project 'SFB F3209-19' [Mathematical Optimization and Applications in Biomedical Sciences](http://imsc.uni-graz.at/mobis/).
- We also gratefully acknowledge the support of [NVIDIA Corporation](http://nvidia.com) with the donation of the Tesla K40c GPU used for this research.
+ We also gratefully acknowledge the support of [NVIDIA Corporation](http://nvidia.com) with the donation of the Tesla K40c GPU and the TitanXP GPU used for this research.
 
 For questions and comments on the project please contact [Matthias Schloegl](mailto:matthias.schloegl@tugraz.at)
 ## Dependencies
@@ -194,3 +205,5 @@ testdata_cart_avionic_tgv3d.mat: Cartesian VIBE data of the left hand with parti
 
 noncart_avionic_tgv3d.mat: radial VIBE data of the human brain with golden-angle stack-of-stars sampling 
 
+## ASL-TGV Demo: Reconstruction of 4D ASL data 
+Please look into demo_ASL_TGV_Recon.m for further explanations

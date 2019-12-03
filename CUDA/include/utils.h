@@ -21,6 +21,30 @@ namespace utils
  */
 RType Ellipke(RType value);
 
+CType RandomNumber();
+
+/** \brief Compute 4-d gradient for given image data vector.
+ *
+ * \param[in] data_gpu 4-d data vector, dim width*height*depth*frames
+ * \param[in] width
+ * \param[in] height
+ * \param[in] depth
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim
+ * \param[in] dt Step size in t dim
+ * \param[out] gradient components stored component-wise in vector as (dx,dy,dz,dt)
+ * */
+void Gradient4D(CVector &data_gpu, std::vector<CVector> &gradient,
+                     unsigned width, unsigned height, unsigned depth, 
+                     DType dx = 1.0, DType dy = 1.0,
+                     DType dz = 1.0, DType dt = 1.0);
+
+std::vector<CVector> Gradient4D(CVector &data_gpu, unsigned width,
+                                     unsigned height, unsigned depth, 
+                                     DType dx = 1.0, DType dy = 1.0, 
+                                     DType dz = 1.0, DType dt = 1.0);
+
 /** \brief Compute 3-d gradient for given image data vector.
  *
  * \param[in] data_gpu 3-d data vector, dim width*height*frames
@@ -98,6 +122,13 @@ std::vector<CVector> Gradient2D(CVector &data_gpu, unsigned width,
                                 unsigned height, DType dx = 1.0,
                                 DType dy = 1.0);
 
+
+// compute norm sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2 + abs(dt).^2)
+void GradientNorm4D(const std::vector<CVector> &gradient, CVector &norm,
+                    CVector &temp);
+
+// compute norm sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2 + abs(dt).^2)
+CVector GradientNorm4D(const std::vector<CVector> &gradient, CVector &temp);
 /** \brief Computation of norm, i.e. sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2)
  * */
 void GradientNorm(const std::vector<CVector> &gradient, CVector &norm);
@@ -126,6 +157,29 @@ void GradientNorm1D(const std::vector<CVector> &gradient, CVector &norm);
  * */
 CVector GradientNorm1D(const std::vector<CVector> &gradient);
 
+
+/** \brief Compute 4-d second symmetric gradient for given image gradient
+ *vector.
+ *
+ * \param[in] data_gpu vector of 4-d data gradient (dx,dy,dz,dt)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] depth
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim
+ * \param[in] dz Step size in t dim
+ * \param[out] gradient symmetric gradient components stored component-wise in
+ * vector as
+ *(dxx,dyy,dzz,dtt,dxy,dxz,dxt,dyz,dyt,dzt)
+ * */
+void SymmetricGradient4D(const std::vector<CVector> &data_gpu,
+                         std::vector<CVector> &gradient, CVector &temp, unsigned width,
+                         unsigned height, unsigned depth, DType dx = 1.0, 
+                         DType dy = 1.0, DType dz = 1.0, DType dt = 1.0);
+
+std::vector<CVector> SymmetricGradient4D(const std::vector<CVector> &data_gpu, CVector &temp, unsigned width, unsigned height, unsigned depth, DType dx = 1.0, 
+                           DType dy = 1.0, DType dz = 1.0, DType dt = 1.0);															  
 
 /** \brief Compute 3-d second symmetric gradient for given image gradient
  *vector.
@@ -213,6 +267,16 @@ std::vector<CVector> SymmetricGradient2D(const std::vector<CVector> &data_gpu,
                                          unsigned width, unsigned height,
                                          DType dx = 1.0, DType dy = 1.0);
 
+  // compute norm sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2 + abs(dt).^2 
+  // + 2.0*abs(dxy).^2 + 2.0*abs(dxz).^2 + 2.0*abs(dxt).^2
+  // + 2.0*abs(dyz).^2 + 2.0*abs(dyt).^2 + 2.0*abs(dzt).^2)
+void SymmetricGradientNorm4D(const std::vector<CVector> &gradient,
+                                  CVector &norm, CVector &temp);
+
+  // compute norm sqrt(abs(dx).^2 + abs(dy).^2 + abs(dz).^2 + abs(dt).^2 
+  // + 2.0*abs(dxy).^2 + 2.0*abs(dxz).^2 + 2.0*abs(dxt).^2
+  // + 2.0*abs(dyz).^2 + 2.0*abs(dyt).^2 + 2.0*abs(dzt).^2)
+CVector SymmetricGradientNorm4D(const std::vector<CVector> &gradient, CVector &temp);																		 
 /** \brief Computation of symmetric gradient norm, i.e. sqrt(abs(dx).^2 +
  abs(dy).^2 + abs(dz).^2 + 2.0*abs(dxy).^2 +
    2.0*abs(dxz).^2 + 2.0*abs(dyz).^2)
@@ -242,6 +306,34 @@ void SymmetricGradientNorm2D(const std::vector<CVector> &gradient,
  * */
 CVector SymmetricGradientNorm2D(const std::vector<CVector> &gradient);
 
+/** \brief Compute 4-d divergence with backward differences for given 4-d
+ *component vector (i.e. gradient).
+ *
+ * Since, \f$grad^* = -div\f$
+ * the divergence
+ * \f$div = -\nabla \cdot p \f$
+ * is computed as dual operator of the gradient (minus div).
+ *
+ * \param[in] gradient vector of 4-d gradient (dx,dy,dz,dt)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] depth
+ * \param[in] frames
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim
+ * \param[in] dz Step size in t dim
+ * \param[out] divergence computed divergence
+ * */
+void Divergence4D(std::vector<CVector> &gradient, CVector &divergence,
+		 CVector &temp_gpu, unsigned width, unsigned height, 
+                 unsigned depth, unsigned frames, DType dx = 1.0, 
+                 DType dy = 1.0, DType dz = 1.0, DType dt = 1.0);
+
+CVector Divergence4D(std::vector<CVector> &gradient, CVector &temp, 
+		     unsigned width, unsigned height, unsigned depth, 
+                     unsigned frames, DType dx = 1.0, DType dy = 1.0, 
+                     DType dz = 1.0, DType dt = 1.0);															  
 /** \brief Compute 3-d divergence with backward differences for given 3-d
  *component vector (i.e. gradient).
  *
@@ -381,6 +473,37 @@ void Divergence2D(std::vector<CVector> &gradient, CVector &divergence,
 CVector Divergence2D(std::vector<CVector> &gradient, unsigned width,
                      unsigned height, DType dx = 1.0, DType dy = 1.0);
 
+
+/** \brief Compute 4-d symmetric divergence with backward differences for given
+ *4-d symmetric component vector (i.e. symmetric gradient).
+ *
+ * Since, \f$grad^* = -div\f$
+ * the divergence
+ * \f$div = -\nabla \cdot p \f$
+ * is computed as dual operator of the gradient (minus div).
+ *
+ * \param[in] gradient symmetric vector of 4-d gradient (dx, dy, dz, dt, dxy, dxz,
+ *                                                       dxt, dyz, dyt, dzt)
+ * \param[in] width
+ * \param[in] height
+ * \param[in] depth
+ * \param[in] frames
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim
+ * \param[in] dt Step size in t dim
+ * \param[out] divergence computed symmetric divergence
+ * */
+void SymmetricDivergence4D(std::vector<CVector> &gradient, std::vector<CVector> &divergence,
+				           CVector &temp_gpu, unsigned width, unsigned height, 
+						   unsigned depth, unsigned frames, DType dx = 1.0, DType dy = 1.0,
+						   DType dz = 1.0, DType dt = 1.0);
+
+std::vector<CVector> SymmetricDivergence4D(std::vector<CVector> &gradient, CVector &temp,
+                                                unsigned width, unsigned height,
+                                                unsigned depth, unsigned frames, 
+                                                DType dx = 1.0, DType dy = 1.0, 
+                                                DType dz = 1.0, DType dt = 1.0);
 /** \brief Compute 3-d symmetric divergence with backward differences for given
  *3-d symmetric component vector (i.e. symmetric gradient).
  *
@@ -507,6 +630,37 @@ std::vector<CVector> SymmetricDivergence2D(std::vector<CVector> &gradient,
 RType TVNorm(CVector &data_gpu, unsigned width, unsigned height, DType dx = 1.0,
              DType dy = 1.0, DType dt = 1.0);
 
+
+/**
+ * \brief Computation of TGV2 norm
+ *
+ * \f$ TGV2_{\alpha_0,\alpha_1}(x,v) = \alpha_1 \sum |\nabla x - v| + \alpha_0
+ *\sum
+ *|\frac{1}{2} (\nabla v + \nabla v^T) \f$
+ *
+ * \param[in] data1_gpu data vector, gradient (x)
+ * \param[in] data2_gpu data vector, symmetric gradient (v)
+ * \param[in] alpha0 norm parameter
+ * \param[in] alpha1 norm parameter
+ * \param[in] width
+ * \param[in] height
+ * \param[in] depth
+ * \param[in] dx Step size in x dim
+ * \param[in] dy Step size in y dim
+ * \param[in] dz Step size in z dim 
+ * \param[in] dz Step size in t dim (frames/time)
+ * \return TGV2 norm
+ */
+RType TGV2Norm4D(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
+                      CVector &temp, RType alpha0, RType alpha1, unsigned width,
+                      unsigned height, unsigned depth, DType dx = 1.0, 
+                      DType dy = 1.0, DType dz = 1.0, DType dt = 1.0);
+
+RType TGV2Norm4D(CVector &data1_gpu, std::vector<CVector> &data2_gpu,
+                      std::vector<CVector> &temp3, std::vector<CVector> &temp6,
+                      CVector &temp, RType alpha0, RType alpha1, unsigned width,
+                      unsigned height, unsigned depth, DType dx = 1.0, DType dy = 1.0, 
+                      DType dz = 1.0, DType dt = 1.0);																	 
 
 /**
  * \brief Computation of TGV2 norm
@@ -668,6 +822,29 @@ void ProximalMap2D(std::vector<CVector> &y, RType scale);
 void ProximalMap2DSym(std::vector<CVector> &y, RType scale);
 
 /**
+ * \brief Perform proximal mapping for each 4-d gradient vector component y by
+ *scaled gradient norm
+ *
+ * \f$ y[i] \leftarrow \frac{y[i]}{max(scale \cdot norm(y),1.0)} element-wise
+ *\f$
+ *
+ * \param[in,out] y gradient vector
+ * \param[in] scale factor
+ */
+void ProximalMap4(std::vector<CVector> &y, CVector &norm_gpu, CVector &temp, RType scale);
+
+/**
+ * \brief Perform proximal mapping for each 4-d gradient vector component y by
+ *scaled gradient norm
+ *
+ * \f$ y[i] \leftarrow \frac{y[i]}{max(scale \cdot norm(y),1.0)} element-wise
+ *\f$
+ *
+ * \param[in,out] y gradient vector
+ * \param[in] scale factor
+ */
+void ProximalMap10(std::vector<CVector> &y, CVector &norm_gpu, CVector &temp, RType scale);
+/**
  * \brief Perform proximal mapping for each 3-d gradient vector component y by
  *scaled gradient norm
  *
@@ -723,6 +900,15 @@ void SumOfSquares3(std::vector<CVector> &x, CVector &sum);
  */
 void SumOfSquares6(std::vector<CVector> &x, CVector &sum);
 
+/**
+ * \brief Compute sum of squares for four-component vector x
+*/
+void SumOfSquares4(std::vector<CVector> &x, CVector &sum, CVector &temp);
+
+/**
+ * \brief Compute sum of squares for ten-component vector x
+*/
+void SumOfSquares10(std::vector<CVector> &x, CVector &sum, CVector &temp);
 
 /**
  * \brief Compute sum of squares for three-component vector x

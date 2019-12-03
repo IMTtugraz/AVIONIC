@@ -7,6 +7,7 @@
 #include <boost/regex.hpp>
 #include <fstream>
 #include <iostream>
+#include "../include/asltgv2recon4d.h"
 #include "../include/ictgv2.h"
 #include "../include/ictv.h"
 #include "../include/tgv2.h"
@@ -32,7 +33,8 @@ typedef enum Method
   TGV2_3D,
   ICTV,
   ICTGV2,
-  BS_RECON
+  BS_RECON,
+  ASLTGV2RECON4D
 } Method;
 
 /**
@@ -72,6 +74,7 @@ class OptionsParser
   ICTVParams ictvParams;
   ICTGV2Params ictgv2Params;
   TGV2_3DParams tgv2_3DParams;
+  ASLTGV2RECON4DParams asltgv2recon4DParams;								  
   CoilConstructionParams coilParams;
   H1Params h1Params;
 
@@ -79,6 +82,7 @@ class OptionsParser
   std::string kdataFilename;
   std::string maskFilename;
   std::string kdataFilenameH1;
+  std::string kdataLFilename;
   std::string maskFilenameH1;
   std::string outputFilename;
   std::string outputFilenameFinal;
@@ -127,6 +131,8 @@ class OptionsParser
   void AddICTVConfigurationParameters();
 
   void AddICTGV2ConfigurationParameters();
+  
+  void AddASLTGV2RECON4DConfigurationParameters();
 
   void AddGPUNUFFTConfigurationParameters();
 

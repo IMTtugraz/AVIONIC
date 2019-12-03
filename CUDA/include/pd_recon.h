@@ -113,6 +113,17 @@ class PDRecon
 
   /** \brief Return PDParams reference (abstract method). */
   virtual PDParams &GetParams() = 0;
+  
+  /** \brief Perform the iterative ASL reconstruction
+   *
+   * \param data_gpu_c the measured control k-space data
+   * \param data_gpu_l the measured label k-space data
+   * \param x1 reconstructed control image, dims: width * height * depth * frames
+   * \param x3 reconstructed label image, dims: width * height * depth * frames
+   * \param b1_gpu coil sensitivies
+   */
+  virtual void IterativeReconstructionASL(CVector &data_gpu_c, CVector &data_gpu_l, 
+                                          CVector &x1, CVector &x3, CVector &b1_gpu);																															   
 
   /** \brief Perform the iterative reconstruction.
    *

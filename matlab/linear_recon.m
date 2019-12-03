@@ -22,7 +22,7 @@ function [ recon ] = linear_recon( data, mask, b1 )
 
     SM = @(x) col(forward_opt(backward_opt(reshape(x,[n,m,nframes]),mask,b1),mask,b1));
 
-    recon = pcg(SM,rhs,1e-12,30,[],[],col(repmat(u0,[ 1 1 nframes])));
+    recon = pcg(SM,rhs,1e-12,5,[],[],col(repmat(u0,[ 1 1 nframes])));
 
     recon = reshape(recon,[n,m,nframes])./datanorm;
 

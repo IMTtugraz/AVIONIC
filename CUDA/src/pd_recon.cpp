@@ -1,6 +1,7 @@
 #include "../include/pd_recon.h"
 #include "../include/cartesian_operator.h"
 #include "../include/cartesian_operator3d.h"
+#include "../include/cartesian_operator4d.h"
 #include <stdexcept>
 
 PDRecon::PDRecon(unsigned width, unsigned height, unsigned depth, unsigned coils,
@@ -96,6 +97,9 @@ void PDRecon::ComputeTimeSpaceWeights(RType timeSpaceWeight, RType &ds, RType &d
   dt = (RType) 1.0 / w2;
 }
 
+void PDRecon::IterativeReconstructionASL(CVector &data_gpu_c, CVector &data_gpu_l, CVector &x1, CVector &x3, CVector &b1_gpu)
+{
+}																	   
 void PDRecon::IterativeReconstruction(CVector &data_gpu, CVector &x,
                                       CVector &b1_gpu)
 {

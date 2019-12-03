@@ -5,20 +5,19 @@ function [x,fval,datanorm] = ls_pd(mri_obj, lambda, lambda_l, lambda_s, maxiter,
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fval    = 0;
+fval = 0;
 
-n       = mri_obj.imgdims(1);
-m       = mri_obj.imgdims(2);
+n = mri_obj.imgdims(1);
+m = mri_obj.imgdims(2);
 nframes = size(mri_obj.data,4);
-ncoils  = size(mri_obj.data,3);
+ncoils = size(mri_obj.data,3);
 [nRO,nspf,~,~] = size(mri_obj.data);
 
-Nd      = mri_obj.imgdims;
-Kd      = floor(Nd*1.5);
+Nd = mri_obj.imgdims;
+Kd = floor(Nd*1.5);
 n_shift = Nd/2;
 
 if gpu
-    
     Nd      = [n,m];
     osf     = 1.5;  %   oversampling: 1.5 1.25
     wg      = 6;    %   kernel width: 5 7

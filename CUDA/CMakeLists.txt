@@ -27,9 +27,8 @@ link_libraries (${AGILE_LIBRARIES})
 
 # DCMTK
 # for DCMTK - Dicom ToolKit¬
-#SET(DCMTK_DIR /usr/local/include/dcmtk CACHE STRING "Path to DCMTK root directory")
-
 SET(DCMTK_DIR /usr/local/include/dcmtk CACHE STRING "Path to DCMTK root directory")
+
 # 
 ADD_DEFINITIONS(-DHAVE_CONFIG_H)
 
@@ -62,7 +61,7 @@ find_package(ISMRMRD REQUIRED)
 include_directories(${ISMRMRD_INCLUDE_DIR})
 link_libraries(${ISMRMRD_LIBRARIES})
 
-set(CUDA_NVCC_FLAGS "-arch;sm_20")
+set(CUDA_NVCC_FLAGS "-arch;sm_35")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 
 set(SOURCE_WILDCARDS *.h *.hpp *.hxx *.c *.cpp *.cc *.cxx)

@@ -14,6 +14,7 @@
 #include "../include/raw_data_preparation.h"
 #include "../include/cartesian_coil_construction.h"
 #include "../include/noncartesian_coil_construction.h"
+#include "../include/asltgv2recon4d.h"									  						 
 #include "../include/ictgv2.h"
 #include "../include/ictv.h"
 #include "../include/tgv2.h"
@@ -22,6 +23,7 @@
 #include "../include/tv.h"
 #include "../include/noncartesian_operator.h"
 #include "../include/cartesian_operator3d.h"
+#include "../include/cartesian_operator4d.h"																			   
 #include "../include/noncartesian_operator3d.h"
 #include "../include/options_parser.h"
 #include "../include/utils.h"
@@ -135,6 +137,12 @@ void GenerateReconOperator(PDRecon **recon, OptionsParser &options,
                               options.ictgv2Params, mrOp);
     break;
   }
+  case ASLTGV2RECON4D:
+  {
+    std::cout << "ASLTGV2RECON4D:" << std::endl;
+    *recon = new class ASLTGV2RECON4D(dims.width, dims.height, dims.depth, dims.coils, dims.frames, options.asltgv2recon4DParams, mrOp);
+    break;
+  }					
   };
 
   (*recon)->SetVerbose(options.verbose);
@@ -342,7 +350,12 @@ int main(int argc, char *argv[])
 
   // kdata
   CVector kdata, kdataPos, kdataNeg;
-
+  CVector b1, u0, kdataL;
+  CVector dM(0.0);
+  CVector x(0.0);
+  CVector C(0.0);
+  CVector L(0.0);
+  PDRecon *recon = NULL;
   // kspace mask/trajectory
   RVector mask, maskPos, maskNeg;
 
@@ -357,7 +370,7 @@ int main(int argc, char *argv[])
   std::cout << "Extension:" << extension << std::endl;
   
   Dimension dims; // = op.dims;
-  if (op.method != BS_RECON)
+  if (op.method != BS_RECON || op.method != ASLTGV2RECON4D)
   {
     if (extension.compare(".bin") == 0)
       dims = op.dims;
@@ -389,6 +402,8 @@ int main(int argc, char *argv[])
   unsigned N;
   if (op.method==TGV2_3D || op.method==BS_RECON)
     N = dims.width * dims.height * dims.depth;
+  else if(op.method == ASLTGV2RECON4D)
+    N = dims.width * dims.height * dims.depth * dims.frames;
   else 
     N = dims.width * dims.height;
 
@@ -397,11 +412,18 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   if (op.rawdata) // ismrmrd input
   {
-	if (op.method != BS_RECON)  
+	if (op.method != BS_RECON || op.method != ASLTGV2RECON4D)  
 		PerformRawDataPreparation(dims, op, kdata, mask, w, datanorm);
 	else
 	{
-		std::cerr<<"Not implemented for BS_RECON"<<std::endl;
+		if (op.method == BS_RECON)
+		{
+		  std::cerr << "Not implemented for BS_RECON" << std::endl;
+		}
+		else if(op.method == ASLTGV2RECON4D)
+		{
+		  std::cerr << "Not implemented for ASLTGV2RECON4D" << std::endl;
+		}
 		return -1;
 	}	
   }
@@ -412,7 +434,16 @@ int main(int argc, char *argv[])
       return -1;
     else
       std::cout << "Data File " << op.kdataFilename << " successfully loaded." << std::endl;
- 
+  
+    if(op.method == ASLTGV2RECON4D)
+	{
+	  {
+        if (!LoadGPUVectorFromFile(op.kdataLFilename, kdataL))
+          return -1;
+        else
+          std::cout << "Data File " << op.kdataLFilename << " successfully loaded." << std::endl;
+      }
+	}
     if (!LoadGPUVectorFromFile(op.maskFilename, mask))
       return -1;
     else
@@ -454,6 +485,25 @@ int main(int argc, char *argv[])
 		  }
 		}
       }
+	  else if(op.method == ASLTGV2RECON4D)
+      {
+        for (unsigned frame = 0; frame < dims.frames; frame++)
+        {
+          unsigned offset_ = dims.width * dims.height * dims.depth * dims.coils * frame;
+          for (unsigned coil = 0; coil < dims.coils; coil++)
+          {
+            unsigned offset = dims.width * dims.height * dims.depth * coil;
+            agile::lowlevel::multiplyElementwise(
+		      kdata.data() + offset_ + offset, mask.data() + dims.width * dims.height *dims.depth * frame,
+		      kdata.data() + offset_ + offset, dims.width * dims.height * dims.depth);
+            agile::lowlevel::multiplyElementwise(
+		      kdataL.data() + offset_ + offset, mask.data() + dims.width * dims.height *dims.depth * frame,
+		      kdataL.data() + offset_ + offset, dims.width * dims.height * dims.depth);
+          }
+        }
+		float acc_fac = dims.width * dims.height * dims.depth * dims.frames / agile::norm1(mask);
+        std::cout << "Acceleartion factor = " << acc_fac << std::endl;
+	  }
       else
       {
         for (unsigned frame = 0; frame < dims.frames; frame++)
@@ -471,6 +521,11 @@ int main(int argc, char *argv[])
     }
     else // is non-cartesian data
     {
+	  if(op.method == ASLTGV2RECON4D)
+      {
+        std::cout << "Non-cartesion operator for ASLTGV2RECON4D is not implemented" << std::endl;
+        return -1;
+      }
       // load density compensation
       if (w.size() == 0)
       {
@@ -536,7 +591,9 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // init b1 and u0
   // ==================================================================================================================
-  CVector b1, u0;
+  if(op.method != ASLTGV2RECON4D)
+  {  
+  //CVector b1, u0;
   b1 = CVector(N * dims.coils);
   b1.assign(N * dims.coils, 1.0);
   u0 = CVector(N);
@@ -593,11 +650,46 @@ int main(int argc, char *argv[])
                                          "b1_reconstructed.bin", b1);
 
   }
+  }
+    // end initilize b1, u0
+  // ==================================================================================================================
   
+  // ==================================================================================================================
+  // init b1 and u0 for ASL reconstruction
+  // ==================================================================================================================
+  else if(op.method == ASLTGV2RECON4D)
+  {
+      std::cout << "Number of time frames/averages:" << dims.frames << std::endl;
+	  b1 = CVector(N * dims.coils);
+	  b1.assign(N * dims.coils, 1.0);
+	  u0 = CVector(N);
+	  u0.assign(N, 0.0);
 
+      // check if b1 and u0 data is provided
+	  if (LoadGPUVectorFromFile(op.sensitivitiesFilename, b1))
+	  {
+	    std::cout << "B1 File " << op.sensitivitiesFilename
+		      << " successfully loaded." << std::endl;
+	    
+	    if (LoadGPUVectorFromFile(op.u0Filename, u0))
+	    {
+	      std::cout << " initial solution (u0) file " << op.u0Filename
+		        << " successfully loaded." << std::endl;
+	    }
+	    else
+	    {
+	      std::cout << "no initial solution (u0) data provided!" << std::endl;
+	    }
+	  }
+	  else // b1 and u0 not provided
+	  {
+	       std::cerr << "Coil Construction for 3D ASL reconstruction not implemented! Provide b1 seperately!"
+		        << std::endl;
+	       return -1;
+	  }
+  }
   // end initilize b1, u0
   // ==================================================================================================================
-
 
 
   // ==================================================================================================================
@@ -620,7 +712,12 @@ int main(int argc, char *argv[])
                                             op.gpuNUFFTParams.kernelWidth, op.gpuNUFFTParams.sectorWidth,
                                             op.gpuNUFFTParams.osf);
     }
-    else
+	else if (op.method == ASLTGV2RECON4D) //
+	{
+		std::cout << "ASL-TGV recon for non-cartesian data is currently not implemented" << std::endl;
+		return -1;
+	}
+	else
     { 
       std::cout << "2D-time operator" <<std::endl;
  
@@ -648,6 +745,11 @@ int main(int argc, char *argv[])
        baseOp = new CartesianOperator3D(dims.width, dims.height, dims.depth,
                                      dims.coils, mask, false, FOR_BS);
     }
+	else if (op.method == ASLTGV2RECON4D) // generate new operator 3d-time
+	{
+	  baseOp = new CartesianOperator4D(dims.width, dims.height, dims.depth,
+		                               dims.coils, dims.frames, mask, false);
+	}
     else // Create 2d-t Cartesian MR Operator
     {
       baseOp = new CartesianOperator(dims.width, dims.height, dims.coils,
@@ -658,40 +760,42 @@ int main(int argc, char *argv[])
   // ==================================================================================================================
   // BEGIN: Perform iterative (TV, TVtemp, TGV2, TGV_3D, ICTV, ICTGV2) reconstruction
   // ==================================================================================================================
-  PDRecon *recon = NULL;
-  GenerateReconOperator(&recon, op, baseOp);
+  if(op.method != ASLTGV2RECON4D)
+  {
+    GenerateReconOperator(&recon, op, baseOp);
 
-  CVector x(0); // resize at runtime
-  if (op.method==TGV2_3D || op.method==BS_RECON)
-  {
-    x.resize(N, 0.0);
-    agile::copy(u0, x);
-  }
-  else
-  {
-    x.resize(N * dims.frames, 0.0);
-    for (unsigned frame = 0; frame < dims.frames; frame++)
+    //CVector x(0); // resize at runtime
+    if (op.method==TGV2_3D || op.method==BS_RECON)
     {
-      utils::SetSubVector(u0, x, frame, N);
+      x.resize(N, 0.0);
+      agile::copy(u0, x);
     }
-  }
+    else
+    {
+      x.resize(N * dims.frames, 0.0);
+      for (unsigned frame = 0; frame < dims.frames; frame++)
+      {
+        utils::SetSubVector(u0, x, frame, N);
+      }
+    }
  
-  std::cout << "Initialization time: " << timer.stop() / 1000 << "s"
-            << std::endl;
+    std::cout << "Initialization time: " << timer.stop() / 1000 << "s"
+              << std::endl;
 
-  timer.start();
-
-
-  // run reconstruction
-  recon->IterativeReconstruction(kdata, x, b1);
+    timer.start();
 
 
-  // rescale
-  std::vector<CType> datanorm_v;
-  datanorm_v.push_back(datanorm);
-  if (op.normalize)
+    // run reconstruction
+    recon->IterativeReconstruction(kdata, x, b1);
+
+
+    // rescale
+    std::vector<CType> datanorm_v;
+    datanorm_v.push_back(datanorm);
+    if (op.normalize)
 	  ExportAdditionalResultsToMatlabBin2(outputDir.c_str(),"datanorm_factor.bin",datanorm_v);
-  std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
+    std::cout << "Execution time: " << timer.stop() / 1000 << "s" << std::endl;
+  }
 
   // ==================================================================================================================
   // END: Perform iterative (TV, TVtemp, TGV2, TGV_3D, ICTV, ICTGV2) reconstruction
@@ -699,17 +803,59 @@ int main(int argc, char *argv[])
 
 
   // ==================================================================================================================
+  // BEGIN: Perform iterative ASL reconstruction
+  // ==================================================================================================================  
+  if(op.method == ASLTGV2RECON4D)
+  {
+    //CVector C(0.0);
+    C.resize(N, 0.0);
+    //CVector L(0.0);
+    L.resize(N,0.0);
+    // PDRecon *recon = NULL;
+    GenerateReconOperator(&recon, op, baseOp);
+    std::cout << "Initialization time: " << timer.stop() / 1000 << "s" << std::endl;
+    timer.start();
+
+    recon->IterativeReconstructionASL(kdataL,kdata,C,L,b1);
+
+    std::cout << "Execution time:" << timer.stop() / 1000 << "s" << std::endl;
+  }
+
+  // ==================================================================================================================
   // BEGIN: Define output 
   // ================================================================================================================== 
   std::string extension_out = utils::GetFileExtension(op.outputFilename);
   std::vector<CType> xHost;
-  x.copyToHost(xHost);
- 
-  // write reconstruction to bin file 
+  std::vector<CType> RHost;
+  
+   // write reconstruction to bin file 
   if (extension_out.compare(".bin") == 0)
   {
-    std::cout << "writing output file to: " << op.outputFilename << std::endl;
-    agile::writeVectorFile(op.outputFilename.c_str(), xHost); 
+	if(op.method != ASLTGV2RECON4D )
+    {
+	  x.copyToHost(xHost);
+      std::cout << "writing output file to: " << op.outputFilename << std::endl;
+      agile::writeVectorFile(op.outputFilename.c_str(), xHost); 
+	}
+	else if(op.method == ASLTGV2RECON4D)
+	{
+	  char filenameC[(op.outputFilename.size()+1)];
+	  char filenameL[(op.outputFilename.size()+1)];
+	  char strtemp[(op.outputFilename.size()-4)];
+	  strncpy(strtemp,op.outputFilename.c_str(),op.outputFilename.size()-4);
+	  strtemp[op.outputFilename.size()-4] = '\0';
+	  
+	  strcpy(filenameC,strtemp);
+          strcpy(filenameL,strtemp);
+	  strcat(filenameC,"C.bin");
+	  strcat(filenameL,"L.bin");
+          C.copyToHost(RHost); //EIN!
+          L.copyToHost(xHost); //AUS!
+          std::cout << "writing output file C to: " << filenameC << std::endl;
+          agile::writeVectorFile(filenameC, RHost);
+	  std::cout << "writing output file L to: " << filenameL << std::endl;
+          agile::writeVectorFile(filenameL, xHost);
+	}
   }
   // write reconstruction to h5 file 
   else if (extension_out.compare(".h5") == 0)
@@ -760,6 +906,7 @@ int main(int argc, char *argv[])
   }
   else
   {
+	 x.copyToHost(xHost);
      // write reconstruction to binary file
      agile::writeVectorFile(op.outputFilename.c_str(), xHost);
   }

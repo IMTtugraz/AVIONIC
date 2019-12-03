@@ -4,6 +4,6 @@
 
 /* WARNING: Automatically generated file. Do not modify! */
 
-#define CONFIG_DIR "/home/lesch/workspace/AVIONIC_merged/CUDA/config/"
+#define CONFIG_DIR "/home/spann/AGILE_AVIONIC_GITMERGE/AVIONIC-master/CUDA/config/"
 
 #endif  // INCLUDE_CONFIG_DIR_H_

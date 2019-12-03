@@ -36,6 +36,10 @@ std::istream &operator>>(std::istream &in, Method &method)
   {
 	method = BS_RECON;
   }
+  else if (token == "ASLTGV2RECON4D")
+  {
+    method = ASLTGV2RECON4D;
+  }									 
   else
   {
     throw std::runtime_error("invalid method selected");
@@ -97,6 +101,8 @@ OptionsParser::OptionsParser()
       "sens,s", po::value<std::string>(&sensitivitiesFilename),
       "Coil sensitivity data.")("uzero,u", po::value<std::string>(&u0Filename),
                                 "Initial image u0.")(
+	  "labeldata,l", po::value<std::string>(&kdataLFilename),
+      "Labeled ASL data.")(															   
       "rawdata,r", po::bool_switch(&rawdata)->default_value(false),
       "flag to indicate raw data import")(
       "forceOSRemoval,f", po::bool_switch(&forceOSRemoval)->default_value(false),
@@ -110,7 +116,7 @@ OptionsParser::OptionsParser()
       ("finalOutBS,y", po::value<std::string>(&outputFilenameFinal), "output file name for BS map");
 
   conf.add_options()("method,m", po::value<Method>()->default_value(ICTGV2),
-                     "reconstruction method (TV, TVTEMP, TGV2, TGV2_3D, ICTV, ICTGV2, BS_RECON)")(
+                     "reconstruction method (TV, TVTEMP, TGV2, TGV2_3D, ICTV, ICTGV2, BS_RECON, ASLTGV2RECON4D)")(
       "maxIt,i", po::value<int>()->default_value(500),
       "Maximum number of iterations")(
           "stopPDGap,j", po::value<float>()->default_value(0),
@@ -123,6 +129,7 @@ OptionsParser::OptionsParser()
   AddTGV2_3DConfigurationParameters();
   AddICTVConfigurationParameters(); 
   AddICTGV2ConfigurationParameters();
+  AddASLTGV2RECON4DConfigurationParameters();										
   AddGPUNUFFTConfigurationParameters();
   AddH1ConfigurationParameters();
   AddAdaptLambdaConfigurationParameters();
@@ -270,6 +277,23 @@ void OptionsParser::AddICTGV2ConfigurationParameters()
       "ictgv2.dt2", po::value<RType>(&ictgv2Params.dt2));
 }
 
+void OptionsParser::AddASLTGV2RECON4DConfigurationParameters()
+{
+    conf.add_options()("asltgv2recon4D.dx", po::value<RType>(&asltgv2recon4DParams.dx))(
+      "asltgv2recon4D.dy", po::value<RType>(&asltgv2recon4DParams.dy))(
+      "asltgv2recon4D.dz", po::value<RType>(&asltgv2recon4DParams.dz))(
+      "asltgv2recon4D.dt", po::value<RType>(&asltgv2recon4DParams.dt))(
+      "asltgv2recon4D.sigma", po::value<RType>(&asltgv2recon4DParams.sigma))(
+      "asltgv2recon4D.tau", po::value<RType>(&asltgv2recon4DParams.tau))(
+      "asltgv2recon4D.sigmaTauRatio", po::value<RType>(&asltgv2recon4DParams.sigmaTauRatio))(
+      "asltgv2recon4D.timeSpaceWeight",
+      po::value<RType>(&asltgv2recon4DParams.timeSpaceWeight))(
+      "asltgv2recon4D.lambda_l", po::value<RType>(&asltgv2recon4DParams.lambda_l))(
+      "asltgv2recon4D.lambda_c", po::value<RType>(&asltgv2recon4DParams.lambda_c))(
+      "asltgv2recon4D.alpha0", po::value<RType>(&asltgv2recon4DParams.alpha0))(
+      "asltgv2recon4D.alpha1", po::value<RType>(&asltgv2recon4DParams.alpha1))(
+      "asltgv2recon4D.alpha", po::value<RType>(&asltgv2recon4DParams.alpha));
+}
 void OptionsParser::AddGPUNUFFTConfigurationParameters()
 {
   conf.add_options()(
@@ -307,6 +331,7 @@ void OptionsParser::SetMaxIt(int maxIt)
   tgv2_3DParams.maxIt = maxIt;
   ictvParams.maxIt = maxIt;
   ictgv2Params.maxIt = maxIt;
+  asltgv2recon4DParams.maxIt = maxIt;								
 }
 
 void OptionsParser::SetStopPDGap(float stopPDGap)

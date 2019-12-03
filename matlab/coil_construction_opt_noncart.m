@@ -1,10 +1,10 @@
 function [b1,u,ind,par] = coil_construction_opt_noncart(kdata,traj,dcf,imdims,par_in)
 
-    u_reg   = 0.2;
-    b1_reg  = 2;
+    u_reg = 0.2;
+    b1_reg = 2;
     b1_final_reg = 0.1; % changed for non-cart
     b1_final_nr_it = 1000;
-    uH1mu 	= 1e-1;
+    uH1mu =  1e-1;
 
     %Read parameter-------------------------------------------------------------------------
     %Input: par_in--------------------------------------------------------------------------

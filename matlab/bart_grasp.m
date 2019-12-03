@@ -1,5 +1,6 @@
-function [ reco ] = bart_grasp(data, b1, spf, ld, traj, scale, maxspokes )
+function [ reco ] = bart_grasp( data,b1,spf,ld,traj,scale,maxspokes )
 
+addpath(genpath('/home/mr_recon/Workspace/bart/'))
 if size(data,2) > maxspokes
     data= data(:,1:maxspokes,:);
 end
