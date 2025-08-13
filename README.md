@@ -1,3 +1,6 @@
+**The main repository has moved to: https://gitlab.tugraz.at/ibi/mrirecon/software/AVIONIC**
+
+
 # AVIONIC
 Accelerated Variational Dynamic MRI Reconstruction
 
